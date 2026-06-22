@@ -1,0 +1,250 @@
+==== AUTO TEXTURE ASSIGNMENT REPORT ====
+
+OBJECTS SUCCESSFULLY TEXTURED:
+tree.025 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.031 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+leaves -> pngtree-herbal-green-henna-branch-or-leaves-isolated-background-png-image_9197311
+tree.007 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.043 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.013 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.017 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.035 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.026 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.037 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.027 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.029 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.015 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.012 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.002 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.020 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.001 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.008 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.028 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.032 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.030 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.042 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.009 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.024 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.003 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.010 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.023 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.004 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.039 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.019 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.036 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.045 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.022 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.046 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.006 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.014 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.038 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.044 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.005 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.034 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.041 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.016 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.040 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.033 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.018 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.011 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+tree.021 -> pngtree-a-big-tree-with-green-leaf-on-transparent-background-genrative-ai-png-image_11931910
+
+OBJECTS MISSING TEXTURES (Assigned Magenta color):
+Agave.039
+trunk0_HIGH_RES.002
+Agave.019
+leaves.044
+leaves.043
+leaves.025
+ferns 1.019
+ferns 1.020
+Banana_Plant_01_LOD1.019
+Cliff_Rock_Model.006
+Agave.021
+leaves.040
+Banana_Plant_01_LOD0.006
+Agave.042
+Agave.026
+Agave.027
+Agave.028
+ferns 1.010
+Agave.005
+ferns 1.017
+trunk0_MID_RES.002
+ferns 1.006
+Landscape.003
+trunk0_MID_RES.010
+Agave.007
+Banana_Plant_01_LOD1.005
+Banana_Plant_01_LOD1
+ferns 1.005
+thatch_with_opacity
+Banana_Plant_01_LOD1.011
+Banana_Plant_01_LOD0.007
+leaves.002
+leaves.012
+Banana_Plant_01_LOD1.016
+Cliff_Rock_Model.014
+Agave.009
+Banana_Plant_01_LOD1.015
+leaves.026
+Agave.013
+Banana_Plant_01_LOD0.002
+trunk0_MID_RES.008
+Banana_Plant_01_LOD0.008
+Banana_Plant_01_LOD0.003
+Agave.023
+Agave
+leaves.007
+leaves.011
+leaves.030
+Agave.029
+ferns 1.001
+Agave.017
+Agave.012
+Banana_Plant_01_LOD1.008
+ferns 1.016
+Agave.030
+Agave.003
+Agave.024
+ferns 1.014
+ferns 1.026
+Agave.032
+ferns 1.028
+ferns 1.025
+Banana_Plant_01_LOD1.014
+Banana_Plant_01_LOD1.013
+leaves.031
+leaves.041
+trunk0_MID_RES.007
+ferns 1.024
+Agave.011
+Agave.016
+Agave.014
+Agave.044
+Plane
+trunk0_MID_RES.004
+Banana_Plant_01_LOD0.005
+leaves.004
+Banana_Plant_01_LOD1.020
+Agave.033
+leaves.046
+leaves.019
+ferns 1.013
+ferns 1.018
+Banana_Plant_01_LOD1.010
+Cliff_Rock_Model.012
+ferns 1.007
+leaves.015
+Banana_Plant_01_LOD1.004
+ferns 1.002
+Cliff_Rock_Model.011
+Agave.025
+leaves.006
+trunk0_MID_RES.006
+Agave.004
+ferns 1.008
+Agave.040
+trunk0_HIGH_RES
+Banana_Plant_01_LOD1.017
+leaves.037
+leaves.005
+Agave.008
+Banana_Plant_01_LOD1.022
+Banana_Plant_01_LOD1.009
+ferns 1.012
+trunk0_MID_RES.003
+Agave.037
+Banana_Plant_01_LOD1.018
+Banana_Plant_01_LOD1.007
+leaves.014
+ferns 1.021
+leaves.008
+trunk0_MID_RES.009
+Cliff_Rock_Model.004
+construction.019
+leaves.035
+Agave.022
+leaves.022
+Banana_Plant_01_LOD1.012
+Banana_Plant_01_LOD1.023
+leaves.018
+leaves.034
+Banana_Plant_01_LOD0.001
+Banana_Plant_01_LOD1.002
+Agave.036
+leaves.027
+Banana_Plant_01_LOD2
+Cliff_Rock_Model.003
+leaves.024
+Banana_Plant_01_LOD1.001
+leaves.045
+leaves.016
+Agave.031
+ferns 1.003
+leaves.017
+leaves.009
+ferns 1.022
+leaves.001
+construction.005
+Cliff_Rock_Model.013
+trunk0_HIGH_RES.003
+Agave.015
+ferns 1.015
+Cliff_Rock_Model.007
+Banana_Plant_01_LOD1.021
+Banana_Plant_01_LOD1.006
+leaves.023
+leaves.010
+trunk0_MID_RES.005
+Agave.006
+Banana_Plant_01_LOD0.004
+trunk0_MID_RES
+trunk0_MID_RES.001
+Agave.001
+ferns 1.009
+Agave.010
+leaves.028
+leaves.032
+Cliff_Rock_Model.009
+leaves.020
+Cube.007
+Cliff_Rock_Model.010
+Cliff_Rock_Model.001
+leaves.039
+Agave.041
+leaves.038
+Cliff_Rock_Model.005
+ferns 1
+leaves.036
+Agave.045
+Cliff_Rock_Model.008
+ferns 1.023
+Agave.002
+leaves.033
+trunk0_HIGH_RES.001
+trunk0_LOW_RES
+Banana_Plant_01_LOD1.003
+ferns 1.011
+ferns 1.027
+leaves.029
+leaves.013
+Agave.038
+Agave.035
+leaves.003
+Cliff_Rock_Model.002
+Cliff_Rock_Model
+Agave.043
+Agave.020
+leaves.042
+leaves.021
+Banana_Plant_01_LOD0
+ferns 1.004
+Agave.018
+Agave.034
+
+UNUSED TEXTURES:
+images (1)
+images
+pngtree-lush-foliage-sunlit-trees-with-vivid-leaves-on-a-green-bokeh-picture-image_15212345

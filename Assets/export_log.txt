@@ -1,0 +1,2 @@
+Log start
+Failed to load Main Asset at Assets/LinhViet.glb
