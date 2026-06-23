@@ -8,65 +8,60 @@ public class ThirdPersonController : MonoBehaviour
     public float moveSpeed = 5f;
     public float runSpeed = 8f;
     public float rotationSmoothTime = 0.1f;
-    
-    [Tooltip("Điều chỉnh góc này (thường là 90, -90, 180) nếu nhân vật đi ngang")]
     public float modelRotationOffset = -90f;
 
     [Header("Animation")]
     public Animator animator;
-    public float speedAnimBlend = 10f; // Tốc độ chuyển đổi animation
+    public float speedAnimBlend = 10f;
 
     [Header("Jumping & Gravity")]
     public float jumpHeight = 1.2f;
-    public float gravity = -9.81f;
+    public float gravity = -15f;
     public float groundedOffset = -0.14f;
     public float groundedRadius = 0.28f;
     public LayerMask groundLayers;
 
-    private CharacterController controller;
-    private Transform mainCamera;
+    CharacterController controller;
+    Transform mainCamera;
 
-    private float rotationVelocity;
-    private float verticalVelocity;
-    private float animationBlend;
+    float rotationVelocity;
+    float verticalVelocity;
+    float animationBlend;
+    float maxUpVelocity;
 
-    private InputAction moveAction;
-    private InputAction jumpAction;
-    private InputAction sprintAction;
+    InputAction moveAction;
+    InputAction jumpAction;
+    InputAction sprintAction;
 
-    private bool isGrounded;
+    bool isGrounded;
+
+    const float FootToPivot = 1.5f;
+    const float MaxFeetAboveGround = 1.6f;
 
     void Start()
     {
-        // Khóa con trỏ chuột vào giữa màn hình và ẩn nó đi
+        CharacterMaterialFixer.ApplyTo(transform);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         controller = GetComponent<CharacterController>();
-        if (Camera.main != null)
-        {
-            mainCamera = Camera.main.transform;
-        }
-        else
-        {
-            Debug.LogWarning("Không tìm thấy Main Camera! Nhân vật sẽ không di chuyển theo hướng nhìn của camera.");
-        }
+        controller.stepOffset = 0f;
+        controller.slopeLimit = 40f;
+        groundLayers = LayerMask.GetMask("Ground", "Default");
 
-        // Setup Input Actions trực tiếp bằng code để không cần cấu hình trên Inspector
+        maxUpVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+
+        if (Camera.main != null)
+            mainCamera = Camera.main.transform;
+
         moveAction = new InputAction("Move", binding: "<Gamepad>/leftStick");
         moveAction.AddCompositeBinding("Dpad")
-            .With("Up", "<Keyboard>/w")
-            .With("Up", "<Keyboard>/upArrow")
-            .With("Down", "<Keyboard>/s")
-            .With("Down", "<Keyboard>/downArrow")
-            .With("Left", "<Keyboard>/a")
-            .With("Left", "<Keyboard>/leftArrow")
-            .With("Right", "<Keyboard>/d")
-            .With("Right", "<Keyboard>/rightArrow");
-            
+            .With("Up", "<Keyboard>/w").With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/s").With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/a").With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/d").With("Right", "<Keyboard>/rightArrow");
         jumpAction = new InputAction("Jump", binding: "<Keyboard>/space");
         jumpAction.AddBinding("<Gamepad>/buttonSouth");
-
         sprintAction = new InputAction("Sprint", binding: "<Keyboard>/leftShift");
         sprintAction.AddBinding("<Gamepad>/rightTrigger");
 
@@ -82,99 +77,120 @@ public class ThirdPersonController : MonoBehaviour
         sprintAction?.Disable();
     }
 
+    public void ResetVerticalVelocity() => verticalVelocity = -2f;
+
     void Update()
     {
         CheckGrounded();
         JumpAndGravity();
+        if (GameManager.Instance != null && GameManager.Instance.InputLocked)
+            return;
         Move();
+        EnforceGroundHeight();
     }
 
-    private void CheckGrounded()
-    {
-        // Tính toán vị trí chân của nhân vật dựa vào CharacterController thay vì transform.position
-        float feetY = transform.position.y + controller.center.y - (controller.height / 2f);
-        Vector3 spherePosition = new Vector3(transform.position.x, feetY - groundedOffset, transform.position.z);
-        
-        // Lưu ý: Nhớ gán groundLayers trong Inspector (VD: Everything)
-        // Kết hợp kiểm tra bằng Layer và thuộc tính isGrounded có sẵn của CharacterController
-        isGrounded = Physics.CheckSphere(spherePosition, groundedRadius, groundLayers, QueryTriggerInteraction.Ignore) || controller.isGrounded;
+    float GetFeetY() => transform.position.y - FootToPivot;
 
-        // Cập nhật trạng thái chạm đất cho Animator
+    void CheckGrounded()
+    {
+        if (!GroundSnap.TryGetGroundY(transform.position, out float groundY))
+        {
+            isGrounded = false;
+            if (animator != null) animator.SetBool("Grounded", false);
+            return;
+        }
+
+        float feetY = GetFeetY();
+        float feetAbove = feetY - groundY;
+        var spherePos = new Vector3(transform.position.x, feetY - groundedOffset, transform.position.z);
+        bool nearSurface = Physics.CheckSphere(spherePos, groundedRadius, groundLayers, QueryTriggerInteraction.Ignore);
+
+        isGrounded = nearSurface && feetAbove <= 0.45f && verticalVelocity <= 0.1f;
+
+        if (animator != null)
+            animator.SetBool("Grounded", isGrounded);
+    }
+
+    void Move()
+    {
+        Vector2 input = moveAction.ReadValue<Vector2>();
+        Vector3 targetDirection = Vector3.zero;
+        bool isMoving = input.sqrMagnitude > 0.01f;
+
+        if (isMoving)
+        {
+            var inputDirection = new Vector3(input.x, 0f, input.y).normalized;
+            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg;
+            if (mainCamera != null)
+                targetAngle += mainCamera.eulerAngles.y;
+
+            float rotation = Mathf.SmoothDampAngle(
+                transform.eulerAngles.y, targetAngle + modelRotationOffset, ref rotationVelocity, rotationSmoothTime);
+            transform.rotation = Quaternion.Euler(0f, rotation, 0f);
+            targetDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+        }
+
+        float currentSpeed = sprintAction.IsPressed() ? runSpeed : moveSpeed;
+        float yBefore = transform.position.y;
+        var movement = targetDirection.normalized * currentSpeed + Vector3.up * verticalVelocity;
+        controller.Move(movement * Time.deltaTime);
+
+        float yGain = transform.position.y - yBefore;
+        if (yGain > 0.25f && verticalVelocity <= 0.5f)
+        {
+            var p = transform.position;
+            p.y = yBefore;
+            controller.enabled = false;
+            transform.position = p;
+            controller.enabled = true;
+            verticalVelocity = 0f;
+        }
+
         if (animator != null)
         {
-            animator.SetBool("Grounded", isGrounded);
+            float targetSpeed = isMoving ? currentSpeed : 0f;
+            float blendSpeed = targetSpeed == 0f ? 20f : speedAnimBlend;
+            animationBlend = Mathf.MoveTowards(animationBlend, targetSpeed, Time.deltaTime * blendSpeed);
+            animator.SetFloat("Speed", animationBlend);
         }
     }
 
-private void Move()
-{
-    Vector2 input = moveAction.ReadValue<Vector2>();
-    Vector3 targetDirection = Vector3.zero;
-    
-    // Nhận biết ngay lập tức việc người chơi có bấm phím hay không
-    bool isMoving = input.sqrMagnitude > 0.01f;
-
-    if (isMoving)
+    void EnforceGroundHeight()
     {
-        // Tính toán góc xoay... (giữ nguyên code cũ của bạn)
-        Vector3 inputDirection = new Vector3(input.x, 0.0f, input.y).normalized;
-        
-        float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg;
-        if (mainCamera != null)
-        {
-            targetAngle += mainCamera.eulerAngles.y;
-        }
-        
-        float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle + modelRotationOffset, ref rotationVelocity, rotationSmoothTime);
-        transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+        if (!GroundSnap.TryGetGroundY(transform.position, out float groundY))
+            return;
 
-        targetDirection = Quaternion.Euler(0.0f, targetAngle, 0.0f) * Vector3.forward;
+        float feetY = GetFeetY();
+        if (feetY <= groundY + MaxFeetAboveGround)
+            return;
+
+        SnapFeetTo(groundY);
     }
 
-    // Tính toán tốc độ hiện tại (đi bộ hay chạy)
-    float currentSpeed = sprintAction.IsPressed() ? runSpeed : moveSpeed;
-
-    // Áp dụng di chuyển
-    Vector3 movement = targetDirection.normalized * currentSpeed + Vector3.up * verticalVelocity;
-    controller.Move(movement * Time.deltaTime);
-
-    // --- CẬP NHẬT ANIMATION CHO BLEND TREE ---
-    if (animator != null)
+    void SnapFeetTo(float groundY)
     {
-        // Tốc độ mục tiêu: Bấm phím thì = currentSpeed, nhả phím = 0
-        float targetSpeed = isMoving ? currentSpeed : 0f;
-        
-        // Cốt lõi chống trượt đà: 
-        // Nếu nhả phím (targetSpeed == 0), tăng tốc độ blend lên rất cao (vd: 20f) để về Idle ngay lập tức.
-        // Nếu đang di chuyển, dùng tốc độ speedAnimBlend bình thường (10f) cho mượt.
-        float currentBlendSpeed = (targetSpeed == 0) ? 20f : speedAnimBlend; 
-
-        // Dùng MoveTowards thay vì Lerp để kiểm soát tốc độ chính xác
-        animationBlend = Mathf.MoveTowards(animationBlend, targetSpeed, Time.deltaTime * currentBlendSpeed);
-        
-        // Truyền giá trị vào Parameter "Speed" trong Animator (Giá trị sẽ chạy từ 0 đến 5)
-        animator.SetFloat("Speed", animationBlend);
+        var pos = transform.position;
+        pos.y = groundY + FootToPivot + 0.08f;
+        controller.enabled = false;
+        transform.position = pos;
+        controller.enabled = true;
+        verticalVelocity = -2f;
     }
-}
 
-    private void JumpAndGravity()
+    void JumpAndGravity()
     {
+        verticalVelocity = Mathf.Min(verticalVelocity, maxUpVelocity);
+
         if (isGrounded)
         {
             if (animator != null) animator.SetBool("FreeFall", false);
+            if (verticalVelocity < 0f) verticalVelocity = -2f;
 
-            // Giữ nhân vật áp sát mặt đất khi không nhảy
-            if (verticalVelocity < 0.0f)
+            bool dialogueOpen = DialogueManager.Instance != null && DialogueManager.Instance.IsShowing;
+            if (jumpAction.triggered && !dialogueOpen &&
+                (GameManager.Instance == null || !GameManager.Instance.InputLocked))
             {
-                verticalVelocity = -2f; 
-            }
-
-            // Xử lý nhảy
-            if (jumpAction.triggered)
-            {
-                // Công thức tính lực nhảy: V = sqrt(H * -2 * G)
-                verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
-                
+                verticalVelocity = maxUpVelocity;
                 if (animator != null) animator.SetBool("Jump", true);
             }
         }
@@ -185,8 +201,6 @@ private void Move()
                 animator.SetBool("FreeFall", true);
                 animator.SetBool("Jump", false);
             }
-
-            // Áp dụng trọng lực khi đang trên không
             verticalVelocity += gravity * Time.deltaTime;
         }
     }
