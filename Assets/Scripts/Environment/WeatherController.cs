@@ -8,6 +8,11 @@ public class WeatherController : MonoBehaviour
     public WeatherPreset preset = WeatherPreset.Overcast;
     public bool stormOnStart;
 
+    const float RainEmitterSize = 200f;
+    const float RainEmitterHeight = 28f;
+    const int RainMaxParticles = 18000;
+    const float DebrisEmitterSize = 180f;
+
     Light sunLight;
     ParticleSystem rainSystem;
     ParticleSystem windDebrisSystem;
@@ -34,7 +39,7 @@ public class WeatherController : MonoBehaviour
 
     public bool IsStormActive => stormActive;
     public WeatherPreset CurrentPreset => activePreset;
-    public float NormalizedRain => Mathf.Clamp01(currentRainRate / 3500f);
+    public float NormalizedRain => Mathf.Clamp01(currentRainRate / 9000f);
     public float NormalizedWind => Mathf.Clamp01(currentWind / 1.4f);
 
     public enum WeatherPreset
@@ -84,8 +89,13 @@ public class WeatherController : MonoBehaviour
             rainFollowTarget = GameManager.Instance?.player;
         }
 
-        if (rainFollowTarget != null && rainSystem != null)
-            rainSystem.transform.position = rainFollowTarget.position + Vector3.up * 18f;
+        if (rainFollowTarget != null)
+        {
+            if (rainSystem != null)
+                rainSystem.transform.position = rainFollowTarget.position + Vector3.up * RainEmitterHeight;
+            if (windDebrisSystem != null)
+                windDebrisSystem.transform.position = rainFollowTarget.position + Vector3.up * 12f;
+        }
 
         SmoothWeatherTransition();
 
@@ -146,18 +156,18 @@ public class WeatherController : MonoBehaviour
             case WeatherPreset.DarkForest:
                 SetTargets(fog: 0.022f, fogColor: new Color(0.18f, 0.22f, 0.28f),
                     light: 0.28f, lightColor: new Color(0.55f, 0.62f, 0.75f),
-                    rain: 800f, wind: 0.7f);
+                    rain: 3200f, wind: 0.7f);
                 break;
             case WeatherPreset.Storm:
                 SetTargets(fog: 0.035f, fogColor: new Color(0.12f, 0.14f, 0.18f),
                     light: 0.15f, lightColor: new Color(0.45f, 0.5f, 0.6f),
-                    rain: 3500f, wind: 1.4f);
+                    rain: 9000f, wind: 1.4f);
                 stormActive = true;
                 break;
             case WeatherPreset.Battlefield:
                 SetTargets(fog: 0.028f, fogColor: new Color(0.25f, 0.22f, 0.2f),
                     light: 0.32f, lightColor: new Color(0.65f, 0.58f, 0.5f),
-                    rain: 1200f, wind: 0.9f);
+                    rain: 4500f, wind: 0.9f);
                 break;
         }
 
@@ -268,7 +278,7 @@ public class WeatherController : MonoBehaviour
         go.transform.position = Vector3.zero;
         windZone = go.AddComponent<WindZone>();
         windZone.mode = WindZoneMode.Directional;
-        windZone.radius = 200f;
+        windZone.radius = 250f;
         windZone.windMain = currentWind;
         windZone.windTurbulence = 0.8f;
         windZone.windPulseMagnitude = 0.5f;
@@ -284,20 +294,20 @@ public class WeatherController : MonoBehaviour
         rainSystem = go.AddComponent<ParticleSystem>();
         var main = rainSystem.main;
         main.loop = true;
-        main.startLifetime = 1.8f;
-        main.startSpeed = 18f;
-        main.startSize = 0.06f;
-        main.maxParticles = 8000;
+        main.startLifetime = 2.4f;
+        main.startSpeed = 20f;
+        main.startSize = 0.08f;
+        main.maxParticles = RainMaxParticles;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
-        main.startColor = new Color(0.75f, 0.8f, 0.9f, 0.55f);
-        main.gravityModifier = 1.2f;
+        main.startColor = new Color(0.75f, 0.8f, 0.9f, 0.65f);
+        main.gravityModifier = 1.35f;
 
         var emission = rainSystem.emission;
         emission.rateOverTime = currentRainRate;
 
         var shape = rainSystem.shape;
         shape.shapeType = ParticleSystemShapeType.Box;
-        shape.scale = new Vector3(45f, 1f, 45f);
+        shape.scale = new Vector3(RainEmitterSize, 1f, RainEmitterSize);
 
         var velocity = rainSystem.velocityOverLifetime;
         velocity.enabled = true;
@@ -314,8 +324,8 @@ public class WeatherController : MonoBehaviour
 
         var renderer = go.GetComponent<ParticleSystemRenderer>();
         renderer.renderMode = ParticleSystemRenderMode.Stretch;
-        renderer.lengthScale = 0.35f;
-        renderer.velocityScale = 0.08f;
+        renderer.lengthScale = 0.45f;
+        renderer.velocityScale = 0.1f;
         renderer.material = CreateParticleMaterial(new Color(0.8f, 0.85f, 0.95f, 0.6f));
     }
 
@@ -328,10 +338,10 @@ public class WeatherController : MonoBehaviour
         windDebrisSystem = go.AddComponent<ParticleSystem>();
         var main = windDebrisSystem.main;
         main.loop = true;
-        main.startLifetime = 3f;
+        main.startLifetime = 3.5f;
         main.startSpeed = new ParticleSystem.MinMaxCurve(4f, 9f);
         main.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.08f);
-        main.maxParticles = 300;
+        main.maxParticles = 800;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.startColor = new Color(0.35f, 0.38f, 0.32f, 0.45f);
 
@@ -340,7 +350,7 @@ public class WeatherController : MonoBehaviour
 
         var shape = windDebrisSystem.shape;
         shape.shapeType = ParticleSystemShapeType.Box;
-        shape.scale = new Vector3(50f, 8f, 50f);
+        shape.scale = new Vector3(DebrisEmitterSize, 10f, DebrisEmitterSize);
 
         var velocity = windDebrisSystem.velocityOverLifetime;
         velocity.enabled = true;

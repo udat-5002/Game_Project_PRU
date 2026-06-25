@@ -7,9 +7,15 @@ public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance { get; private set; }
 
+    [Header("Hội thoại mặc định")]
+    public bool autoAdvance = true;
+    public bool typewriter = true;
+    public float charsPerSecond = 34f;
+    public float minAutoPause = 1.8f;
+    public float maxAutoPause = 6f;
+
     public bool IsShowing { get; private set; }
 
-    Action onComplete;
     InputAction continueAction;
 
     void Awake()
@@ -26,31 +32,91 @@ public class DialogueManager : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    public void ShowDialogue(string speaker, string message, Action callback = null)
+    public DialogueDisplayOptions DefaultOptions => new DialogueDisplayOptions
+    {
+        typewriter = typewriter,
+        autoAdvance = autoAdvance,
+        charsPerSecond = charsPerSecond,
+        minAutoPause = minAutoPause,
+        maxAutoPause = maxAutoPause,
+        allowSkip = true
+    };
+
+    public void ShowDialogue(string speaker, string message, Action callback = null) =>
+        ShowDialogue(speaker, message, callback, DefaultOptions);
+
+    public void ShowDialogue(string speaker, string message, Action callback, DialogueDisplayOptions options)
     {
         if (IsShowing) return;
-        StartCoroutine(DialogueRoutine(speaker, message, callback));
+        StartCoroutine(DialogueRoutine(speaker, message, callback, options));
     }
 
-    IEnumerator DialogueRoutine(string speaker, string message, Action callback)
+    IEnumerator DialogueRoutine(string speaker, string message, Action callback, DialogueDisplayOptions options)
     {
         IsShowing = true;
         GameManager.Instance?.LockInput(true);
-        GameUI.Instance?.ShowDialogue(speaker, message);
+        GameUI.Instance?.PrepareDialogue(speaker, message);
 
-        // E vừa bấm để tương tác không được tính là "quay trang" — chờ UI hiện và thả phím trước.
         yield return null;
         while (continueAction.IsPressed())
             yield return null;
         yield return null;
 
-        yield return new WaitUntil(() => continueAction.WasPressedThisFrame());
+        if (options.typewriter)
+        {
+            GameUI.Instance?.SetDialogueHint("Space / E để hiện hết");
+            yield return RunTypewriterWithSkip(message, options);
+        }
+        else if (GameUI.Instance != null)
+        {
+            GameUI.Instance.SetDialogueBody(message);
+        }
+
+        if (options.autoAdvance)
+        {
+            float readPause = ComputeAutoPause(message, options);
+            GameUI.Instance?.SetDialogueHint("Space / E để bỏ qua");
+            float endTime = Time.time + readPause;
+            while (Time.time < endTime)
+            {
+                if (options.allowSkip && continueAction.WasPressedThisFrame())
+                    break;
+                yield return null;
+            }
+        }
+        else
+        {
+            GameUI.Instance?.SetDialogueHint("Space / E để tiếp tục");
+            yield return new WaitUntil(() => continueAction.WasPressedThisFrame());
+        }
 
         GameUI.Instance?.HideDialogue();
         GameManager.Instance?.LockInput(false);
         IsShowing = false;
-
         callback?.Invoke();
-        onComplete = null;
+    }
+
+    IEnumerator RunTypewriterWithSkip(string message, DialogueDisplayOptions options)
+    {
+        var ui = GameUI.Instance;
+        if (ui == null) yield break;
+
+        var typing = ui.StartTypewriter(message, options.charsPerSecond);
+        while (typing != null && !ui.IsTypewriterComplete)
+        {
+            if (options.allowSkip && continueAction.WasPressedThisFrame())
+            {
+                ui.CompleteTypewriter(message);
+                break;
+            }
+            yield return null;
+        }
+    }
+
+    static float ComputeAutoPause(string message, DialogueDisplayOptions options)
+    {
+        int length = string.IsNullOrEmpty(message) ? 0 : message.Length;
+        float byLength = length / Mathf.Max(options.charsPerSecond, 1f) * 0.45f + options.minAutoPause;
+        return Mathf.Clamp(byLength, options.minAutoPause, options.maxAutoPause);
     }
 }

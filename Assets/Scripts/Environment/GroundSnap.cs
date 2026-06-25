@@ -6,7 +6,7 @@ public static class GroundSnap
     const float RayLength = 120f;
     const float DefaultFootOffset = 0.08f;
     const float FallbackGroundY = 3.09f;
-    const float PlayerFootToPivot = 1.5f;
+    public const float CharacterFootToPivot = 1.5f;
 
     public static bool TryGetGroundY(Vector3 worldPos, out float groundY, LayerMask? layers = null)
     {
@@ -36,12 +36,14 @@ public static class GroundSnap
         return worldPos;
     }
 
+    public static Vector3 SnapCharacter(Vector3 worldPos) => SnapPlayer(worldPos);
+
     public static Vector3 SnapPlayer(Vector3 worldPos, Transform player = null)
     {
         if (TryGetGroundY(worldPos, out float y))
-            worldPos.y = y + PlayerFootToPivot + 0.1f;
+            worldPos.y = y + CharacterFootToPivot + 0.1f;
         else
-            worldPos.y = FallbackGroundY + PlayerFootToPivot;
+            worldPos.y = FallbackGroundY + CharacterFootToPivot;
         return worldPos;
     }
 }

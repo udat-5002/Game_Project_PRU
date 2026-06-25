@@ -225,7 +225,7 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateElderNpc()
     {
-        var go = CreateMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), new Vector3(1.5f, 2f, 1.5f));
+        var go = CreateNpcMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), NpcVisualFactory.NpcRole.Civilian);
         RegisterWaypoint("ask_elder", go.transform.position);
         var elder = go.AddComponent<ElderGuideInteractable>();
         elder.promptText = "Nhấn E - Hỏi đường";
@@ -320,7 +320,7 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateDeliveryNpc(string name, Vector3 pos)
     {
-        var go = CreateMarker(name, pos, Color.yellow, new Vector3(1.5f, 2f, 1.5f));
+        var go = CreateNpcMarker(name, pos, Color.yellow, NpcVisualFactory.NpcRole.Civilian);
         RegisterWaypoint("deliver_mail", go.transform.position);
         var delivery = go.AddComponent<MailDeliveryInteractable>();
         delivery.recipientName = "Bà Lan - Làng Bình An";
@@ -329,7 +329,7 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateSoldierNpc()
     {
-        var go = CreateMarker("Người lính trẻ", soldierNpcPosition, Color.blue, new Vector3(1.5f, 2f, 1.5f));
+        var go = CreateNpcMarker("Người lính trẻ", soldierNpcPosition, Color.blue, NpcVisualFactory.NpcRole.Soldier);
         RegisterWaypoint("receive_letter", go.transform.position);
         go.AddComponent<SoldierLetterInteractable>();
     }
@@ -353,19 +353,28 @@ public class ChapterFlowController : MonoBehaviour
 
             var patrol = new GameObject($"PatrolEnemy_{questId}_{index++}");
             patrol.transform.SetParent(chapterRoot.transform);
-            patrol.transform.position = GroundSnap.Snap(setup.pointA);
+            patrol.transform.position = GroundSnap.SnapCharacter(setup.pointA);
 
             var enemy = patrol.AddComponent<StealthEnemy>();
-            enemy.pointA = GroundSnap.Snap(setup.pointA);
-            enemy.pointB = GroundSnap.Snap(setup.pointB);
-            enemy.resetPosition = GroundSnap.Snap(resetPos);
+            enemy.pointA = GroundSnap.SnapCharacter(setup.pointA);
+            enemy.pointB = GroundSnap.SnapCharacter(setup.pointB);
+            enemy.resetPosition = GroundSnap.SnapCharacter(resetPos);
             enemy.moveSpeed = setup.moveSpeed;
             enemy.detectRadius = setup.detectRadius;
             enemy.detectSeconds = setup.detectSeconds;
             enemy.mustHideToPass = setup.mustHideToPass;
             enemy.activeQuestId = setup.activeQuestId;
 
-            CreateSmallIndicator(patrol.transform, Color.red);
+            var modelRoot = NpcVisualFactory.Attach(patrol.transform, NpcVisualFactory.NpcRole.Enemy);
+            if (modelRoot != null)
+            {
+                var patrolAnim = patrol.AddComponent<NpcPatrolAnimator>();
+                patrolAnim.modelRoot = modelRoot;
+            }
+            else
+            {
+                CreateSmallIndicator(patrol.transform, Color.red);
+            }
         }
     }
 
@@ -417,7 +426,7 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateMotherNpc()
     {
-        var go = CreateMarker("Mẹ anh lính", motherNpcPosition, new Color(1f, 0.7f, 0.8f), new Vector3(1.5f, 2f, 1.5f));
+        var go = CreateNpcMarker("Mẹ anh lính", motherNpcPosition, new Color(1f, 0.7f, 0.8f), NpcVisualFactory.NpcRole.Civilian);
         RegisterWaypoint("deliver_mother", go.transform.position);
         go.AddComponent<MotherDeliveryInteractable>();
     }
@@ -502,7 +511,7 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateFinalDeliveryNpc()
     {
-        var go = CreateMarker("Trạm thư cuối", finalDeliveryPosition, new Color(0.9f, 0.75f, 0.2f), new Vector3(2f, 2f, 2f));
+        var go = CreateNpcMarker("Trạm thư cuối", finalDeliveryPosition, new Color(0.9f, 0.75f, 0.2f), NpcVisualFactory.NpcRole.Civilian);
         RegisterWaypoint("final_delivery", go.transform.position);
         go.AddComponent<FinalDeliveryInteractable>();
     }
@@ -530,6 +539,38 @@ public class ChapterFlowController : MonoBehaviour
         box.isTrigger = true;
         box.size = size;
         return go;
+    }
+
+    GameObject CreateNpcMarker(string name, Vector3 pos, Color accent, NpcVisualFactory.NpcRole role)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(chapterRoot.transform);
+        go.transform.position = GroundSnap.SnapCharacter(pos);
+
+        var col = go.AddComponent<SphereCollider>();
+        col.isTrigger = true;
+        col.radius = 1.2f;
+        col.center = new Vector3(0f, 0f, 0f);
+
+        if (NpcVisualFactory.Attach(go.transform, role) == null)
+            CreateSmallIndicator(go.transform, accent);
+
+        CreateObjectiveLabel(go.transform, name);
+        CreateNpcFootRing(go.transform, accent);
+        return go;
+    }
+
+    void CreateNpcFootRing(Transform parent, Color color)
+    {
+        var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        ring.name = "FootRing";
+        ring.transform.SetParent(parent);
+        ring.transform.localPosition = new Vector3(0f, -GroundSnap.CharacterFootToPivot + 0.05f, 0f);
+        ring.transform.localScale = new Vector3(1.4f, 0.03f, 1.4f);
+        if (ring.GetComponent<Collider>() != null) Destroy(ring.GetComponent<Collider>());
+        var renderer = ring.GetComponent<Renderer>();
+        if (renderer != null)
+            renderer.material = CreateURPMaterial(color, 0.45f);
     }
 
     GameObject CreateMarker(string name, Vector3 pos, Color color, Vector3 size)

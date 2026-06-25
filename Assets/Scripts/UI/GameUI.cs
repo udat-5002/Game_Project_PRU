@@ -16,6 +16,7 @@ public class GameUI : MonoBehaviour
     GameObject dialoguePanel;
     Text dialogueSpeaker;
     Text dialogueBody;
+    Text dialogueHint;
     Text notificationText;
     float notificationTimer;
     bool waypointVisibleBeforeDialogue;
@@ -112,6 +113,7 @@ public class GameUI : MonoBehaviour
 
         var hint = CreatePanelText(dialoguePanel.transform, "Hint", 28, TextBright, FontStyle.Bold);
         hint.text = "Space / E để tiếp tục";
+        dialogueHint = hint;
         var hintRt = hint.rectTransform;
         hintRt.anchorMin = new Vector2(1f, 0f);
         hintRt.anchorMax = new Vector2(1f, 0f);
@@ -209,7 +211,12 @@ public class GameUI : MonoBehaviour
         }
     }
 
-    public void ShowDialogue(string speaker, string message)
+    Coroutine typewriterRoutine;
+    bool typewriterComplete = true;
+
+    public bool IsTypewriterComplete => typewriterComplete;
+
+    public void PrepareDialogue(string speaker, string message)
     {
         waypointVisibleBeforeDialogue = waypointText != null && waypointText.gameObject.activeSelf;
         if (waypointText != null) waypointText.gameObject.SetActive(false);
@@ -224,7 +231,7 @@ public class GameUI : MonoBehaviour
 
         if (dialogueBody != null)
         {
-            dialogueBody.text = message;
+            dialogueBody.text = "";
             var bodyRt = dialogueBody.rectTransform;
             bodyRt.offsetMax = new Vector2(-40f, hasSpeaker ? -80f : -68f);
         }
@@ -233,8 +240,77 @@ public class GameUI : MonoBehaviour
         SetWorldLabelsVisible(false);
     }
 
+    public void SetDialogueBody(string message)
+    {
+        if (dialogueBody != null)
+            dialogueBody.text = message ?? "";
+    }
+
+    public void SetDialogueHint(string hint)
+    {
+        if (dialogueHint != null)
+            dialogueHint.text = hint ?? "";
+    }
+
+    public Coroutine StartTypewriter(string message, float charsPerSecond)
+    {
+        StopTypewriter();
+        typewriterComplete = false;
+        typewriterRoutine = StartCoroutine(TypewriterRoutine(message, charsPerSecond));
+        return typewriterRoutine;
+    }
+
+    public void CompleteTypewriter(string message)
+    {
+        StopTypewriter();
+        SetDialogueBody(message);
+        typewriterComplete = true;
+    }
+
+    void StopTypewriter()
+    {
+        if (typewriterRoutine != null)
+        {
+            StopCoroutine(typewriterRoutine);
+            typewriterRoutine = null;
+        }
+    }
+
+    IEnumerator TypewriterRoutine(string message, float charsPerSecond)
+    {
+        message ??= "";
+        SetDialogueBody("");
+
+        if (message.Length == 0)
+        {
+            typewriterComplete = true;
+            yield break;
+        }
+
+        float shown = 0f;
+        while (shown < message.Length)
+        {
+            shown += charsPerSecond * Time.deltaTime;
+            int count = Mathf.Clamp(Mathf.FloorToInt(shown), 1, message.Length);
+            SetDialogueBody(message.Substring(0, count));
+            yield return null;
+        }
+
+        SetDialogueBody(message);
+        typewriterComplete = true;
+        typewriterRoutine = null;
+    }
+
+    public void ShowDialogue(string speaker, string message)
+    {
+        PrepareDialogue(speaker, message);
+        SetDialogueBody(message);
+    }
+
     public void HideDialogue()
     {
+        StopTypewriter();
+        typewriterComplete = true;
         dialoguePanel.SetActive(false);
         SetWorldLabelsVisible(true);
         if (waypointText != null && waypointVisibleBeforeDialogue && !string.IsNullOrEmpty(waypointText.text))
