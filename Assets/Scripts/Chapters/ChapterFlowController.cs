@@ -53,12 +53,20 @@ public class ChapterFlowController : MonoBehaviour
         GameManager.Instance.TeleportPlayer(playerSpawnPosition);
         yield return new WaitForSeconds(0.25f);
         GameManager.Instance.TeleportPlayer(playerSpawnPosition);
+
+        MapCollisionCleanup.ForceRun();
+        yield return null;
+        MapCollisionCleanup.ForceRun();
+
         SetupForestZones();
 
         if (FindFirstObjectByType<QuestNavigator>() == null)
             chapterRoot.AddComponent<QuestNavigator>();
 
         AddChapterPressureTimer();
+
+        while (SceneTransition.Instance != null && SceneTransition.Instance.IsShowingChapterTitle)
+            yield return null;
 
         SetupChapterIntro();
 
@@ -94,7 +102,7 @@ public class ChapterFlowController : MonoBehaviour
                 break;
             case 3:
                 playerSpawnPosition = ForestZoneLayout.SnapPoint(ForestZoneLayout.Ch3Spawn);
-                clue1Position = ForestZoneLayout.SnapPoint(ForestZoneLayout.Ch3Clue1);
+                clue1Position = ForestZoneLayout.ResolveHouseCluePosition();
                 clue2Position = ForestZoneLayout.SnapPoint(ForestZoneLayout.Ch3Clue2);
                 clue3Position = ForestZoneLayout.SnapPoint(ForestZoneLayout.Ch3Clue3);
                 finalDeliveryPosition = ForestZoneLayout.SnapPoint(ForestZoneLayout.Ch3FinalDelivery);
@@ -166,28 +174,31 @@ public class ChapterFlowController : MonoBehaviour
         GameUI.Instance?.SetChapterLabel(title);
 
         var zone = ForestZoneLayout.GetZone(chapterIndex);
-        GameUI.Instance?.SetZoneLabel($"📍 {zone.shortName}  •  {zone.fullName}");
+        GameUI.Instance?.SetZoneLabel(zone.shortName);
 
         if (chapterIndex == 1)
         {
             DialogueManager.Instance?.ShowDialogue("",
-                "Chương 1 — Rìa làng.\n" +
-                "5 nhiệm vụ — cuối cùng phải lẻn qua lính tuần tra.\n" +
-                "Tránh vòng đỏ, dùng bụi xanh nếu cần. Nhấn E tại cột vàng.");
+                "Chương 1 — Rìa làng.\n\n" +
+                "• Nhiệm vụ dàn khắp map — đi theo mũi tên HUD\n" +
+                "• 5 mục tiêu từ tây nam → đông bắc\n" +
+                "• Tránh vòng đỏ lính tuần tra, dùng bụi xanh nếu cần");
         }
         else if (chapterIndex == 2)
         {
             DialogueManager.Instance?.ShowDialogue("",
-                "Chương 2 — Rừng sâu, khó hơn.\n" +
-                "Hai lính tuần tra + mưa bão. Bắt buộc núp bụi xanh mới qua an toàn.\n" +
-                "Tìm chỗ trú mưa trước khi giao thư.");
+                "Chương 2 — Rừng sâu, đêm tối.\n\n" +
+                "• Tiếp tục khám phá map theo mũi tên HUD\n" +
+                "• Lẻn qua lính tuần tra — núp bụi xanh\n" +
+                "• Tìm chỗ trú mưa trước khi giao thư");
         }
         else if (chapterIndex == 3)
         {
             DialogueManager.Instance?.ShowDialogue("",
-                "Chương 3 — Vùng chiến sự.\n" +
-                "Tìm 3 manh mối dưới hỏa lực, đọc thư anh trai,\n" +
-                "vượt vùng pháo kích rồi giao thư cuối. Không đứng lâu vùng đỏ!");
+                "Chương 3 — Vùng chiến sự.\n\n" +
+                "• Manh mối rải khắp map — đi theo mũi tên HUD\n" +
+                "• Tìm 3 manh mối → đọc thư anh trai → vượt pháo kích\n" +
+                "• Giao lá thư cuối ở phía đông bắc map");
         }
     }
 
@@ -264,7 +275,7 @@ public class ChapterFlowController : MonoBehaviour
         CreateHideSpot(ForestZoneLayout.Ch3DangerReset, "find_clues");
         CreateDangerArea();
         SpawnPatrols(3, "cross_danger", ForestZoneLayout.Ch3DangerReset);
-        CreateHideSpot(new Vector3(27f, 0f, -8f), "cross_danger");
+        CreateHideSpot(ForestZoneLayout.Ch3HideSpot, "cross_danger");
         CreateFinalDeliveryNpc();
     }
 
@@ -368,15 +379,19 @@ public class ChapterFlowController : MonoBehaviour
     void CreateDangerArea()
     {
         var center = GroundSnap.Snap(ForestZoneLayout.Ch3DangerZone);
-        var go = CreateInvisibleTrigger("ArtilleryZone", center, new Vector3(14f, 4f, 14f));
+        var go = CreateInvisibleTrigger("ArtilleryZone", center, new Vector3(18f, 4f, 18f));
         var danger = go.AddComponent<DangerZone>();
         danger.resetPoint = GroundSnap.Snap(ForestZoneLayout.Ch3DangerReset);
         danger.exposureLimit = ChapterDifficulty.DangerExposureLimit(3);
         danger.activeQuestId = "cross_danger";
 
+        var barrage = go.AddComponent<ArtilleryBarrage>();
+        barrage.activeQuestId = "cross_danger";
+        barrage.zoneRadius = 8.5f;
+
         CreateSmallIndicator(go.transform, new Color(0.85f, 0.2f, 0.1f));
 
-        var safeEnd = GroundSnap.Snap(new Vector3(30f, 0f, -6f));
+        var safeEnd = GroundSnap.Snap(ForestZoneLayout.Ch3DangerExit);
         CreateZone("DangerCrossEnd", safeEnd, new Vector3(5f, 3f, 5f), "cross_danger", Color.clear);
         RegisterWaypoint("cross_danger", safeEnd);
     }
@@ -412,19 +427,47 @@ public class ChapterFlowController : MonoBehaviour
     void CreateCluePoints()
     {
         cluesFound = 0;
-        RegisterWaypoint("find_clues", clue1Position);
         RegisterWaypoint("read_brother_letter", clue3Position);
-        CreateClue(clue1Position, "Chiến hào bỏ hoang", "Dấu chân gần đống đổ nát...");
+        CreateHouseClue("Ngôi nhà bỏ hoang", "Căn nhà hoang vắng cạnh chiến trường cũ. Có dấu vết ai đó từng ghé qua...");
         CreateClue(clue2Position, "Hầm trú ẩn", "Một túi vải rách half-buried...");
         CreateClue(clue3Position, "Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...");
+    }
+
+    void CreateHouseClue(string title, string hint)
+    {
+        clue1Position = ForestZoneLayout.ResolveHouseCluePosition();
+        RegisterWaypoint("find_clues", clue1Position);
+
+        var house = GameObject.Find("house");
+        if (house == null)
+        {
+            CreateClue(clue1Position, title, hint);
+            return;
+        }
+
+        var trigger = new GameObject("Clue_NgoiNha");
+        trigger.transform.SetParent(chapterRoot.transform);
+        trigger.transform.position = house.transform.position + Vector3.up * 2f;
+
+        var box = trigger.AddComponent<BoxCollider>();
+        box.isTrigger = true;
+        box.size = new Vector3(12f, 6f, 12f);
+
+        AttachClueInteractable(trigger, title, hint, hideAfterCollect: true);
     }
 
     void CreateClue(Vector3 pos, string title, string hint)
     {
         var go = CreateMarker(title, pos, new Color(0.8f, 0.6f, 0.2f), new Vector3(1.5f, 2f, 1.5f));
+        AttachClueInteractable(go, title, hint, hideAfterCollect: true);
+    }
+
+    void AttachClueInteractable(GameObject go, string title, string hint, bool hideAfterCollect)
+    {
         var clue = go.AddComponent<ClueInteractable>();
         clue.clueTitle = title;
         clue.clueHint = hint;
+        clue.hideAfterCollect = hideAfterCollect;
         clue.onClueFound = () =>
         {
             cluesFound++;
@@ -516,26 +559,28 @@ public class ChapterFlowController : MonoBehaviour
         canvas.renderMode = RenderMode.WorldSpace;
         canvasGo.AddComponent<FaceCamera>();
         var rt = canvasGo.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(420, 72);
-        rt.localScale = Vector3.one * 0.018f;
+        rt.sizeDelta = new Vector2(520, 88);
+        rt.localScale = Vector3.one * 0.022f;
+
+        var bgGo = new GameObject("Bg", typeof(RectTransform), typeof(Image));
+        bgGo.transform.SetParent(canvasGo.transform, false);
+        var bgRt = bgGo.GetComponent<RectTransform>();
+        bgRt.anchorMin = Vector2.zero;
+        bgRt.anchorMax = Vector2.one;
+        bgRt.offsetMin = Vector2.zero;
+        bgRt.offsetMax = Vector2.zero;
+        bgGo.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.03f, 0.98f);
 
         var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
         textGo.transform.SetParent(canvasGo.transform, false);
         var textRt = textGo.GetComponent<RectTransform>();
         textRt.anchorMin = Vector2.zero;
         textRt.anchorMax = Vector2.one;
-        textRt.offsetMin = Vector2.zero;
-        textRt.offsetMax = Vector2.zero;
+        textRt.offsetMin = new Vector2(10, 8);
+        textRt.offsetMax = new Vector2(-10, -8);
 
         var t = textGo.GetComponent<Text>();
-        t.font = CrispUiText.GetFont();
-        t.fontSize = 32;
-        t.fontStyle = FontStyle.Bold;
-        t.alignment = TextAnchor.MiddleCenter;
-        t.color = Color.white;
-        t.text = label;
-        t.raycastTarget = false;
-        CrispUiText.WarmAtlas(26);
+        CrispUiText.ConfigureWorldLabel(t, 44, Color.white, label);
     }
 
     void CreateSmallIndicator(Transform parent, Color color)

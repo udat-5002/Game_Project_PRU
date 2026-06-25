@@ -86,8 +86,8 @@ public static class ChapterDifficulty
             },
             new PatrolSetup
             {
-                pointA = ForestZoneLayout.Ch3PatrolStart,
-                pointB = ForestZoneLayout.Ch3FinalDelivery,
+                pointA = ForestZoneLayout.Ch3DangerPatrolStart,
+                pointB = ForestZoneLayout.Ch3DangerPatrolEnd,
                 moveSpeed = 3.8f,
                 detectRadius = 7.5f,
                 detectSeconds = 0.7f,
@@ -102,7 +102,7 @@ public static class ChapterDifficulty
     {
         1 => 0f,
         2 => 0f,
-        3 => 1.8f,
+        3 => 2.4f,
         _ => 0f
     };
 }

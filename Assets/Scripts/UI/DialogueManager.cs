@@ -38,6 +38,12 @@ public class DialogueManager : MonoBehaviour
         GameManager.Instance?.LockInput(true);
         GameUI.Instance?.ShowDialogue(speaker, message);
 
+        // E vừa bấm để tương tác không được tính là "quay trang" — chờ UI hiện và thả phím trước.
+        yield return null;
+        while (continueAction.IsPressed())
+            yield return null;
+        yield return null;
+
         yield return new WaitUntil(() => continueAction.WasPressedThisFrame());
 
         GameUI.Instance?.HideDialogue();

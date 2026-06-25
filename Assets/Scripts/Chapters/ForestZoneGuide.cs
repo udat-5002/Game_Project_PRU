@@ -40,7 +40,7 @@ public class ForestZoneGuide : MonoBehaviour
 
         CreateWorldLabel(root.transform, new Vector3(0f, 4.2f, 0f),
             zone.shortName + "\n" + zone.fullName + "\n\nTheo mũi tên trên HUD",
-            32, Color.white);
+            48, Color.white);
     }
 
     void CreateWorldLabel(Transform parent, Vector3 localPos, string text, int fontSize, Color color)
@@ -53,26 +53,28 @@ public class ForestZoneGuide : MonoBehaviour
         canvas.renderMode = RenderMode.WorldSpace;
         canvasGo.AddComponent<FaceCamera>();
         var rt = canvasGo.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(520, 160);
-        rt.localScale = Vector3.one * 0.014f;
+        rt.sizeDelta = new Vector2(620, 200);
+        rt.localScale = Vector3.one * 0.018f;
+
+        var bgGo = new GameObject("Bg", typeof(RectTransform), typeof(Image));
+        bgGo.transform.SetParent(canvasGo.transform, false);
+        var bgRt = bgGo.GetComponent<RectTransform>();
+        bgRt.anchorMin = Vector2.zero;
+        bgRt.anchorMax = Vector2.one;
+        bgRt.offsetMin = Vector2.zero;
+        bgRt.offsetMax = Vector2.zero;
+        bgGo.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.03f, 0.98f);
 
         var labelGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
         labelGo.transform.SetParent(canvasGo.transform, false);
         var labelRt = labelGo.GetComponent<RectTransform>();
         labelRt.anchorMin = Vector2.zero;
         labelRt.anchorMax = Vector2.one;
-        labelRt.offsetMin = Vector2.zero;
-        labelRt.offsetMax = Vector2.zero;
+        labelRt.offsetMin = new Vector2(12, 12);
+        labelRt.offsetMax = new Vector2(-12, -12);
 
         var t = labelGo.GetComponent<Text>();
-        t.font = CrispUiText.GetFont();
-        t.fontSize = fontSize;
-        t.fontStyle = FontStyle.Bold;
-        t.alignment = TextAnchor.MiddleCenter;
-        t.color = color;
-        t.text = text;
-        t.raycastTarget = false;
-        CrispUiText.WarmAtlas(fontSize);
+        CrispUiText.ConfigureWorldLabel(t, fontSize, color, text);
     }
 
     static void ApplyColor(Renderer renderer, Color color)

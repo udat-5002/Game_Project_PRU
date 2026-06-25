@@ -18,10 +18,13 @@ public class GameUI : MonoBehaviour
     Text dialogueBody;
     Text notificationText;
     float notificationTimer;
+    bool waypointVisibleBeforeDialogue;
+    GameObject hudBackdrop;
+    bool hudVisible = true;
 
-    static readonly Color TextBright = new Color(1f, 0.98f, 0.94f, 1f);
-    static readonly Color HudBg = new Color(0.02f, 0.02f, 0.03f, 0.72f);
-    static readonly Color DialogueBg = new Color(0.02f, 0.02f, 0.03f, 0.88f);
+    static readonly Color TextBright = Color.white;
+    static readonly Color HudBg = new Color(0.01f, 0.01f, 0.02f, 0.96f);
+    static readonly Color DialogueBg = new Color(0.01f, 0.01f, 0.02f, 0.98f);
 
     void Awake()
     {
@@ -59,22 +62,18 @@ public class GameUI : MonoBehaviour
 
         CrispUiText.WarmGameplayAtlas();
 
-        CreatePanel("HudBackdrop", HudBg, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -12), new Vector2(760, 185));
+        hudBackdrop = CreatePanel("HudBackdrop", HudBg, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -12), new Vector2(840, 260));
 
-        chapterText = CreateAnchoredText("Chapter", 32, new Vector2(28, -28), TextAnchor.UpperLeft, new Vector2(0, 1), FontStyle.Bold);
-        chapterText.rectTransform.sizeDelta = new Vector2(720, 48);
-        zoneText = CreateAnchoredText("Zone", 24, new Vector2(28, -68), TextAnchor.UpperLeft, new Vector2(0, 1), FontStyle.Bold);
-        zoneText.rectTransform.sizeDelta = new Vector2(720, 36);
-        zoneText.color = new Color(0.85f, 0.75f, 0.35f, 1f);
-        questText = CreateAnchoredText("Quest", 28, new Vector2(28, -108), TextAnchor.UpperLeft, new Vector2(0, 1), FontStyle.Bold);
-        questText.rectTransform.sizeDelta = new Vector2(720, 76);
-        questText.lineSpacing = 1.15f;
-        waypointText = CreateAnchoredText("Waypoint", 26, new Vector2(28, -168), TextAnchor.UpperLeft, new Vector2(0, 1), FontStyle.Bold);
-        waypointText.rectTransform.sizeDelta = new Vector2(720, 40);
-        waypointText.color = new Color(0.55f, 0.9f, 1f, 1f);
+        chapterText = CreateHudLine("Chapter", 38, new Vector2(24, -20), 52);
+        zoneText = CreateHudLine("Zone", 30, new Vector2(24, -78), 44);
+        zoneText.color = CrispUiText.Gold;
+        questText = CreateHudLine("Quest", 34, new Vector2(24, -130), 80);
+        questText.lineSpacing = 1.25f;
+        waypointText = CreateHudLine("Waypoint", 30, new Vector2(24, -218), 44);
+        waypointText.color = CrispUiText.Cyan;
 
-        interactPrompt = CreatePanel("InteractPrompt", new Color(0.04f, 0.03f, 0.02f, 0.96f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 90), new Vector2(540, 68));
-        interactText = CreateAnchoredText("InteractText", 28, Vector2.zero, TextAnchor.MiddleCenter, new Vector2(0.5f, 0), FontStyle.Bold);
+        interactPrompt = CreatePanel("InteractPrompt", new Color(0.02f, 0.02f, 0.03f, 1f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 96), new Vector2(620, 80));
+        interactText = CreateAnchoredText("InteractText", 36, Vector2.zero, TextAnchor.MiddleCenter, new Vector2(0.5f, 0), FontStyle.Bold);
         interactText.transform.SetParent(interactPrompt.transform, false);
         interactText.rectTransform.anchorMin = Vector2.zero;
         interactText.rectTransform.anchorMax = Vector2.one;
@@ -82,23 +81,68 @@ public class GameUI : MonoBehaviour
         interactText.rectTransform.offsetMax = Vector2.zero;
         interactPrompt.SetActive(false);
 
-        dialoguePanel = CreatePanel("Dialogue", DialogueBg, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 260));
-        dialogueSpeaker = CreateAnchoredText("Speaker", 34, new Vector2(36, 200), TextAnchor.UpperLeft, new Vector2(0, 0), FontStyle.Bold);
-        dialogueSpeaker.transform.SetParent(dialoguePanel.transform, false);
-        dialogueSpeaker.rectTransform.sizeDelta = new Vector2(1680, 48);
-        dialogueBody = CreateAnchoredText("Body", 30, new Vector2(36, 138), TextAnchor.UpperLeft, new Vector2(0, 0), FontStyle.Bold);
-        dialogueBody.transform.SetParent(dialoguePanel.transform, false);
-        dialogueBody.rectTransform.sizeDelta = new Vector2(1680, 130);
-        dialogueBody.lineSpacing = 1.2f;
-        var hint = CreateAnchoredText("Hint", 24, new Vector2(-36, 30), TextAnchor.LowerRight, new Vector2(1, 0), FontStyle.Bold);
-        hint.transform.SetParent(dialoguePanel.transform, false);
-        hint.text = "Space / E để tiếp tục";
-        hint.rectTransform.sizeDelta = new Vector2(400, 36);
-        dialoguePanel.SetActive(false);
+        BuildDialoguePanel();
 
-        notificationText = CreateAnchoredText("Notification", 30, new Vector2(0, -130), TextAnchor.UpperCenter, new Vector2(0.5f, 1), FontStyle.Bold);
-        notificationText.rectTransform.sizeDelta = new Vector2(900, 50);
+        notificationText = CreateAnchoredText("Notification", 38, new Vector2(0, -130), TextAnchor.UpperCenter, new Vector2(0.5f, 1), FontStyle.Bold);
+        notificationText.rectTransform.sizeDelta = new Vector2(980, 60);
         notificationText.gameObject.SetActive(false);
+    }
+
+    void BuildDialoguePanel()
+    {
+        dialoguePanel = CreatePanel("Dialogue", DialogueBg, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 340));
+
+        dialogueSpeaker = CreatePanelText(dialoguePanel.transform, "Speaker", 40, CrispUiText.Gold, FontStyle.Bold);
+        var speakerRt = dialogueSpeaker.rectTransform;
+        speakerRt.anchorMin = new Vector2(0f, 1f);
+        speakerRt.anchorMax = new Vector2(1f, 1f);
+        speakerRt.pivot = new Vector2(0f, 1f);
+        speakerRt.offsetMin = new Vector2(40f, -68f);
+        speakerRt.offsetMax = new Vector2(-40f, -16f);
+        dialogueSpeaker.alignment = TextAnchor.UpperLeft;
+
+        dialogueBody = CreatePanelText(dialoguePanel.transform, "Body", 36, TextBright, FontStyle.Bold);
+        var bodyRt = dialogueBody.rectTransform;
+        bodyRt.anchorMin = Vector2.zero;
+        bodyRt.anchorMax = Vector2.one;
+        bodyRt.offsetMin = new Vector2(40f, 56f);
+        bodyRt.offsetMax = new Vector2(-40f, -80f);
+        dialogueBody.alignment = TextAnchor.UpperLeft;
+        dialogueBody.lineSpacing = 1.35f;
+
+        var hint = CreatePanelText(dialoguePanel.transform, "Hint", 28, TextBright, FontStyle.Bold);
+        hint.text = "Space / E để tiếp tục";
+        var hintRt = hint.rectTransform;
+        hintRt.anchorMin = new Vector2(1f, 0f);
+        hintRt.anchorMax = new Vector2(1f, 0f);
+        hintRt.pivot = new Vector2(1f, 0f);
+        hintRt.anchoredPosition = new Vector2(-40f, 18f);
+        hintRt.sizeDelta = new Vector2(520f, 40f);
+        hint.alignment = TextAnchor.LowerRight;
+
+        dialoguePanel.SetActive(false);
+    }
+
+    Text CreateHudLine(string name, int size, Vector2 anchoredPos, float height)
+    {
+        var t = CreateAnchoredText(name, size, anchoredPos, TextAnchor.UpperLeft, new Vector2(0, 1), FontStyle.Bold);
+        t.rectTransform.sizeDelta = new Vector2(780, height);
+        return t;
+    }
+
+    Text CreatePanelText(Transform parent, string name, int size, Color color, FontStyle style)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+        go.transform.SetParent(parent, false);
+        var t = go.GetComponent<Text>();
+        t.font = CrispUiText.GetFont();
+        t.fontSize = size;
+        t.fontStyle = style;
+        t.color = color;
+        t.text = "";
+        CrispUiText.ApplyReadableDefaults(t);
+        CrispUiText.WarmAtlas(size);
+        return t;
     }
 
     public void SetChapterLabel(string text)
@@ -144,16 +188,68 @@ public class GameUI : MonoBehaviour
         interactText.text = string.IsNullOrEmpty(text) ? "Nhấn E" : text;
     }
 
+    public void SetHudVisible(bool visible)
+    {
+        hudVisible = visible;
+        if (hudBackdrop != null) hudBackdrop.SetActive(visible);
+        if (chapterText != null) chapterText.gameObject.SetActive(visible);
+        if (zoneText != null) zoneText.gameObject.SetActive(visible);
+        if (questText != null) questText.gameObject.SetActive(visible);
+        if (waypointText != null)
+            waypointText.gameObject.SetActive(visible && !string.IsNullOrEmpty(waypointText.text));
+        if (!visible)
+        {
+            if (interactPrompt != null) interactPrompt.SetActive(false);
+            if (dialoguePanel != null) dialoguePanel.SetActive(false);
+            SetWorldLabelsVisible(false);
+        }
+        else
+        {
+            SetWorldLabelsVisible(true);
+        }
+    }
+
     public void ShowDialogue(string speaker, string message)
     {
-        dialogueSpeaker.text = speaker;
-        dialogueBody.text = message;
+        waypointVisibleBeforeDialogue = waypointText != null && waypointText.gameObject.activeSelf;
+        if (waypointText != null) waypointText.gameObject.SetActive(false);
+        if (interactPrompt != null) interactPrompt.SetActive(false);
+
+        bool hasSpeaker = !string.IsNullOrWhiteSpace(speaker);
+        if (dialogueSpeaker != null)
+        {
+            dialogueSpeaker.text = hasSpeaker ? speaker : "";
+            dialogueSpeaker.gameObject.SetActive(hasSpeaker);
+        }
+
+        if (dialogueBody != null)
+        {
+            dialogueBody.text = message;
+            var bodyRt = dialogueBody.rectTransform;
+            bodyRt.offsetMax = new Vector2(-40f, hasSpeaker ? -80f : -68f);
+        }
+
         dialoguePanel.SetActive(true);
+        SetWorldLabelsVisible(false);
     }
 
     public void HideDialogue()
     {
         dialoguePanel.SetActive(false);
+        SetWorldLabelsVisible(true);
+        if (waypointText != null && waypointVisibleBeforeDialogue && !string.IsNullOrEmpty(waypointText.text))
+            waypointText.gameObject.SetActive(true);
+    }
+
+    static void SetWorldLabelsVisible(bool visible)
+    {
+        foreach (var canvas in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+        {
+            if (canvas.renderMode != RenderMode.WorldSpace) continue;
+            var n = canvas.gameObject.name;
+            if (n == "ObjectiveLabel" || n == "Label")
+                canvas.gameObject.SetActive(visible);
+        }
     }
 
     public void ShowNotification(string msg, float duration = 3f)
@@ -172,19 +268,19 @@ public class GameUI : MonoBehaviour
     {
         GameManager.Instance?.LockInput(true);
 
-        var panel = CreatePanel("Letter", new Color(0.06f, 0.05f, 0.04f, 0.96f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        var titleT = CreateAnchoredText("LetterTitle", 36, new Vector2(0, 220), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
+        var panel = CreatePanel("Letter", new Color(0.02f, 0.02f, 0.03f, 1f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var titleT = CreateAnchoredText("LetterTitle", 44, new Vector2(0, 220), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
         titleT.transform.SetParent(panel.transform, false);
         titleT.text = title;
-        titleT.rectTransform.sizeDelta = new Vector2(900, 50);
+        titleT.rectTransform.sizeDelta = new Vector2(980, 60);
 
-        var bodyT = CreateAnchoredText("LetterBody", 28, Vector2.zero, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
+        var bodyT = CreateAnchoredText("LetterBody", 36, Vector2.zero, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
         bodyT.transform.SetParent(panel.transform, false);
-        bodyT.rectTransform.sizeDelta = new Vector2(900, 420);
-        bodyT.lineSpacing = 1.2f;
+        bodyT.rectTransform.sizeDelta = new Vector2(980, 440);
+        bodyT.lineSpacing = 1.25f;
         bodyT.text = body;
 
-        var hintT = CreateAnchoredText("LetterHint", 22, new Vector2(0, -280), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
+        var hintT = CreateAnchoredText("LetterHint", 30, new Vector2(0, -280), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
         hintT.transform.SetParent(panel.transform, false);
         hintT.text = "Space để đóng";
 

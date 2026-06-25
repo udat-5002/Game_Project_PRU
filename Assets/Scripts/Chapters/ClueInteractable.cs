@@ -5,6 +5,7 @@ public class ClueInteractable : Interactable
 {
     public string clueTitle;
     [TextArea] public string clueHint;
+    public bool hideAfterCollect = true;
     public Action onClueFound;
     bool found;
 
@@ -19,7 +20,8 @@ public class ClueInteractable : Interactable
         DialogueManager.Instance?.ShowDialogue(clueTitle, clueHint, () =>
         {
             onClueFound?.Invoke();
-            gameObject.SetActive(false);
+            if (hideAfterCollect)
+                gameObject.SetActive(false);
         });
     }
 }

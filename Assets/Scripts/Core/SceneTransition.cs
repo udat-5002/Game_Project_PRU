@@ -9,17 +9,22 @@ public class SceneTransition : MonoBehaviour
     public static SceneTransition Instance { get; private set; }
 
     public float fadeDuration = 1f;
-    public float titleDuration = 3f;
+    public float titleDuration = 3.5f;
+    public bool IsShowingChapterTitle { get; private set; }
 
     Canvas canvas;
     Image fadeImage;
     GameObject titlePanel;
+    Text titleBadge;
     Text titleText;
     Text subtitleText;
     GameObject endingPanel;
     Text endingText;
 
     bool isTransitioning;
+
+    static readonly Color Gold = new Color(1f, 0.82f, 0.28f, 1f);
+    static readonly Color CardBg = new Color(0.05f, 0.04f, 0.03f, 0.98f);
 
     void Awake()
     {
@@ -56,6 +61,7 @@ public class SceneTransition : MonoBehaviour
             titlePanel.SetActive(false);
         if (endingPanel != null)
             endingPanel.SetActive(false);
+        IsShowingChapterTitle = false;
         isTransitioning = false;
         UpdateMenuBlocker();
     }
@@ -64,7 +70,6 @@ public class SceneTransition : MonoBehaviour
     {
         var gr = GetComponent<GraphicRaycaster>();
         if (gr == null) return;
-        // Không chặn click menu khi ở MainMenu
         gr.enabled = SceneManager.GetActiveScene().name != GameManager.SceneMainMenu;
     }
 
@@ -73,23 +78,45 @@ public class SceneTransition : MonoBehaviour
         canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 999;
-        gameObject.AddComponent<CanvasScaler>();
+        var scaler = gameObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f;
         gameObject.AddComponent<GraphicRaycaster>();
         UpdateMenuBlocker();
 
         fadeImage = CreateFullScreenImage("Fade", new Color(0, 0, 0, 0));
         fadeImage.raycastTarget = false;
 
-        titlePanel = CreatePanel("TitlePanel", new Color(0, 0, 0, 0.85f));
-        titleText = CreateText(titlePanel.transform, "Title", 44, TextAnchor.MiddleCenter, new Vector2(0, 40));
-        subtitleText = CreateText(titlePanel.transform, "Subtitle", 28, TextAnchor.MiddleCenter, new Vector2(0, -40));
-        titlePanel.SetActive(false);
+        BuildChapterTitlePanel();
 
-        endingPanel = CreatePanel("EndingPanel", new Color(0, 0, 0, 0.92f));
-        endingText = CreateText(endingPanel.transform, "Ending", 30, TextAnchor.MiddleCenter, Vector2.zero);
-        var endingHint = CreateText(endingPanel.transform, "Hint", 22, TextAnchor.LowerCenter, new Vector2(0, 40));
+        endingPanel = CreatePanel("EndingPanel", new Color(0, 0, 0, 0.96f));
+        endingText = CreateText(endingPanel.transform, "Ending", 40, TextAnchor.MiddleCenter, Vector2.zero, Color.white);
+        var endingHint = CreateText(endingPanel.transform, "Hint", 30, TextAnchor.LowerCenter, new Vector2(0, 40), Color.white);
         endingHint.text = "Nhấn Space để quay về menu";
         endingPanel.SetActive(false);
+    }
+
+    void BuildChapterTitlePanel()
+    {
+        titlePanel = CreatePanel("TitlePanel", new Color(0, 0, 0, 0.88f));
+
+        var card = CreateBox(titlePanel.transform, "TitleCard", new Vector2(920f, 360f), CardBg);
+
+        CreateBox(card.transform, "AccentLine", new Vector2(760f, 6f), Gold)
+            .GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 148f);
+
+        titleBadge = CreateText(card.transform, "Badge", 30, TextAnchor.MiddleCenter, new Vector2(0f, 118f), Gold);
+        titleBadge.rectTransform.sizeDelta = new Vector2(800f, 44f);
+
+        titleText = CreateText(card.transform, "Title", 52, TextAnchor.MiddleCenter, new Vector2(0f, 48f), Color.white);
+        titleText.rectTransform.sizeDelta = new Vector2(820f, 72f);
+
+        subtitleText = CreateText(card.transform, "Subtitle", 34, TextAnchor.MiddleCenter, new Vector2(0f, -42f), Color.white);
+        subtitleText.rectTransform.sizeDelta = new Vector2(820f, 100f);
+        subtitleText.lineSpacing = 1.2f;
+
+        titlePanel.SetActive(false);
     }
 
     public void LoadScene(string sceneName)
@@ -114,6 +141,7 @@ public class SceneTransition : MonoBehaviour
     {
         isTransitioning = true;
         GameManager.Instance?.LockInput(true);
+        GameUI.Instance?.SetHudVisible(false);
 
         yield return Fade(0f, 1f);
 
@@ -123,14 +151,19 @@ public class SceneTransition : MonoBehaviour
         GameManager.Instance?.SetCurrentChapter(chapterIndex);
         GameManager.Instance?.FindPlayer();
 
-        titleText.text = title;
+        titleBadge.text = $"CHƯƠNG {chapterIndex}";
+        titleText.text = ExtractChapterName(title, chapterIndex);
         subtitleText.text = subtitle;
+
+        IsShowingChapterTitle = true;
         titlePanel.SetActive(true);
 
         yield return Fade(1f, 0f);
-        yield return new WaitForSeconds(titleDuration);
+        yield return new WaitForSecondsRealtime(titleDuration);
 
         titlePanel.SetActive(false);
+        IsShowingChapterTitle = false;
+        GameUI.Instance?.SetHudVisible(true);
         GameManager.Instance?.LockInput(false);
         isTransitioning = false;
     }
@@ -145,11 +178,12 @@ public class SceneTransition : MonoBehaviour
 
         if (showTitle && titlePanel != null)
         {
+            titleBadge.text = chapterIndex > 0 ? $"CHƯƠNG {chapterIndex}" : "";
             titleText.text = title ?? "";
             subtitleText.text = subtitle ?? "";
             titlePanel.SetActive(true);
             yield return Fade(1f, 0f);
-            yield return new WaitForSeconds(titleDuration);
+            yield return new WaitForSecondsRealtime(titleDuration);
             titlePanel.SetActive(false);
         }
         else
@@ -164,9 +198,11 @@ public class SceneTransition : MonoBehaviour
     {
         isTransitioning = true;
         GameManager.Instance?.LockInput(true);
+        GameUI.Instance?.SetHudVisible(false);
 
         yield return Fade(0f, 1f);
 
+        GameMusicController.Instance?.PlayEndingMusic();
         endingText.text = message;
         endingPanel.SetActive(true);
         yield return Fade(1f, 0f);
@@ -178,6 +214,15 @@ public class SceneTransition : MonoBehaviour
 
         onComplete?.Invoke();
         isTransitioning = false;
+    }
+
+    static string ExtractChapterName(string fullTitle, int chapter)
+    {
+        if (string.IsNullOrEmpty(fullTitle)) return "";
+        string prefix = $"Chương {chapter}: ";
+        return fullTitle.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? fullTitle.Substring(prefix.Length)
+            : fullTitle;
     }
 
     IEnumerator Fade(float from, float to)
@@ -221,13 +266,29 @@ public class SceneTransition : MonoBehaviour
         return go;
     }
 
-    Text CreateText(Transform parent, string name, int fontSize, TextAnchor anchor, Vector2 anchoredPos)
+    GameObject CreateBox(Transform parent, string name, Vector2 size, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = size;
+        rt.anchoredPosition = Vector2.zero;
+        go.GetComponent<Image>().color = color;
+        go.GetComponent<Image>().raycastTarget = false;
+        return go;
+    }
+
+    Text CreateText(Transform parent, string name, int fontSize, TextAnchor anchor, Vector2 anchoredPos, Color color)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Text));
         go.transform.SetParent(parent, false);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = new Vector2(900, 200);
         rt.anchoredPosition = anchoredPos;
 
@@ -235,18 +296,16 @@ public class SceneTransition : MonoBehaviour
         text.font = CrispUiText.GetFont() ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (text.font == null)
         {
-            UnityEngine.Object.Destroy(go);
+            Destroy(go);
             return null;
         }
         text.fontSize = fontSize;
         text.fontStyle = FontStyle.Bold;
         text.alignment = anchor;
-        text.color = Color.white;
+        text.color = color;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Overflow;
-        text.supportRichText = false;
-        text.resizeTextForBestFit = false;
-        text.raycastTarget = false;
+        CrispUiText.ApplyReadableDefaults(text);
         CrispUiText.WarmAtlas(fontSize);
         return text;
     }

@@ -3,12 +3,16 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Tạo chữ UI sắc nét: pre-render font đúng cỡ hiển thị, không dùng Outline (hay làm mờ).
+/// Tạo chữ UI sắc nét: pre-render font đúng cỡ hiển thị, không dùng Outline/Shadow (hay làm mờ).
 /// </summary>
 public static class CrispUiText
 {
     static Font cachedFont;
     static readonly HashSet<int> WarmedSizes = new HashSet<int>();
+
+    public static readonly Color White = Color.white;
+    public static readonly Color Gold = new Color(1f, 0.9f, 0.4f, 1f);
+    public static readonly Color Cyan = new Color(0.65f, 0.98f, 1f, 1f);
 
     public const string VietnameseChars =
         "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
@@ -38,10 +42,7 @@ public static class CrispUiText
             foreach (var size in sizes)
             {
                 if (!WarmedSizes.Add(size)) continue;
-                font.RequestCharactersInTexture(VietnameseChars, size, FontStyle.Normal);
                 font.RequestCharactersInTexture(VietnameseChars, size, FontStyle.Bold);
-                font.RequestCharactersInTexture(VietnameseChars, size, FontStyle.Italic);
-                font.RequestCharactersInTexture(VietnameseChars, size, FontStyle.BoldAndItalic);
             }
         }
         catch (System.Exception e)
@@ -51,10 +52,23 @@ public static class CrispUiText
     }
 
     public static void WarmMenuAtlas() =>
-        WarmAtlas(200, 80, 76, 44, 38, 36, 34, 32, 28, 26);
+        WarmAtlas(52, 44, 40, 34);
 
     public static void WarmGameplayAtlas() =>
-        WarmAtlas(36, 34, 32, 30, 28, 26, 24, 22);
+        WarmAtlas(40, 36, 34, 30);
+
+    public static void ApplyReadableDefaults(Text t)
+    {
+        if (t == null) return;
+        t.supportRichText = false;
+        t.resizeTextForBestFit = false;
+        t.alignByGeometry = false;
+        t.raycastTarget = false;
+        t.horizontalOverflow = HorizontalWrapMode.Wrap;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        var c = t.color;
+        t.color = new Color(c.r, c.g, c.b, 1f);
+    }
 
     public static Text Create(Transform parent, string name, string text, int fontSize,
         TextAnchor align, Vector2 anchor, Vector2 sizeDelta, Color color,
@@ -86,11 +100,20 @@ public static class CrispUiText
         t.alignment = align;
         t.color = color;
         t.text = text;
-        t.supportRichText = false;
-        t.resizeTextForBestFit = false;
-        t.horizontalOverflow = HorizontalWrapMode.Wrap;
-        t.verticalOverflow = VerticalWrapMode.Overflow;
-        t.raycastTarget = false;
+        ApplyReadableDefaults(t);
         return t;
+    }
+
+    public static void ConfigureWorldLabel(Text t, int fontSize, Color color, string text)
+    {
+        if (t == null) return;
+        t.font = GetFont();
+        t.fontSize = fontSize;
+        t.fontStyle = FontStyle.Bold;
+        t.alignment = TextAnchor.MiddleCenter;
+        t.color = color;
+        t.text = text;
+        ApplyReadableDefaults(t);
+        WarmAtlas(fontSize);
     }
 }
