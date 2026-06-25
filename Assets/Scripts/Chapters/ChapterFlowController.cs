@@ -70,6 +70,7 @@ public class ChapterFlowController : MonoBehaviour
         }
 
         SetupWeather();
+        GenerateEnvironment();
     }
 
     void ApplyZonePositions()
@@ -198,9 +199,10 @@ public class ChapterFlowController : MonoBehaviour
         qm.SetupQuests(
             ("pickup_mail", "Lấy túi thư tại Trạm Liên Lạc"),
             ("ask_elder", "Hỏi cụ già đường vào làng"),
-            ("cross_obstacle", "Vượt qua khu gỗ đổ chặn đường"),
+            ("cross_obstacle", "Vượt qua khu gỗ mục chặn đường"),
             ("sneak_patrol", "Lẻn qua lính tuần tra (tránh vòng đỏ)"),
-            ("deliver_mail", "Giao thư cho Bà Lan")
+            ("deliver_mail", "Giao thư đầu tiên cho Anh Sơn"),
+            ("return_to_base", "Trở về Trạm Liên Lạc")
         );
         qm.OnAllQuestsCompleted += OnChapter1Complete;
 
@@ -209,7 +211,14 @@ public class ChapterFlowController : MonoBehaviour
         CreateObstacleSection();
         CreateStealthPath(1, ForestZoneLayout.Ch1StealthEnd, "sneak_patrol",
             ForestZoneLayout.Ch1HideSpot, ForestZoneLayout.Ch1Obstacle);
-        CreateDeliveryNpc("Bà Lan", deliveryNpcPosition);
+        CreateDeliveryNpc("Anh Sơn", deliveryNpcPosition);
+        CreateReturnToBaseTrigger();
+    }
+
+    void CreateReturnToBaseTrigger()
+    {
+        CreateZone("ReturnToBaseZone", mailStationPosition, new Vector3(6f, 3f, 6f), "return_to_base", Color.clear);
+        RegisterWaypoint("return_to_base", mailStationPosition);
     }
 
     void CreateElderNpc()
@@ -218,14 +227,22 @@ public class ChapterFlowController : MonoBehaviour
         RegisterWaypoint("ask_elder", go.transform.position);
         var elder = go.AddComponent<ElderGuideInteractable>();
         elder.promptText = "Nhấn E - Hỏi đường";
+        // Put a conical hat on the Elder
+        SpawnHatVisual(go.transform, new Color(0.85f, 0.78f, 0.65f), isSoldier: false);
     }
 
     void CreateObstacleSection()
     {
-        var go = CreateMarker("Khu gỗ đổ", obstacleZonePosition, new Color(0.25f, 0.65f, 0.3f), new Vector3(2f, 2f, 2f));
+        var pos = GroundSnap.Snap(obstacleZonePosition);
+        var go = CreateMarker("Khu gỗ mục", pos, new Color(0.25f, 0.65f, 0.3f), new Vector3(2f, 2f, 2f));
         RegisterWaypoint("cross_obstacle", go.transform.position);
         var obstacle = go.AddComponent<ObstacleCrossInteractable>();
         obstacle.promptText = "Nhấn E - Vượt qua";
+
+        // Spawn actual physical logs to jump over
+        SpawnFallenLog(pos + new Vector3(-2f, 0.2f, 0f), 45f, 5f);
+        SpawnFallenLog(pos + new Vector3(0f, 0.3f, 1f), -30f, 6f);
+        SpawnFallenLog(pos + new Vector3(2f, 0.1f, -1f), 15f, 4f);
     }
 
     void SetupChapter2()
@@ -265,7 +282,7 @@ public class ChapterFlowController : MonoBehaviour
         CreateDangerArea();
         SpawnPatrols(3, "cross_danger", ForestZoneLayout.Ch3DangerReset);
         CreateHideSpot(new Vector3(27f, 0f, -8f), "cross_danger");
-        CreateFinalDeliveryNpc();
+        CreateFinalRecipients();
     }
 
     void CreateMailStation()
@@ -275,6 +292,9 @@ public class ChapterFlowController : MonoBehaviour
         RegisterWaypoint("pickup_mail", go.transform.position);
         var pickup = go.AddComponent<MailPickupInteractable>();
         pickup.promptText = "Nhấn E - Lấy túi thư";
+        pickup.recipientName = "Anh Sơn";
+        pickup.mailSummary = "Thư từ tiền tuyến gửi cho Anh Sơn...";
+        pickup.pickupDialogue = "Nam ơi, hãy mang túi thư này đến làng Bình An và giao bức thư đầu tiên cho Anh Sơn giúp tôi nhé.";
     }
 
     void CreateMailBagProp(Transform parent)
@@ -312,8 +332,10 @@ public class ChapterFlowController : MonoBehaviour
         var go = CreateMarker(name, pos, Color.yellow, new Vector3(1.5f, 2f, 1.5f));
         RegisterWaypoint("deliver_mail", go.transform.position);
         var delivery = go.AddComponent<MailDeliveryInteractable>();
-        delivery.recipientName = "Bà Lan - Làng Bình An";
+        delivery.recipientName = name;
         delivery.promptText = "Nhấn E - Giao thư";
+        delivery.deliveryDialogue = "Cảm ơn cháu! Vợ tôi đã sinh con rồi, tôi có con trai rồi! Bức thư này thực sự mang lại hy vọng lớn lao cho tôi.";
+        SpawnHatVisual(go.transform, new Color(0.85f, 0.78f, 0.65f), isSoldier: false);
     }
 
     void CreateSoldierNpc()
@@ -321,6 +343,7 @@ public class ChapterFlowController : MonoBehaviour
         var go = CreateMarker("Người lính trẻ", soldierNpcPosition, Color.blue, new Vector3(1.5f, 2f, 1.5f));
         RegisterWaypoint("receive_letter", go.transform.position);
         go.AddComponent<SoldierLetterInteractable>();
+        SpawnHatVisual(go.transform, new Color(0.2f, 0.35f, 0.2f), isSoldier: true);
     }
 
     void CreateStealthPath(int chapter, Vector3 endPos, string questId, Vector3 hidePos, Vector3 resetPos)
@@ -355,6 +378,7 @@ public class ChapterFlowController : MonoBehaviour
             enemy.activeQuestId = setup.activeQuestId;
 
             CreateSmallIndicator(patrol.transform, Color.red);
+            SpawnHatVisual(patrol.transform, new Color(0.25f, 0.3f, 0.25f), isSoldier: true);
         }
     }
 
@@ -362,6 +386,7 @@ public class ChapterFlowController : MonoBehaviour
     {
         var hideGo = CreateInvisibleTrigger($"HideSpot_{questId}", GroundSnap.Snap(hidePos), new Vector3(3.5f, 2.5f, 3.5f));
         hideGo.AddComponent<HideSpot>();
+        SpawnBushModel(hideGo.transform, Vector3.zero, 3.2f);
         CreateSmallIndicator(hideGo.transform, new Color(0.15f, 0.75f, 0.35f));
     }
 
@@ -389,7 +414,6 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateStealthSection()
     {
-        // Giữ cho tương thích — dùng CreateStealthPath
     }
 
     void CreateRainEvent()
@@ -405,6 +429,7 @@ public class ChapterFlowController : MonoBehaviour
         var go = CreateMarker("Mẹ anh lính", motherNpcPosition, new Color(1f, 0.7f, 0.8f), new Vector3(1.5f, 2f, 1.5f));
         RegisterWaypoint("deliver_mother", go.transform.position);
         go.AddComponent<MotherDeliveryInteractable>();
+        SpawnHatVisual(go.transform, new Color(0.85f, 0.78f, 0.65f), isSoldier: false);
     }
 
     int cluesFound;
@@ -453,15 +478,467 @@ public class ChapterFlowController : MonoBehaviour
 
         GameUI.Instance?.ShowLetter("Thư của anh trai Nam",
             "Nếu em nhận được lá thư này, có lẽ anh đã không thể trở về.\n\n" +
-            "Hãy thay anh chăm sóc mẹ.\nVà hãy sống tiếp thật tốt.",
+            "Hãy thay anh chăm sóc mẹ.\nVà hãy sống tiếp thật tốt.\n\nAnh yêu hai mẹ con nhiều.",
             () => QuestManager.Instance.CompleteStep("read_brother_letter"));
     }
 
-    void CreateFinalDeliveryNpc()
+    void CreateFinalRecipients()
     {
-        var go = CreateMarker("Trạm thư cuối", finalDeliveryPosition, new Color(0.9f, 0.75f, 0.2f), new Vector3(2f, 2f, 2f));
-        RegisterWaypoint("final_delivery", go.transform.position);
-        go.AddComponent<FinalDeliveryInteractable>();
+        FamilyRecipient.ResetCounter();
+
+        // 1. Chị Liên
+        var pos1 = GroundSnap.Snap(finalDeliveryPosition);
+        var go1 = CreateMarker("Chị Liên (Vợ lính 1)", pos1, new Color(0.9f, 0.5f, 0.7f), new Vector3(1.5f, 2f, 1.5f));
+        var recipient1 = go1.AddComponent<FamilyRecipient>();
+        recipient1.recipientId = "lien";
+        recipient1.recipientName = "Chị Liên";
+        recipient1.initialDialogue = "Anh ấy hứa sẽ trở về khi mùa lúa chín... Bức thư này là tất cả những gì anh ấy để lại sao?";
+        recipient1.flashbackDialogue = "Hồi tưởng: Tiếng cười ấm áp của người lính trẻ chia tay vợ bên gốc đa làng trước khi lên đường ra trận.";
+        RegisterWaypoint("final_delivery", pos1);
+        SpawnHatVisual(go1.transform, new Color(0.85f, 0.78f, 0.65f), isSoldier: false);
+
+        // 2. Ông Hùng Cũ
+        var pos2 = GroundSnap.Snap(finalDeliveryPosition + new Vector3(6f, 0f, -4f));
+        var go2 = CreateMarker("Ông Hùng Cũ (Cha lính 2)", pos2, new Color(0.5f, 0.6f, 0.7f), new Vector3(1.5f, 2f, 1.5f));
+        var recipient2 = go2.AddComponent<FamilyRecipient>();
+        recipient2.recipientId = "hung_old";
+        recipient2.recipientName = "Ông Hùng Cũ";
+        recipient2.initialDialogue = "Con trai tôi... Nó đã hy sinh để cứu đồng đội của nó. Thằng bé chưa bao giờ làm tôi thất vọng.";
+        recipient2.flashbackDialogue = "Hồi tưởng: Cha và con trai cùng sửa sang lại mái nhà lá bị dột trước khi người con lên đường nhập ngũ.";
+        SpawnHatVisual(go2.transform, new Color(0.85f, 0.78f, 0.65f), isSoldier: false);
+
+        // 3. Mẹ Nam
+        var pos3 = GroundSnap.Snap(playerSpawnPosition + new Vector3(-4f, 0f, 4f));
+        var go3 = CreateMarker("Mẹ Nam", pos3, new Color(1f, 0.8f, 0.8f), new Vector3(1.5f, 2f, 1.5f));
+        var recipient3 = go3.AddComponent<FamilyRecipient>();
+        recipient3.recipientId = "me_nam";
+        recipient3.recipientName = "Mẹ Nam";
+        recipient3.initialDialogue = "Anh trai con... Trần Minh... đã hy sinh rồi sao? Đứa con tội nghiệp của mẹ... Nhưng con đã đưa thư của anh về, mẹ tự hào về con.";
+        recipient3.flashbackDialogue = "Hồi tưởng: Cảnh ba mẹ con bên bữa cơm chiều đạm bạc nhưng tràn đầy tiếng cười ngày xưa.";
+        SpawnHatVisual(go3.transform, new Color(0.85f, 0.78f, 0.65f), isSoldier: false);
+    }
+
+    // --- Procedural Environment Generator ---
+    void GenerateEnvironment()
+    {
+        var zone = ForestZoneLayout.GetZone(chapterIndex);
+        var center = zone.center;
+        var size = zone.groundSize;
+
+        var ground = GameObject.Find("Ground") ?? GameObject.Find("Terrain") ?? GameObject.Find("Plane");
+        if (ground != null)
+        {
+            var r = ground.GetComponent<Renderer>();
+            if (r != null) r.material = CreateURPMaterial(zone.groundColor, 1f);
+        }
+
+        switch (chapterIndex)
+        {
+            case 1:
+                GenerateChapter1Environment(center, size);
+                break;
+            case 2:
+                GenerateChapter2Environment(center, size);
+                break;
+            case 3:
+                GenerateChapter3Environment(center, size);
+                break;
+        }
+    }
+
+    void GenerateChapter1Environment(Vector3 center, Vector3 size)
+    {
+        SpawnHouse(mailStationPosition + new Vector3(-6f, 0f, 4f), "House1");
+        SpawnHouse(mailStationPosition + new Vector3(8f, 0f, -3f), "House2");
+        SpawnHouse(elderNpcPosition + new Vector3(-6f, 0f, -4f), "House3");
+        SpawnHouse(deliveryNpcPosition + new Vector3(7f, 0f, 5f), "House4");
+
+        Color leafColor = new Color(0.18f, 0.65f, 0.25f);
+        for (float x = center.x - size.x * 0.45f; x <= center.x + size.x * 0.45f; x += 6f)
+        {
+            SpawnTree(new Vector3(x, 0f, center.z - size.z * 0.48f + Random.Range(-1f, 1f)), leafColor, Random.Range(0.85f, 1.2f));
+            SpawnTree(new Vector3(x, 0f, center.z + size.z * 0.48f + Random.Range(-1f, 1f)), leafColor, Random.Range(0.85f, 1.2f));
+        }
+        for (float z = center.z - size.z * 0.45f; z <= center.z + size.z * 0.45f; z += 6f)
+        {
+            SpawnTree(new Vector3(center.x - size.x * 0.48f + Random.Range(-1f, 1f), 0f, z), leafColor, Random.Range(0.85f, 1.2f));
+            SpawnTree(new Vector3(center.x + size.x * 0.48f + Random.Range(-1f, 1f), 0f, z), leafColor, Random.Range(0.85f, 1.2f));
+        }
+
+        for (int i = 0; i < 8; i++)
+        {
+            Vector3 rockPos = center + new Vector3(Random.Range(-size.x * 0.35f, size.x * 0.35f), 0f, Random.Range(-size.z * 0.35f, size.z * 0.35f));
+            if (Vector3.Distance(rockPos, playerSpawnPosition) > 5f && Vector3.Distance(rockPos, mailStationPosition) > 5f && Vector3.Distance(rockPos, obstacleZonePosition) > 5f)
+            {
+                var rock = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                rock.name = "Rock";
+                rock.transform.SetParent(chapterRoot.transform);
+                rock.transform.position = GroundSnap.Snap(rockPos) + Vector3.up * 0.4f;
+                rock.transform.rotation = Quaternion.Euler(Random.Range(0, 360), Random.Range(0, 360), Random.Range(0, 360));
+                rock.transform.localScale = new Vector3(Random.Range(1f, 2.5f), Random.Range(0.8f, 2f), Random.Range(1f, 2.5f));
+                var rockR = rock.GetComponent<Renderer>();
+                if (rockR != null) rockR.material = CreateURPMaterial(new Color(0.48f, 0.48f, 0.5f), 1f);
+            }
+        }
+    }
+
+    void GenerateChapter2Environment(Vector3 center, Vector3 size)
+    {
+        SpawnRainShelter(rainShelterPosition);
+        SpawnWatchtower(new Vector3(25f, 0f, -28f));
+        SpawnWatchtower(new Vector3(33f, 0f, -18f));
+
+        Color forestLeafColor = new Color(0.08f, 0.35f, 0.15f);
+        for (int i = 0; i < 45; i++)
+        {
+            Vector3 treePos = center + new Vector3(Random.Range(-size.x * 0.48f, size.x * 0.48f), 0f, Random.Range(-size.z * 0.48f, size.z * 0.48f));
+            bool nearSpecialPoint = false;
+            Vector3[] paths = { playerSpawnPosition, soldierNpcPosition, patrolStart, patrolEnd, rainShelterPosition, motherNpcPosition };
+            foreach (var p in paths)
+            {
+                if (Vector3.Distance(treePos, p) < 4.8f)
+                {
+                    nearSpecialPoint = true;
+                    break;
+                }
+            }
+
+            if (!nearSpecialPoint)
+            {
+                SpawnTree(treePos, forestLeafColor, Random.Range(1.1f, 1.6f));
+            }
+        }
+    }
+
+    void GenerateChapter3Environment(Vector3 center, Vector3 size)
+    {
+        SpawnRustedTank(new Vector3(20f, 0f, -12f));
+
+        for (int i = 0; i < 22; i++)
+        {
+            Vector3 treePos = center + new Vector3(Random.Range(-size.x * 0.48f, size.x * 0.48f), 0f, Random.Range(-size.z * 0.48f, size.z * 0.48f));
+            bool nearSpecial = false;
+            Vector3[] specials = { playerSpawnPosition, clue1Position, clue2Position, clue3Position, finalDeliveryPosition };
+            foreach (var s in specials)
+            {
+                if (Vector3.Distance(treePos, s) < 4f)
+                {
+                    nearSpecial = true;
+                    break;
+                }
+            }
+
+            if (!nearSpecial)
+            {
+                treePos = GroundSnap.Snap(treePos);
+                var tree = new GameObject("BurnedTree");
+                tree.transform.SetParent(chapterRoot.transform);
+                tree.transform.position = treePos;
+
+                var trunk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                trunk.transform.SetParent(tree.transform, false);
+                trunk.transform.localPosition = new Vector3(0f, 2f, 0f);
+                trunk.transform.localScale = new Vector3(0.35f, 2f, 0.35f);
+                var trunkR = trunk.GetComponent<Renderer>();
+                if (trunkR != null) trunkR.material = CreateURPMaterial(new Color(0.12f, 0.12f, 0.12f), 1f);
+            }
+        }
+
+        for (int i = 0; i < 12; i++)
+        {
+            Vector3 blockPos = center + new Vector3(Random.Range(-size.x * 0.45f, size.x * 0.45f), 0f, Random.Range(-size.z * 0.45f, size.z * 0.45f));
+            if (Vector3.Distance(blockPos, playerSpawnPosition) > 4f && Vector3.Distance(blockPos, finalDeliveryPosition) > 4f)
+            {
+                var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                block.name = "Rubble";
+                block.transform.SetParent(chapterRoot.transform);
+                block.transform.position = GroundSnap.Snap(blockPos) + new Vector3(0f, Random.Range(0.2f, 0.6f), 0f);
+                block.transform.rotation = Quaternion.Euler(Random.Range(-15, 15), Random.Range(0, 360), Random.Range(-15, 15));
+                block.transform.localScale = new Vector3(Random.Range(1.5f, 3.5f), Random.Range(0.5f, 1.5f), Random.Range(1f, 2.5f));
+                var blockR = block.GetComponent<Renderer>();
+                if (blockR != null) blockR.material = CreateURPMaterial(new Color(0.35f, 0.35f, 0.36f), 1f);
+            }
+        }
+
+        StartCoroutine(ShellingRoutine());
+    }
+
+    void SpawnTree(Vector3 pos, Color leafColor, float scaleMultiplier = 1f)
+    {
+        pos = GroundSnap.Snap(pos);
+        var tree = new GameObject("Tree");
+        tree.transform.SetParent(chapterRoot.transform);
+        tree.transform.position = pos;
+
+        var trunk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        trunk.name = "Trunk";
+        trunk.transform.SetParent(tree.transform, false);
+        trunk.transform.localPosition = new Vector3(0f, 1.5f * scaleMultiplier, 0f);
+        trunk.transform.localScale = new Vector3(0.35f * scaleMultiplier, 1.5f * scaleMultiplier, 0.35f * scaleMultiplier);
+        var trunkR = trunk.GetComponent<Renderer>();
+        if (trunkR != null) trunkR.material = CreateURPMaterial(new Color(0.35f, 0.22f, 0.12f), 1f);
+
+        var leaves = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        leaves.name = "Leaves";
+        leaves.transform.SetParent(tree.transform, false);
+        leaves.transform.localPosition = new Vector3(0f, 3.2f * scaleMultiplier, 0f);
+        leaves.transform.localScale = new Vector3(2.5f * scaleMultiplier, 2.2f * scaleMultiplier, 2.5f * scaleMultiplier);
+        var leavesR = leaves.GetComponent<Renderer>();
+        if (leavesR != null) leavesR.material = CreateURPMaterial(leafColor, 1f);
+    }
+
+    void SpawnBushModel(Transform parent, Vector3 localPos, float scale = 1f)
+    {
+        var bush = new GameObject("BushVisual");
+        bush.transform.SetParent(parent, false);
+        bush.transform.localPosition = localPos;
+
+        for (int i = 0; i < 3; i++)
+        {
+            var leaf = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            leaf.transform.SetParent(bush.transform, false);
+            leaf.transform.localPosition = new Vector3(Random.Range(-0.4f, 0.4f), Random.Range(0.2f, 0.5f), Random.Range(-0.4f, 0.4f));
+            leaf.transform.localScale = Vector3.one * Random.Range(0.9f, 1.4f) * scale;
+            if (leaf.GetComponent<Collider>() != null) Destroy(leaf.GetComponent<Collider>());
+            var leafR = leaf.GetComponent<Renderer>();
+            if (leafR != null) leafR.material = CreateURPMaterial(new Color(0.12f, 0.5f, 0.18f), 1f);
+        }
+    }
+
+    void SpawnFallenLog(Vector3 pos, float rotationY, float length)
+    {
+        pos = GroundSnap.Snap(pos);
+        var log = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        log.name = "FallenLog";
+        log.transform.SetParent(chapterRoot.transform);
+        log.transform.position = pos + Vector3.up * 0.25f;
+        log.transform.rotation = Quaternion.Euler(0f, rotationY, 90f);
+        log.transform.localScale = new Vector3(0.5f, length * 0.5f, 0.5f);
+        var logR = log.GetComponent<Renderer>();
+        if (logR != null) logR.material = CreateURPMaterial(new Color(0.28f, 0.18f, 0.1f), 1f);
+    }
+
+    void SpawnHouse(Vector3 pos, string name)
+    {
+        pos = GroundSnap.Snap(pos);
+        var house = new GameObject(name);
+        house.transform.SetParent(chapterRoot.transform);
+        house.transform.position = pos;
+
+        var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wall.name = "Walls";
+        wall.transform.SetParent(house.transform, false);
+        wall.transform.localPosition = new Vector3(0f, 1.2f, 0f);
+        wall.transform.localScale = new Vector3(3.5f, 2.4f, 3f);
+        var wallR = wall.GetComponent<Renderer>();
+        if (wallR != null) wallR.material = CreateURPMaterial(new Color(0.9f, 0.86f, 0.76f), 1f);
+
+        var roof = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        roof.name = "Roof";
+        roof.transform.SetParent(house.transform, false);
+        roof.transform.localPosition = new Vector3(0f, 2.7f, 0f);
+        roof.transform.localRotation = Quaternion.Euler(0f, 0f, 25f);
+        roof.transform.localScale = new Vector3(2.6f, 2.6f, 3.4f);
+        var roofR = roof.GetComponent<Renderer>();
+        if (roofR != null) roofR.material = CreateURPMaterial(new Color(0.65f, 0.35f, 0.18f), 1f);
+    }
+
+    void SpawnRainShelter(Vector3 pos)
+    {
+        pos = GroundSnap.Snap(pos);
+        var shelter = new GameObject("RainShelterVisual");
+        shelter.transform.SetParent(chapterRoot.transform);
+        shelter.transform.position = pos;
+
+        Vector3[] offsets = { new Vector3(-2f, 0f, -2f), new Vector3(2f, 0f, -2f), new Vector3(-2f, 0f, 2f), new Vector3(2f, 0f, 2f) };
+        foreach (var offset in offsets)
+        {
+            var pillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pillar.transform.SetParent(shelter.transform, false);
+            pillar.transform.localPosition = offset + Vector3.up * 1.5f;
+            pillar.transform.localScale = new Vector3(0.18f, 1.5f, 0.18f);
+            var pillarR = pillar.GetComponent<Renderer>();
+            if (pillarR != null) pillarR.material = CreateURPMaterial(new Color(0.35f, 0.22f, 0.12f), 1f);
+        }
+
+        var roof = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        roof.name = "Roof";
+        roof.transform.SetParent(shelter.transform, false);
+        roof.transform.localPosition = new Vector3(0f, 3f, 0f);
+        roof.transform.localScale = new Vector3(4.8f, 0.25f, 4.8f);
+        var roofR = roof.GetComponent<Renderer>();
+        if (roofR != null) roofR.material = CreateURPMaterial(new Color(0.5f, 0.4f, 0.25f), 1f);
+    }
+
+    void SpawnWatchtower(Vector3 pos)
+    {
+        pos = GroundSnap.Snap(pos);
+        var tower = new GameObject("Watchtower");
+        tower.transform.SetParent(chapterRoot.transform);
+        tower.transform.position = pos;
+
+        var frame = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        frame.name = "Frame";
+        frame.transform.SetParent(tower.transform, false);
+        frame.transform.localPosition = new Vector3(0f, 2.5f, 0f);
+        frame.transform.localScale = new Vector3(1.2f, 5f, 1.2f);
+        var frameR = frame.GetComponent<Renderer>();
+        if (frameR != null) frameR.material = CreateURPMaterial(new Color(0.2f, 0.2f, 0.22f), 1f);
+
+        var platform = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        platform.name = "Platform";
+        platform.transform.SetParent(tower.transform, false);
+        platform.transform.localPosition = new Vector3(0f, 5f, 0f);
+        platform.transform.localScale = new Vector3(2.5f, 0.3f, 2.5f);
+        var platformR = platform.GetComponent<Renderer>();
+        if (platformR != null) platformR.material = CreateURPMaterial(new Color(0.35f, 0.35f, 0.38f), 1f);
+
+        var lightGo = new GameObject("WatchtowerLight");
+        lightGo.transform.SetParent(tower.transform, false);
+        lightGo.transform.localPosition = new Vector3(0f, 5.5f, 0f);
+        var light = lightGo.AddComponent<Light>();
+        light.type = LightType.Spot;
+        light.color = new Color(1f, 0.95f, 0.8f);
+        light.intensity = 4.5f;
+        light.range = 25f;
+        light.spotAngle = 35f;
+
+        var rotVisual = lightGo.AddComponent<FlashlightVisual>();
+        rotVisual.beamLength = 15f;
+        rotVisual.beamWidth = 4f;
+        rotVisual.sweepAngle = 35f;
+        rotVisual.sweepSpeed = 0.8f;
+    }
+
+    void SpawnRustedTank(Vector3 pos)
+    {
+        pos = GroundSnap.Snap(pos);
+        var tank = new GameObject("RustedTank");
+        tank.transform.SetParent(chapterRoot.transform);
+        tank.transform.position = pos;
+
+        var chassis = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        chassis.name = "Chassis";
+        chassis.transform.SetParent(tank.transform, false);
+        chassis.transform.localPosition = new Vector3(0f, 0.6f, 0f);
+        chassis.transform.localScale = new Vector3(3f, 1f, 5f);
+        var chassisR = chassis.GetComponent<Renderer>();
+        if (chassisR != null) chassisR.material = CreateURPMaterial(new Color(0.42f, 0.28f, 0.2f), 1f);
+
+        var turret = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        turret.name = "Turret";
+        turret.transform.SetParent(tank.transform, false);
+        turret.transform.localPosition = new Vector3(0f, 1.4f, -0.4f);
+        turret.transform.localScale = new Vector3(1.8f, 0.8f, 2.2f);
+        var turretR = turret.GetComponent<Renderer>();
+        if (turretR != null) turretR.material = CreateURPMaterial(new Color(0.38f, 0.25f, 0.18f), 1f);
+
+        var barrel = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        barrel.name = "Barrel";
+        barrel.transform.SetParent(tank.transform, false);
+        barrel.transform.localPosition = new Vector3(0f, 1.4f, 1.8f);
+        barrel.transform.localRotation = Quaternion.Euler(85f, 0f, 0f);
+        barrel.transform.localScale = new Vector3(0.25f, 1.8f, 0.25f);
+        var barrelR = barrel.GetComponent<Renderer>();
+        if (barrelR != null) barrelR.material = CreateURPMaterial(new Color(0.3f, 0.2f, 0.15f), 1f);
+    }
+
+    void SpawnHatVisual(Transform npcTransform, Color color, bool isSoldier)
+    {
+        var hat = GameObject.CreatePrimitive(isSoldier ? PrimitiveType.Sphere : PrimitiveType.Cylinder);
+        hat.name = "HatVisual";
+        hat.transform.SetParent(npcTransform, false);
+        
+        if (isSoldier)
+        {
+            hat.transform.localPosition = new Vector3(0f, 2f, 0f);
+            hat.transform.localScale = new Vector3(0.9f, 0.45f, 0.9f);
+        }
+        else // Conical hat (Nón lá) simulation
+        {
+            hat.transform.localPosition = new Vector3(0f, 2.05f, 0f);
+            hat.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            hat.transform.localScale = new Vector3(1.1f, 0.12f, 1.1f);
+            
+            // Conical tip
+            var tip = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            tip.transform.SetParent(hat.transform, false);
+            tip.transform.localPosition = new Vector3(0f, 0.8f, 0f);
+            tip.transform.localScale = new Vector3(0.3f, 1f, 0.3f);
+            Destroy(tip.GetComponent<Collider>());
+            var tipR = tip.GetComponent<Renderer>();
+            if (tipR != null) tipR.material = CreateURPMaterial(color, 1f);
+        }
+
+        Destroy(hat.GetComponent<Collider>());
+        var r = hat.GetComponent<Renderer>();
+        if (r != null) r.material = CreateURPMaterial(color, 1f);
+    }
+
+    IEnumerator ShellingRoutine()
+    {
+        while (chapterIndex == 3)
+        {
+            yield return new WaitForSeconds(Random.Range(4f, 7f));
+
+            if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive("cross_danger"))
+                continue;
+
+            var player = GameManager.Instance?.player;
+            if (player == null) continue;
+
+            var dangerCenter = ForestZoneLayout.Ch3DangerZone;
+            if (Vector3.Distance(player.position, dangerCenter) > 22f)
+                continue;
+
+            Vector3 targetPos = player.position + new Vector3(Random.Range(-5f, 5f), 0f, Random.Range(-5f, 5f));
+            targetPos = GroundSnap.Snap(targetPos);
+
+            var warning = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            warning.name = "ArtilleryWarning";
+            warning.transform.SetParent(chapterRoot.transform);
+            warning.transform.position = targetPos + new Vector3(0f, 0.05f, 0f);
+            warning.transform.localScale = new Vector3(4.5f, 0.02f, 4.5f);
+            Destroy(warning.GetComponent<Collider>());
+            var warningR = warning.GetComponent<Renderer>();
+            if (warningR != null) warningR.material = CreateURPMaterial(new Color(1f, 0f, 0f, 0.35f), 0.35f);
+
+            GameUI.Instance?.ShowNotification("⚠ Cảnh báo pháo kích! Tránh xa vòng đỏ!", 1.5f);
+
+            yield return new WaitForSeconds(2f);
+
+            if (warning != null) Destroy(warning);
+
+            var explosion = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            explosion.name = "ExplosionVisual";
+            explosion.transform.SetParent(chapterRoot.transform);
+            explosion.transform.position = targetPos + Vector3.up * 1.5f;
+            explosion.transform.localScale = Vector3.one * 0.5f;
+            Destroy(explosion.GetComponent<Collider>());
+            var expR = explosion.GetComponent<Renderer>();
+            if (expR != null) expR.material = CreateURPMaterial(new Color(1f, 0.45f, 0.1f, 0.95f), 0.95f);
+
+            float elapsed = 0f;
+            bool hitPlayer = false;
+            while (elapsed < 0.4f)
+            {
+                if (explosion == null) break;
+                float t = elapsed / 0.4f;
+                explosion.transform.localScale = Vector3.Lerp(Vector3.one * 0.5f, Vector3.one * 7f, t);
+                
+                if (!hitPlayer && player != null && Vector3.Distance(player.position, targetPos) <= 3.8f)
+                {
+                    hitPlayer = true;
+                    GameUI.Instance?.ShowNotification("Bị trúng pháo kích! Rút lui về checkpoint.", 3f);
+                    GameManager.Instance?.TeleportPlayer(ForestZoneLayout.Ch3DangerReset);
+                }
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (explosion != null) Destroy(explosion);
+        }
     }
 
     static void RegisterWaypoint(string questStepId, Vector3 pos) =>
@@ -597,10 +1074,15 @@ public class ChapterFlowController : MonoBehaviour
 
     void OnChapter1Complete()
     {
-        DialogueManager.Instance?.ShowDialogue("Nam", "Mỗi lá thư đều mang theo hy vọng...", () =>
+        DialogueManager.Instance?.ShowDialogue("Ông Hùng", "Cậu đã trở về! Và đã giao lá thư đầu tiên thành công chứ?", () =>
         {
-            DialogueManager.Instance?.ShowDialogue("", "Nam được tuyển vào đội vận chuyển thư.", () =>
-                GameManager.Instance?.CompleteChapter(1));
+            DialogueManager.Instance?.ShowDialogue("Nam", "Dạ rồi ạ. Nhìn thấy nụ cười của anh Sơn khi nhận được tin vui từ gia đình, em hiểu công việc này có ý nghĩa thế nào.", () =>
+            {
+                DialogueManager.Instance?.ShowDialogue("Ông Hùng", "Tốt lắm. Mỗi bức thư là một tia hy vọng. Từ hôm nay, cậu chính thức là người đưa thư của chúng tôi.", () =>
+                {
+                    GameManager.Instance?.CompleteChapter(1);
+                });
+            });
         });
     }
 
@@ -615,7 +1097,10 @@ public class ChapterFlowController : MonoBehaviour
 
     void OnChapter3Complete()
     {
-        GameManager.Instance?.CompleteChapter(3);
+        DialogueManager.Instance?.ShowDialogue("Nam", "Chiến tranh đã qua, nhưng những lá thư và hy vọng này sẽ sống mãi.", () =>
+        {
+            GameManager.Instance?.CompleteChapter(3);
+        });
     }
 
     void OnDestroy()

@@ -14,6 +14,7 @@ public class StealthEnemy : MonoBehaviour
     Vector3 target;
     float detectTimer;
     bool warned;
+    FlashlightVisual flashlight;
 
     void Start()
     {
@@ -27,13 +28,28 @@ public class StealthEnemy : MonoBehaviour
 
         if (resetPosition == Vector3.zero)
             resetPosition = pointA + Vector3.back * 4f;
+
+        // Auto-add flashlight visual representation if must hide to pass (stealth difficulty)
+        flashlight = GetComponent<FlashlightVisual>();
+        if (flashlight == null && mustHideToPass)
+        {
+            flashlight = gameObject.AddComponent<FlashlightVisual>();
+            flashlight.beamLength = detectRadius;
+            flashlight.beamWidth = detectRadius * 0.4f;
+        }
     }
 
     void Update()
     {
         transform.position = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
         if (Vector3.Distance(transform.position, target) < 0.2f)
+        {
             target = target == pointB ? pointA : pointB;
+            // Face the walk target
+            Vector3 direction = (target - transform.position).normalized;
+            if (direction != Vector3.zero)
+                transform.rotation = Quaternion.LookRotation(direction);
+        }
 
         if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive(activeQuestId))
         {
@@ -51,8 +67,17 @@ public class StealthEnemy : MonoBehaviour
         var player = GameManager.Instance?.player;
         if (player == null) return;
 
-        float dist = Vector3.Distance(transform.position, player.position);
-        if (dist <= detectRadius)
+        bool isDetected = false;
+        if (flashlight != null)
+        {
+            isDetected = flashlight.CheckPlayerInBeam(player.position);
+        }
+        else
+        {
+            isDetected = Vector3.Distance(transform.position, player.position) <= detectRadius;
+        }
+
+        if (isDetected)
         {
             if (!warned)
             {
@@ -84,3 +109,4 @@ public class StealthEnemy : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, detectRadius);
     }
 }
+
