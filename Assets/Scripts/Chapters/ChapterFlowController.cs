@@ -431,7 +431,13 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateMotherNpc()
     {
-        var go = CreateNpcMarker("Mẹ anh lính", motherNpcPosition, new Color(1f, 0.7f, 0.8f), NpcVisualFactory.NpcRole.Civilian);
+        var go = CreateNpcMarker("Mẹ anh lính", motherNpcPosition, new Color(1f, 0.7f, 0.8f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/MeAnhLinh/MeAnhLinh", false);
+        var model = go.transform.Find("NpcModel");
+        if (model != null)
+        {
+            model.localPosition = Vector3.zero;
+            model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+        }
         RegisterWaypoint("deliver_mother", go.transform.position);
         go.AddComponent<MotherDeliveryInteractable>();
     }
