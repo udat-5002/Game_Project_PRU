@@ -364,7 +364,15 @@ public class ChapterFlowController : MonoBehaviour
             var enemy = patrol.AddComponent<StealthEnemy>();
             enemy.pointA = GroundSnap.SnapCharacter(setup.pointA);
             enemy.pointB = GroundSnap.SnapCharacter(setup.pointB);
-            enemy.resetPosition = GroundSnap.SnapCharacter(resetPos);
+
+            Vector3 chapterStart = chapter switch
+            {
+                1 => ForestZoneLayout.Ch1Start,
+                2 => ForestZoneLayout.Ch2Start,
+                3 => ForestZoneLayout.Ch3Start,
+                _ => resetPos
+            };
+            enemy.resetPosition = GroundSnap.SnapCharacter(chapterStart);
             enemy.moveSpeed = setup.moveSpeed;
             enemy.detectRadius = setup.detectRadius;
             enemy.detectSeconds = setup.detectSeconds;
@@ -397,7 +405,7 @@ public class ChapterFlowController : MonoBehaviour
         if (bushPrefab != null)
         {
             var bush = Object.Instantiate(bushPrefab, hideGo.transform);
-            bush.transform.localPosition = Vector3.down * 1.25f;
+            bush.transform.localPosition = new Vector3(0, -0.1f, 0);
             bush.transform.localScale = Vector3.one * 5f;
 
             var bushMat = Resources.Load<Material>("WildGrass/BushMat");
