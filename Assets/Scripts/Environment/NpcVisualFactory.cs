@@ -36,8 +36,11 @@ public static class NpcVisualFactory
         ApplyPlayerModelTransform(model.transform);
 
         StripGameplayComponents(model);
-        SetupAnimator(model);
-        ApplyRoleAppearance(model, role);
+        SetupAnimator(model, overrideModelPath);
+        if (string.IsNullOrEmpty(overrideModelPath))
+        {
+            ApplyRoleAppearance(model, role);
+        }
         AutoAdjustGroundPlacement(model.transform);
 
         return model.transform;
@@ -152,19 +155,25 @@ public static class NpcVisualFactory
         return cachedAnimController;
     }
 
-    static void SetupAnimator(GameObject model)
+    static void SetupAnimator(GameObject model, string overridePath)
     {
-        var controller = GetAnimController();
-        if (controller == null) return;
+        var anim = model.GetComponent<Animator>();
+        if (anim == null) anim = model.AddComponent<Animator>();
 
-        var animator = model.GetComponent<Animator>();
-        if (animator == null)
-            animator = model.AddComponent<Animator>();
+        if (!string.IsNullOrEmpty(overridePath) && overridePath.Contains("Soldier_demo"))
+        {
+            var demoController = Resources.Load<RuntimeAnimatorController>("NhanVat/LowPolySoldiers_demo/SoldierDemoController");
+            if (demoController != null)
+                anim.runtimeAnimatorController = demoController;
+        }
+        else
+        {
+            anim.runtimeAnimatorController = GetAnimController();
+        }
 
-        animator.runtimeAnimatorController = controller;
-        animator.applyRootMotion = false;
-        animator.SetFloat("Speed", 0f);
-        animator.SetBool("Grounded", true);
+        anim.applyRootMotion = false;
+        anim.SetFloat("Speed", 0f);
+        anim.SetBool("Grounded", true);
     }
 
     static void StripGameplayComponents(GameObject model)
