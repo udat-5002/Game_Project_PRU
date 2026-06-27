@@ -382,7 +382,7 @@ public class ChapterFlowController : MonoBehaviour
             var modelRoot = NpcVisualFactory.Attach(patrol.transform, NpcVisualFactory.NpcRole.Enemy, "NhanVat/LowPolySoldiers_demo/models/Soldier_demo");
             if (modelRoot != null)
             {
-                modelRoot.localScale = Vector3.one * 1.5f;
+                modelRoot.localScale = Vector3.one * 1.3f;
                 NpcVisualFactory.AutoAdjustGroundPlacement(modelRoot);
                 PatrolVisibility.Apply(patrol.transform);
                 var patrolAnim = patrol.AddComponent<NpcPatrolAnimator>();
