@@ -371,7 +371,7 @@ public class ChapterFlowController : MonoBehaviour
             enemy.mustHideToPass = setup.mustHideToPass;
             enemy.activeQuestId = setup.activeQuestId;
 
-            var modelRoot = NpcVisualFactory.Attach(patrol.transform, NpcVisualFactory.NpcRole.Enemy);
+            var modelRoot = NpcVisualFactory.Attach(patrol.transform, NpcVisualFactory.NpcRole.Enemy, "NhanVat/LowPolySoldiers_demo/models/Soldier_demo");
             if (modelRoot != null)
             {
                 PatrolVisibility.Apply(patrol.transform);
