@@ -324,7 +324,7 @@ public class ChapterFlowController : MonoBehaviour
         var model = go.transform.Find("NpcModel");
         if (model != null)
         {
-            model.localPosition = Vector3.zero;
+            model.localPosition = new Vector3(0f, 0.036f, 0f);
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
         }
         RegisterWaypoint("deliver_mail", go.transform.position);
