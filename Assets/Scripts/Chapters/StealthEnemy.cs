@@ -40,13 +40,9 @@ public class StealthEnemy : MonoBehaviour
         if (Vector3.Distance(transform.position, target) < 0.2f)
             target = target == pointB ? pointA : pointB;
 
-        if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive(activeQuestId))
-        {
-            ResetWarnings();
-            return;
-        }
 
-        if (mustHideToPass && HideSpot.PlayerIsHidden)
+
+        if (HideSpot.PlayerIsHidden)
         {
             detectTimer = 0f;
             return;

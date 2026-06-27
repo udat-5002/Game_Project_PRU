@@ -392,6 +392,28 @@ public class ChapterFlowController : MonoBehaviour
     {
         var hideGo = CreateInvisibleTrigger($"HideSpot_{questId}", GroundSnap.Snap(hidePos), new Vector3(3.5f, 2.5f, 3.5f));
         hideGo.AddComponent<HideSpot>();
+
+        var bushPrefab = Resources.Load<GameObject>("WildGrass/Bush");
+        if (bushPrefab != null)
+        {
+            var bush = Object.Instantiate(bushPrefab, hideGo.transform);
+            bush.transform.localPosition = Vector3.down * 1.25f;
+            bush.transform.localScale = Vector3.one * 3.5f;
+
+            var baseTex = Resources.Load<Texture>("WildGrass/Wild_Grass_vczndjqja_Low_1K_BaseColor");
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            
+            foreach (var r in bush.GetComponentsInChildren<Renderer>())
+            {
+                var mat = new Material(shader);
+                mat.SetFloat("_AlphaClip", 1);
+                mat.SetFloat("_Cutoff", 0.3f);
+                mat.SetInt("_Cull", 0); 
+                
+                if (baseTex != null) mat.SetTexture("_BaseMap", baseTex);
+                r.material = mat;
+            }
+        }
     }
 
     void CreateDangerArea()
