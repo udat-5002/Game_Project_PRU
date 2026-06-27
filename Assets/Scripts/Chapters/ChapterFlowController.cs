@@ -367,9 +367,9 @@ public class ChapterFlowController : MonoBehaviour
 
             Vector3 chapterStart = chapter switch
             {
-                1 => ForestZoneLayout.Ch1Start,
-                2 => ForestZoneLayout.Ch2Start,
-                3 => ForestZoneLayout.Ch3Start,
+                1 => ForestZoneLayout.Ch1Spawn,
+                2 => ForestZoneLayout.Ch2Spawn,
+                3 => ForestZoneLayout.Ch3Spawn,
                 _ => resetPos
             };
             enemy.resetPosition = GroundSnap.SnapCharacter(chapterStart);
