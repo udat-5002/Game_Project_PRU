@@ -218,7 +218,13 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateElderNpc()
     {
-        var go = CreateNpcMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/BaLao/BaLao");
+        var go = CreateNpcMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/BaLao/BaLao", false);
+        var model = go.transform.Find("NpcModel");
+        if (model != null)
+        {
+            model.localPosition = Vector3.zero;
+            model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+        }
         RegisterWaypoint("ask_elder", go.transform.position);
         var elder = go.AddComponent<ElderGuideInteractable>();
         elder.promptText = "Nhấn E - Hỏi đường";
@@ -314,7 +320,7 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateDeliveryNpc(string name, Vector3 pos)
     {
-        var go = CreateNpcMarker(name, pos, Color.yellow, NpcVisualFactory.NpcRole.Civilian);
+        var go = CreateNpcMarker(name, pos, Color.yellow, NpcVisualFactory.NpcRole.Civilian, null, false);
         RegisterWaypoint("deliver_mail", go.transform.position);
         var delivery = go.AddComponent<MailDeliveryInteractable>();
         delivery.recipientName = "Bà Lan - Làng Bình An";
@@ -562,7 +568,7 @@ public class ChapterFlowController : MonoBehaviour
         return go;
     }
 
-    GameObject CreateNpcMarker(string name, Vector3 pos, Color accent, NpcVisualFactory.NpcRole role, string overrideModelPath = null)
+    GameObject CreateNpcMarker(string name, Vector3 pos, Color accent, NpcVisualFactory.NpcRole role, string overrideModelPath = null, bool showFootRing = true)
     {
         var go = new GameObject(name);
         go.transform.SetParent(chapterRoot.transform);
@@ -575,7 +581,7 @@ public class ChapterFlowController : MonoBehaviour
 
         NpcVisualFactory.Attach(go.transform, role, overrideModelPath);
         CreateObjectiveLabel(go.transform, name);
-        CreateNpcFootRing(go.transform, accent);
+        if (showFootRing) CreateNpcFootRing(go.transform, accent);
         return go;
     }
 
