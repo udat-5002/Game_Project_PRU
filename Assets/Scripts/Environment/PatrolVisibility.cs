@@ -68,8 +68,11 @@ public static class PatrolVisibility
         foreach (var renderer in patrolRoot.GetComponentsInChildren<Renderer>(true))
         {
             if (renderer == null || renderer.material == null) continue;
+            if (renderer.gameObject.name == "PatrolGroundRing") continue;
 
             var mat = renderer.material;
+            if (mat.name.Contains("demo_soldier") || mat.name.Contains("demo_weapon")) continue;
+
             if (mat.HasProperty("_BaseColor"))
             {
                 var c = mat.GetColor("_BaseColor");
