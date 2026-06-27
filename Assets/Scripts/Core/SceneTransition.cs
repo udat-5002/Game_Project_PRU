@@ -20,8 +20,10 @@ public class SceneTransition : MonoBehaviour
     Text subtitleText;
     GameObject endingPanel;
     Text endingText;
+    Text endingHint;
 
     bool isTransitioning;
+    AudioSource titleVoiceSource;
 
     static readonly Color Gold = new Color(1f, 0.82f, 0.28f, 1f);
     static readonly Color CardBg = new Color(0.05f, 0.04f, 0.03f, 0.98f);
@@ -55,6 +57,7 @@ public class SceneTransition : MonoBehaviour
 
     public void ResetForMainMenu()
     {
+        StopTitleVoice();
         if (fadeImage != null)
             fadeImage.color = new Color(0, 0, 0, 0);
         if (titlePanel != null)
@@ -85,15 +88,28 @@ public class SceneTransition : MonoBehaviour
         gameObject.AddComponent<GraphicRaycaster>();
         UpdateMenuBlocker();
 
+        titleVoiceSource = gameObject.AddComponent<AudioSource>();
+        titleVoiceSource.playOnAwake = false;
+        titleVoiceSource.spatialBlend = 0f;
+        titleVoiceSource.loop = false;
+
         fadeImage = CreateFullScreenImage("Fade", new Color(0, 0, 0, 0));
         fadeImage.raycastTarget = false;
 
         BuildChapterTitlePanel();
 
         endingPanel = CreatePanel("EndingPanel", new Color(0, 0, 0, 0.96f));
-        endingText = CreateText(endingPanel.transform, "Ending", 40, TextAnchor.MiddleCenter, Vector2.zero, Color.white);
-        var endingHint = CreateText(endingPanel.transform, "Hint", 30, TextAnchor.LowerCenter, new Vector2(0, 40), Color.white);
+
+        var endingCard = CreateBox(endingPanel.transform, "EndingCard", new Vector2(980f, 460f), CardBg);
+
+        endingText = CreateText(endingCard.transform, "Ending", 38, TextAnchor.MiddleCenter, new Vector2(0f, 36f), Color.white);
+        endingText.rectTransform.sizeDelta = new Vector2(900f, 260f);
+        endingText.lineSpacing = 1.28f;
+
+        endingHint = CreateText(endingCard.transform, "Hint", 30, TextAnchor.MiddleCenter, new Vector2(0f, -168f), Gold);
+        endingHint.rectTransform.sizeDelta = new Vector2(900f, 48f);
         endingHint.text = "Nhấn Space để quay về menu";
+
         endingPanel.SetActive(false);
     }
 
@@ -121,23 +137,22 @@ public class SceneTransition : MonoBehaviour
 
     public void LoadScene(string sceneName)
     {
-        if (!isTransitioning)
-            StartCoroutine(LoadSceneRoutine(sceneName, null, null, 0, false));
+        StartCoroutine(LoadSceneRoutine(sceneName, null, null, 0, false));
     }
 
-    public void TransitionToChapter(string sceneName, string title, string subtitle, int chapterIndex)
+    public void TransitionToChapter(string sceneName, string title, string subtitle, int chapterIndex, string voiceKey = null)
     {
         if (isTransitioning) return;
-        StartCoroutine(TransitionRoutine(sceneName, title, subtitle, chapterIndex));
+        StartCoroutine(TransitionRoutine(sceneName, title, subtitle, chapterIndex, voiceKey));
     }
 
-    public void ShowEnding(string message, Action onComplete)
+    public void ShowEnding(string message, Action onComplete, string voiceKey = null)
     {
         if (isTransitioning) return;
-        StartCoroutine(EndingRoutine(message, onComplete));
+        StartCoroutine(EndingRoutine(message, onComplete, voiceKey));
     }
 
-    IEnumerator TransitionRoutine(string sceneName, string title, string subtitle, int chapterIndex)
+    IEnumerator TransitionRoutine(string sceneName, string title, string subtitle, int chapterIndex, string voiceKey)
     {
         isTransitioning = true;
         GameManager.Instance?.LockInput(true);
@@ -159,8 +174,13 @@ public class SceneTransition : MonoBehaviour
         titlePanel.SetActive(true);
 
         yield return Fade(1f, 0f);
-        yield return new WaitForSecondsRealtime(titleDuration);
 
+        float waitDuration = PlayTitleVoice(voiceKey);
+        float endTime = Time.unscaledTime + waitDuration;
+        while (Time.unscaledTime < endTime)
+            yield return null;
+
+        StopTitleVoice();
         titlePanel.SetActive(false);
         IsShowingChapterTitle = false;
         GameUI.Instance?.SetHudVisible(true);
@@ -168,13 +188,44 @@ public class SceneTransition : MonoBehaviour
         isTransitioning = false;
     }
 
+    float PlayTitleVoice(string voiceKey)
+    {
+        StopTitleVoice();
+        if (string.IsNullOrWhiteSpace(voiceKey) || titleVoiceSource == null)
+            return titleDuration;
+
+        var clip = Resources.Load<AudioClip>($"Audio/Dialogue/{voiceKey.Trim()}");
+        if (clip == null)
+        {
+            Debug.LogWarning($"[SceneTransition] Không tìm thấy giọng: Audio/Dialogue/{voiceKey}");
+            return titleDuration;
+        }
+
+        titleVoiceSource.clip = clip;
+        titleVoiceSource.volume = AudioSettings.DialogueVoiceScaled;
+        GameMusicController.Instance?.SetMusicDuck(0.22f);
+        titleVoiceSource.Play();
+        return Mathf.Max(titleDuration, clip.length + 0.25f);
+    }
+
+    void StopTitleVoice()
+    {
+        if (titleVoiceSource != null && titleVoiceSource.isPlaying)
+            titleVoiceSource.Stop();
+        GameMusicController.Instance?.SetMusicDuck(1f);
+    }
+
     IEnumerator LoadSceneRoutine(string sceneName, string title, string subtitle, int chapterIndex, bool showTitle)
     {
         isTransitioning = true;
+        GameManager.Instance?.LockInput(true);
         yield return Fade(0f, 1f);
 
         AsyncOperation load = SceneManager.LoadSceneAsync(sceneName);
         while (!load.isDone) yield return null;
+
+        if (sceneName == GameManager.SceneMainMenu)
+            PrepareMainMenuReturn();
 
         if (showTitle && titlePanel != null)
         {
@@ -192,9 +243,22 @@ public class SceneTransition : MonoBehaviour
         }
 
         isTransitioning = false;
+        GameManager.Instance?.LockInput(false);
     }
 
-    IEnumerator EndingRoutine(string message, Action onComplete)
+    static void PrepareMainMenuReturn()
+    {
+        GameUI.Instance?.SetHudVisible(false);
+        GameUI.Instance?.SetInteractPrompt(false);
+        GameManager.Instance?.LockInput(false);
+        GameMusicController.Instance?.SetMusicDuck(1f);
+
+        var menuUi = UnityEngine.Object.FindFirstObjectByType<MainMenuUI>();
+        if (menuUi != null)
+            menuUi.ReturnToMainScreen();
+    }
+
+    IEnumerator EndingRoutine(string message, Action onComplete, string voiceKey)
     {
         isTransitioning = true;
         GameManager.Instance?.LockInput(true);
@@ -203,17 +267,31 @@ public class SceneTransition : MonoBehaviour
         yield return Fade(0f, 1f);
 
         GameMusicController.Instance?.PlayEndingMusic();
+        GameMusicController.Instance?.SetMusicDuck(0.22f);
         endingText.text = message;
         endingPanel.SetActive(true);
         yield return Fade(1f, 0f);
 
+        PlayTitleVoice(voiceKey);
+
+        while (titleVoiceSource != null && titleVoiceSource.isPlaying)
+        {
+            if (GameInput.SpacePressedThisFrame)
+            {
+                StopTitleVoice();
+                break;
+            }
+            yield return null;
+        }
+
         yield return new WaitUntil(() => GameInput.SpacePressedThisFrame);
 
+        StopTitleVoice();
         endingPanel.SetActive(false);
         yield return Fade(0f, 1f);
 
-        onComplete?.Invoke();
         isTransitioning = false;
+        onComplete?.Invoke();
     }
 
     static string ExtractChapterName(string fullTitle, int chapter)

@@ -10,6 +10,7 @@ public class DialogueManager : MonoBehaviour
     [Header("Hội thoại mặc định")]
     public bool autoAdvance = true;
     public bool typewriter = true;
+    public bool voiceEnabled = true;
     public float charsPerSecond = 34f;
     public float minAutoPause = 1.8f;
     public float maxAutoPause = 6f;
@@ -17,6 +18,7 @@ public class DialogueManager : MonoBehaviour
     public bool IsShowing { get; private set; }
 
     InputAction continueAction;
+    DialogueVoicePlayer voicePlayer;
 
     void Awake()
     {
@@ -24,11 +26,16 @@ public class DialogueManager : MonoBehaviour
         continueAction = new InputAction("Continue", binding: "<Keyboard>/space");
         continueAction.AddBinding("<Keyboard>/e");
         continueAction.Enable();
+
+        voicePlayer = GetComponent<DialogueVoicePlayer>();
+        if (voicePlayer == null)
+            voicePlayer = gameObject.AddComponent<DialogueVoicePlayer>();
     }
 
     void OnDestroy()
     {
         continueAction?.Disable();
+        voicePlayer?.Stop();
         if (Instance == this) Instance = null;
     }
 
@@ -39,11 +46,19 @@ public class DialogueManager : MonoBehaviour
         charsPerSecond = charsPerSecond,
         minAutoPause = minAutoPause,
         maxAutoPause = maxAutoPause,
-        allowSkip = true
+        allowSkip = true,
+        voiceKey = null
     };
 
     public void ShowDialogue(string speaker, string message, Action callback = null) =>
         ShowDialogue(speaker, message, callback, DefaultOptions);
+
+    public void ShowDialogue(string speaker, string message, string voiceKey, Action callback = null)
+    {
+        var options = DefaultOptions;
+        options.voiceKey = voiceKey;
+        ShowDialogue(speaker, message, callback, options);
+    }
 
     public void ShowDialogue(string speaker, string message, Action callback, DialogueDisplayOptions options)
     {
@@ -55,7 +70,11 @@ public class DialogueManager : MonoBehaviour
     {
         IsShowing = true;
         GameManager.Instance?.LockInput(true);
+        GameMusicController.Instance?.SetMusicDuck(0.22f);
         GameUI.Instance?.PrepareDialogue(speaker, message);
+
+        bool voiceStarted = voiceEnabled && !string.IsNullOrWhiteSpace(options.voiceKey)
+            && voicePlayer != null && voicePlayer.Play(options.voiceKey);
 
         yield return null;
         while (continueAction.IsPressed())
@@ -74,22 +93,29 @@ public class DialogueManager : MonoBehaviour
 
         if (options.autoAdvance)
         {
-            float readPause = ComputeAutoPause(message, options);
+            float readPause = ComputeAutoPause(message, options, voiceStarted);
             GameUI.Instance?.SetDialogueHint("Space / E để bỏ qua");
             float endTime = Time.time + readPause;
-            while (Time.time < endTime)
+            while (Time.time < endTime || (voiceStarted && voicePlayer != null && voicePlayer.IsPlaying))
             {
                 if (options.allowSkip && continueAction.WasPressedThisFrame())
+                {
+                    voicePlayer?.Stop();
                     break;
+                }
                 yield return null;
             }
         }
         else
         {
             GameUI.Instance?.SetDialogueHint("Space / E để tiếp tục");
-            yield return new WaitUntil(() => continueAction.WasPressedThisFrame());
+            while (!continueAction.WasPressedThisFrame())
+                yield return null;
+            voicePlayer?.Stop();
         }
 
+        voicePlayer?.Stop();
+        GameMusicController.Instance?.SetMusicDuck(1f);
         GameUI.Instance?.HideDialogue();
         GameManager.Instance?.LockInput(false);
         IsShowing = false;
@@ -107,16 +133,22 @@ public class DialogueManager : MonoBehaviour
             if (options.allowSkip && continueAction.WasPressedThisFrame())
             {
                 ui.CompleteTypewriter(message);
+                voicePlayer?.Stop();
                 break;
             }
             yield return null;
         }
     }
 
-    static float ComputeAutoPause(string message, DialogueDisplayOptions options)
+    static float ComputeAutoPause(string message, DialogueDisplayOptions options, bool voiceStarted)
     {
         int length = string.IsNullOrEmpty(message) ? 0 : message.Length;
         float byLength = length / Mathf.Max(options.charsPerSecond, 1f) * 0.45f + options.minAutoPause;
-        return Mathf.Clamp(byLength, options.minAutoPause, options.maxAutoPause);
+        float pause = Mathf.Clamp(byLength, options.minAutoPause, options.maxAutoPause);
+
+        if (voiceStarted && DialogueVoicePlayer.Instance != null)
+            pause = Mathf.Max(pause, DialogueVoicePlayer.Instance.CurrentClipLength + 0.2f);
+
+        return pause;
     }
 }

@@ -19,7 +19,7 @@ public class MailPickupInteractable : Interactable
 
     public override void Interact()
     {
-        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", pickupDialogue, () =>
+        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", pickupDialogue, Chapter1Voice.PickupMail, () =>
         {
             MailInventory.Instance?.ReceiveMail(recipientName, senderName, mailSummary);
             QuestManager.Instance?.CompleteStep(questStepId);

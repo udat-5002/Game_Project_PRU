@@ -11,6 +11,11 @@ public static class MainMenuBootstrap
         EnsureCameraAndLight();
         EnsureMainMenuUi();
         SceneTransition.Instance?.ResetForMainMenu();
+
+        var menuUi = Object.FindFirstObjectByType<MainMenuUI>();
+        menuUi?.ReturnToMainScreen();
+        GameUI.Instance?.SetHudVisible(false);
+        GameManager.Instance?.LockInput(false);
     }
 
     static void EnsureCameraAndLight()

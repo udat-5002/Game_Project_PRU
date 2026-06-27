@@ -30,7 +30,7 @@ public class MailDeliveryInteractable : Interactable
             return;
         }
 
-        DialogueManager.Instance?.ShowDialogue("Bà Lan", deliveryDialogue, () =>
+        DialogueManager.Instance?.ShowDialogue("Bà Lan", deliveryDialogue, Chapter1Voice.DeliverBaLan, () =>
         {
             QuestManager.Instance?.CompleteStep(questStepId);
         });

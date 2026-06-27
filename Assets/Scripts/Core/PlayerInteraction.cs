@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class PlayerInteraction : MonoBehaviour
 {
     public float interactRange = 5f;
+    public float clueInteractRange = 7.5f;
     public LayerMask interactLayers = ~0;
 
     Interactable currentTarget;
@@ -51,7 +52,9 @@ public class PlayerInteraction : MonoBehaviour
             var interactable = col.GetComponent<Interactable>() ?? col.GetComponentInParent<Interactable>();
             if (interactable == null || !interactable.CanInteract()) continue;
 
+            float maxRange = interactable is ClueInteractable ? clueInteractRange : interactRange;
             float dist = HorizontalDistance(transform.position, interactable.transform.position);
+            if (dist > maxRange) continue;
             if (dist < bestDist)
             {
                 bestDist = dist;
@@ -64,8 +67,9 @@ public class PlayerInteraction : MonoBehaviour
             foreach (var interactable in FindObjectsByType<Interactable>(FindObjectsSortMode.None))
             {
                 if (interactable == null || !interactable.CanInteract()) continue;
+                float maxRange = interactable is ClueInteractable ? clueInteractRange : interactRange;
                 float dist = HorizontalDistance(transform.position, interactable.transform.position);
-                if (dist > interactRange || dist >= bestDist) continue;
+                if (dist > maxRange || dist >= bestDist) continue;
                 bestDist = dist;
                 best = interactable;
             }

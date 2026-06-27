@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -15,6 +16,15 @@ public class MainMenuUI : MonoBehaviour
     Text introPageIndicator;
     Text introActionLabel;
     int introPageIndex;
+    AudioSource introVoiceSource;
+    Coroutine introVoiceCoroutine;
+    int introVoiceCoroutinePage = -1;
+
+    static readonly string[] IntroVoiceKeys =
+    {
+        "demo_intro",
+        null
+    };
 
     static readonly string[] IntroPages =
     {
@@ -50,6 +60,10 @@ public class MainMenuUI : MonoBehaviour
             BuildMainPanel();
             BuildSettingsPanel();
             BuildIntroPanel();
+            introVoiceSource = gameObject.AddComponent<AudioSource>();
+            introVoiceSource.playOnAwake = false;
+            introVoiceSource.spatialBlend = 0f;
+            introVoiceSource.loop = false;
             ShowMain();
         }
         catch (System.Exception e)
@@ -232,6 +246,13 @@ public class MainMenuUI : MonoBehaviour
 
     void IntroAdvanceOrStart()
     {
+        if (introVoiceSource != null && introVoiceSource.isPlaying)
+        {
+            StopIntroVoice();
+            RefreshIntroActionLabel();
+            return;
+        }
+
         if (introPageIndex < IntroPages.Length - 1)
         {
             introPageIndex++;
@@ -243,14 +264,150 @@ public class MainMenuUI : MonoBehaviour
 
     void RefreshIntroPage()
     {
+        RefreshIntroPageVisuals();
+        PlayIntroVoice(introPageIndex);
+    }
+
+    void RefreshIntroPageVisuals()
+    {
         if (introBody != null)
             introBody.text = IntroPages[introPageIndex];
         if (introPageIndicator != null)
             introPageIndicator.text = $"{introPageIndex + 1} / {IntroPages.Length}";
+        RefreshIntroActionLabel();
+    }
+
+    void RefreshIntroActionLabel()
+    {
+        if (introActionLabel == null) return;
+
+        if (introVoiceSource != null && introVoiceSource.isPlaying)
+        {
+            introActionLabel.text = "ENTER / BẤM ĐỂ BỎ QUA GIỌNG";
+            return;
+        }
 
         bool lastPage = introPageIndex >= IntroPages.Length - 1;
-        if (introActionLabel != null)
-            introActionLabel.text = lastPage ? "BẮT ĐẦU HÀNH TRÌNH" : "TIẾP THEO";
+        introActionLabel.text = lastPage ? "BẮT ĐẦU HÀNH TRÌNH" : "TIẾP THEO";
+    }
+
+    void PlayIntroVoice(int pageIndex)
+    {
+        StopIntroVoice();
+        if (introVoiceSource == null) return;
+        if (pageIndex < 0 || pageIndex >= IntroVoiceKeys.Length) return;
+
+        var key = IntroVoiceKeys[pageIndex];
+        if (string.IsNullOrWhiteSpace(key))
+            return;
+
+        var clip = Resources.Load<AudioClip>($"Audio/Dialogue/{key}");
+        if (clip == null)
+        {
+            Debug.LogWarning($"[MainMenuUI] Không tìm thấy giọng intro: Audio/Dialogue/{key}");
+            return;
+        }
+
+        introVoiceCoroutinePage = pageIndex;
+        introVoiceCoroutine = StartCoroutine(IntroVoiceRoutine(pageIndex, clip));
+    }
+
+    IEnumerator IntroVoiceRoutine(int startPage, AudioClip clip)
+    {
+        introVoiceSource.clip = clip;
+        introVoiceSource.volume = AudioSettings.DialogueVoiceScaled;
+        introVoiceSource.Play();
+
+        float waitStart = 1f;
+        while (waitStart > 0f && introVoiceSource != null && !introVoiceSource.isPlaying)
+        {
+            waitStart -= Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        RefreshIntroActionLabel();
+        if (introVoiceSource == null || !introVoiceSource.isPlaying)
+            yield break;
+
+        int pagesCovered = CountIntroPagesCoveredByVoice(startPage);
+        int visualPage = startPage;
+
+        while (introVoiceSource != null && introVoiceSource.isPlaying)
+        {
+            if (pagesCovered > 1 && visualPage < startPage + pagesCovered - 1)
+            {
+                float switchAt = GetIntroClipSwitchTime(clip, startPage, pagesCovered, visualPage - startPage);
+                if (introVoiceSource.time >= switchAt)
+                {
+                    visualPage++;
+                    introPageIndex = visualPage;
+                    RefreshIntroPageVisuals();
+                }
+            }
+
+            yield return null;
+        }
+
+        if (introVoiceCoroutinePage != startPage)
+            yield break;
+
+        introVoiceCoroutine = null;
+        introVoiceCoroutinePage = -1;
+
+        int lastCoveredPage = startPage + pagesCovered - 1;
+        if (introPageIndex < lastCoveredPage)
+        {
+            introPageIndex = lastCoveredPage;
+            RefreshIntroPageVisuals();
+        }
+
+        if (lastCoveredPage < IntroPages.Length - 1)
+        {
+            introPageIndex = lastCoveredPage + 1;
+            RefreshIntroPage();
+            yield break;
+        }
+
+        RefreshIntroPageVisuals();
+    }
+
+    static int CountIntroPagesCoveredByVoice(int startPage)
+    {
+        int count = 1;
+        for (int page = startPage + 1; page < IntroPages.Length; page++)
+        {
+            if (!string.IsNullOrWhiteSpace(IntroVoiceKeys[page]))
+                break;
+            count++;
+        }
+
+        return count;
+    }
+
+    static float GetIntroClipSwitchTime(AudioClip clip, int startPage, int pagesCovered, int pageOffset)
+    {
+        int totalChars = 0;
+        for (int i = 0; i < pagesCovered; i++)
+            totalChars += IntroPages[startPage + i].Length;
+
+        int charsBeforeSwitch = 0;
+        for (int i = 0; i <= pageOffset; i++)
+            charsBeforeSwitch += IntroPages[startPage + i].Length;
+
+        return clip.length * ((float)charsBeforeSwitch / totalChars);
+    }
+
+    void StopIntroVoice()
+    {
+        if (introVoiceCoroutine != null)
+        {
+            StopCoroutine(introVoiceCoroutine);
+            introVoiceCoroutine = null;
+        }
+
+        introVoiceCoroutinePage = -1;
+        if (introVoiceSource != null && introVoiceSource.isPlaying)
+            introVoiceSource.Stop();
     }
 
     GameObject CreateIntroBox(Transform parent, string name, Vector2 anchor, Vector2 size)
@@ -301,9 +458,18 @@ public class MainMenuUI : MonoBehaviour
 
     void ShowMain()
     {
+        StopIntroVoice();
         if (mainPanel != null) mainPanel.SetActive(true);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (introPanel != null) introPanel.SetActive(false);
+    }
+
+    public void ReturnToMainScreen()
+    {
+        introPageIndex = 0;
+        ShowMain();
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     void ShowSettings()
@@ -324,6 +490,7 @@ public class MainMenuUI : MonoBehaviour
 
     void StartGame()
     {
+        StopIntroVoice();
         GameSession.StartedFromMenu = true;
         EnsureSystems();
         GameManager.Instance.StartNewGame();

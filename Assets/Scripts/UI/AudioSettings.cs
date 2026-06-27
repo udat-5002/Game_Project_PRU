@@ -14,13 +14,13 @@ public static class AudioSettings
 
     public static float Music
     {
-        get => PlayerPrefs.GetFloat(KeyMusic, 0.7f);
+        get => PlayerPrefs.GetFloat(KeyMusic, 0.45f);
         set { PlayerPrefs.SetFloat(KeyMusic, Mathf.Clamp01(value)); Apply(); PlayerPrefs.Save(); }
     }
 
     public static float Sfx
     {
-        get => PlayerPrefs.GetFloat(KeySfx, 0.85f);
+        get => PlayerPrefs.GetFloat(KeySfx, 0.9f);
         set { PlayerPrefs.SetFloat(KeySfx, Mathf.Clamp01(value)); Apply(); PlayerPrefs.Save(); }
     }
 
@@ -31,4 +31,5 @@ public static class AudioSettings
 
     public static float MusicScaled => Master * Music;
     public static float SfxScaled => Master * Sfx;
+    public static float DialogueVoiceScaled => Mathf.Min(1f, SfxScaled * 1.65f);
 }

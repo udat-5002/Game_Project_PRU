@@ -17,7 +17,14 @@ public class FinalDeliveryInteractable : Interactable
             _ => "Hồi tưởng: Anh trai viết thư dưới ánh đèn dầu..."
         };
 
-        DialogueManager.Instance?.ShowDialogue("Giao thư", flashback, () =>
+        string voiceKey = delivered switch
+        {
+            1 => Chapter3Voice.FlashbackSoldier,
+            2 => Chapter3Voice.FlashbackBaLan,
+            _ => Chapter3Voice.FlashbackBrother
+        };
+
+        DialogueManager.Instance?.ShowDialogue("Giao thư", flashback, voiceKey, () =>
         {
             if (delivered >= 3)
                 QuestManager.Instance?.CompleteStep("final_delivery");

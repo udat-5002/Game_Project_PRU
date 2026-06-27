@@ -149,25 +149,25 @@ public class WeatherController : MonoBehaviour
         switch (p)
         {
             case WeatherPreset.Overcast:
-                SetTargets(fog: 0.006f, fogColor: new Color(0.55f, 0.58f, 0.62f),
-                    light: 0.55f, lightColor: new Color(0.72f, 0.76f, 0.82f),
+                SetTargets(fog: 0.004f, fogColor: new Color(0.62f, 0.65f, 0.68f),
+                    light: 0.72f, lightColor: new Color(0.82f, 0.86f, 0.92f),
                     rain: 0f, wind: 0.35f);
                 break;
             case WeatherPreset.DarkForest:
-                SetTargets(fog: 0.022f, fogColor: new Color(0.18f, 0.22f, 0.28f),
-                    light: 0.28f, lightColor: new Color(0.55f, 0.62f, 0.75f),
-                    rain: 3200f, wind: 0.7f);
+                SetTargets(fog: 0.011f, fogColor: new Color(0.32f, 0.36f, 0.42f),
+                    light: 0.48f, lightColor: new Color(0.72f, 0.78f, 0.88f),
+                    rain: 2400f, wind: 0.7f);
                 break;
             case WeatherPreset.Storm:
-                SetTargets(fog: 0.035f, fogColor: new Color(0.12f, 0.14f, 0.18f),
-                    light: 0.15f, lightColor: new Color(0.45f, 0.5f, 0.6f),
-                    rain: 9000f, wind: 1.4f);
+                SetTargets(fog: 0.016f, fogColor: new Color(0.28f, 0.32f, 0.38f),
+                    light: 0.38f, lightColor: new Color(0.68f, 0.74f, 0.84f),
+                    rain: 7000f, wind: 1.4f);
                 stormActive = true;
                 break;
             case WeatherPreset.Battlefield:
-                SetTargets(fog: 0.028f, fogColor: new Color(0.25f, 0.22f, 0.2f),
-                    light: 0.32f, lightColor: new Color(0.65f, 0.58f, 0.5f),
-                    rain: 4500f, wind: 0.9f);
+                SetTargets(fog: 0.009f, fogColor: new Color(0.42f, 0.38f, 0.36f),
+                    light: 0.62f, lightColor: new Color(0.84f, 0.78f, 0.72f),
+                    rain: 2600f, wind: 0.75f);
                 break;
         }
 

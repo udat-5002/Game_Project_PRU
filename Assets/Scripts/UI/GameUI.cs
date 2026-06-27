@@ -24,6 +24,7 @@ public class GameUI : MonoBehaviour
     bool hudVisible = true;
 
     static readonly Color TextBright = Color.white;
+    static readonly Color WarningYellow = new Color(1f, 0.88f, 0.12f, 1f);
     static readonly Color HudBg = new Color(0.01f, 0.01f, 0.02f, 0.96f);
     static readonly Color DialogueBg = new Color(0.01f, 0.01f, 0.02f, 0.98f);
 
@@ -328,21 +329,31 @@ public class GameUI : MonoBehaviour
         }
     }
 
-    public void ShowNotification(string msg, float duration = 3f)
+    public void ShowNotification(string msg, float duration = 3f) =>
+        ShowNotification(msg, duration, TextBright);
+
+    public void ShowNotification(string msg, float duration, Color color)
     {
         notificationText.text = msg;
+        notificationText.color = color;
         notificationText.gameObject.SetActive(true);
         notificationTimer = duration;
     }
 
-    public void ShowLetter(string title, string body, System.Action onClose)
+    public static Color PatrolWarningColor => WarningYellow;
+
+    public void ShowLetter(string title, string body, System.Action onClose) =>
+        ShowLetter(title, body, null, onClose);
+
+    public void ShowLetter(string title, string body, string voiceKey, System.Action onClose)
     {
-        StartCoroutine(LetterRoutine(title, body, onClose));
+        StartCoroutine(LetterRoutine(title, body, voiceKey, onClose));
     }
 
-    IEnumerator LetterRoutine(string title, string body, System.Action onClose)
+    IEnumerator LetterRoutine(string title, string body, string voiceKey, System.Action onClose)
     {
         GameManager.Instance?.LockInput(true);
+        GameMusicController.Instance?.SetMusicDuck(0.22f);
 
         var panel = CreatePanel("Letter", new Color(0.02f, 0.02f, 0.03f, 1f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var titleT = CreateAnchoredText("LetterTitle", 44, new Vector2(0, 220), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
@@ -360,8 +371,24 @@ public class GameUI : MonoBehaviour
         hintT.transform.SetParent(panel.transform, false);
         hintT.text = "Space để đóng";
 
+        bool voicePlaying = !string.IsNullOrWhiteSpace(voiceKey)
+            && DialogueVoicePlayer.Instance != null
+            && DialogueVoicePlayer.Instance.Play(voiceKey);
+
+        while (voicePlaying && DialogueVoicePlayer.Instance != null && DialogueVoicePlayer.Instance.IsPlaying)
+        {
+            if (GameInput.SpacePressedThisFrame)
+            {
+                DialogueVoicePlayer.Instance.Stop();
+                break;
+            }
+            yield return null;
+        }
+
         yield return new WaitUntil(() => GameInput.SpacePressedThisFrame);
 
+        DialogueVoicePlayer.Instance?.Stop();
+        GameMusicController.Instance?.SetMusicDuck(1f);
         Destroy(panel);
         GameManager.Instance?.LockInput(false);
         onClose?.Invoke();

@@ -20,7 +20,7 @@ public static class ChapterDifficulty
     {
         1 => 12f,
         2 => 10f,
-        3 => 14f,
+        3 => 18f,
         _ => 0f
     };
 
@@ -68,9 +68,9 @@ public static class ChapterDifficulty
             {
                 pointA = ForestZoneLayout.Ch3PatrolStart,
                 pointB = ForestZoneLayout.Ch3PatrolEnd,
-                moveSpeed = 3f,
-                detectRadius = 7f,
-                detectSeconds = 0.9f,
+                moveSpeed = 2.3f,
+                detectRadius = 4.8f,
+                detectSeconds = 1.7f,
                 mustHideToPass = false,
                 activeQuestId = "find_clues"
             },
@@ -78,9 +78,9 @@ public static class ChapterDifficulty
             {
                 pointA = ForestZoneLayout.Ch3Patrol2Start,
                 pointB = ForestZoneLayout.Ch3Patrol2End,
-                moveSpeed = 3.5f,
-                detectRadius = 6.5f,
-                detectSeconds = 0.8f,
+                moveSpeed = 2.5f,
+                detectRadius = 4.2f,
+                detectSeconds = 1.6f,
                 mustHideToPass = false,
                 activeQuestId = "find_clues"
             },

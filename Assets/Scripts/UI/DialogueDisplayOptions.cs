@@ -10,6 +10,7 @@ public struct DialogueDisplayOptions
     public float minAutoPause;
     public float maxAutoPause;
     public bool allowSkip;
+    public string voiceKey;
 
     public static DialogueDisplayOptions AutoPlay => new DialogueDisplayOptions
     {
@@ -18,7 +19,8 @@ public struct DialogueDisplayOptions
         charsPerSecond = 34f,
         minAutoPause = 1.8f,
         maxAutoPause = 6f,
-        allowSkip = true
+        allowSkip = true,
+        voiceKey = null
     };
 
     public static DialogueDisplayOptions Manual => new DialogueDisplayOptions
@@ -28,6 +30,7 @@ public struct DialogueDisplayOptions
         charsPerSecond = 34f,
         minAutoPause = 0f,
         maxAutoPause = 0f,
-        allowSkip = true
+        allowSkip = true,
+        voiceKey = null
     };
 }

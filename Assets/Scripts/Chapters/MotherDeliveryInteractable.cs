@@ -9,13 +9,13 @@ public class MotherDeliveryInteractable : Interactable
     {
         if (MailInventory.Instance == null || !MailInventory.Instance.HasMail)
         {
-            DialogueManager.Instance?.ShowDialogue("Mẹ anh lính", "Cháu có mang thư không?");
+            DialogueManager.Instance?.ShowDialogue("Mẹ anh lính", "Cháu có mang thư không?", Chapter2Voice.MotherNoMail);
             return;
         }
 
         MailInventory.Instance.DeliverMail("Mẹ anh lính");
         DialogueManager.Instance?.ShowDialogue("Mẹ anh lính",
-            "Cảm ơn cháu... Ta biết con ta đã hy sinh rồi.", () =>
+            "Cảm ơn cháu... Ta biết con ta đã hy sinh rồi.", Chapter2Voice.MotherDeliver, () =>
             {
                 QuestManager.Instance?.CompleteStep("deliver_mother");
             });

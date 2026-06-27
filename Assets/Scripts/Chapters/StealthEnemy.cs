@@ -7,13 +7,15 @@ public class StealthEnemy : MonoBehaviour
     public Vector3 resetPosition;
     public float moveSpeed = 2f;
     public float detectRadius = 5f;
+    public float approachRadius = 10f;
     public float detectSeconds = 1.5f;
     public bool mustHideToPass;
     public string activeQuestId = "stealth_cross";
 
     Vector3 target;
     float detectTimer;
-    bool warned;
+    bool approachWarned;
+    bool dangerWarned;
 
     void Start()
     {
@@ -27,6 +29,9 @@ public class StealthEnemy : MonoBehaviour
 
         if (resetPosition == Vector3.zero)
             resetPosition = pointA + Vector3.back * 4f;
+
+        if (approachRadius <= detectRadius)
+            approachRadius = detectRadius * 2f;
     }
 
     void Update()
@@ -37,8 +42,7 @@ public class StealthEnemy : MonoBehaviour
 
         if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive(activeQuestId))
         {
-            detectTimer = 0f;
-            warned = false;
+            ResetWarnings();
             return;
         }
 
@@ -52,34 +56,62 @@ public class StealthEnemy : MonoBehaviour
         if (player == null) return;
 
         float dist = Vector3.Distance(transform.position, player.position);
+
+        if (dist <= approachRadius && dist > detectRadius)
+        {
+            if (!approachWarned)
+            {
+                approachWarned = true;
+                GameUI.Instance?.ShowNotification(
+                    mustHideToPass
+                        ? "⚠ Sắp gặp lính tuần tra! Chuẩn bị núp vào bụi xanh!"
+                        : "⚠ Sắp gặp lính tuần tra! Tránh xa!",
+                    3f,
+                    GameUI.PatrolWarningColor);
+            }
+
+            detectTimer = 0f;
+            dangerWarned = false;
+            return;
+        }
+
         if (dist <= detectRadius)
         {
-            if (!warned)
+            if (!dangerWarned)
             {
-                warned = true;
+                dangerWarned = true;
                 GameUI.Instance?.ShowNotification(
                     mustHideToPass ? "⚠ Lính tuần tra! Núp vào bụi xanh!" : "⚠ Có lính tuần tra! Tránh xa!",
-                    2f);
+                    2.5f,
+                    GameUI.PatrolWarningColor);
             }
 
             detectTimer += Time.deltaTime;
             if (detectTimer >= detectSeconds)
             {
                 detectTimer = 0f;
-                warned = false;
-                GameUI.Instance?.ShowNotification("Bị phát hiện! Rút lui và thử lại.", 3f);
+                dangerWarned = false;
+                GameUI.Instance?.ShowNotification("Bị phát hiện! Rút lui và thử lại.", 3f, GameUI.PatrolWarningColor);
                 GameManager.Instance?.TeleportPlayer(resetPosition);
             }
         }
         else
         {
-            detectTimer = 0f;
-            warned = false;
+            ResetWarnings();
         }
+    }
+
+    void ResetWarnings()
+    {
+        detectTimer = 0f;
+        approachWarned = false;
+        dangerWarned = false;
     }
 
     void OnDrawGizmosSelected()
     {
+        Gizmos.color = new Color(1f, 0.55f, 0.1f, 0.35f);
+        Gizmos.DrawWireSphere(transform.position, approachRadius);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, detectRadius);
     }

@@ -12,10 +12,11 @@ public class GameMusicController : MonoBehaviour
     const string Chapter3Path = "Audio/chương3";
     const string EndPath = "Audio/end";
 
-    [SerializeField] float baseVolume = 0.65f;
+    [SerializeField] float baseVolume = 0.32f;
 
     AudioSource source;
     string currentTrackId;
+    float musicDuck = 1f;
     readonly Dictionary<string, AudioClip> clips = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -73,6 +74,11 @@ public class GameMusicController : MonoBehaviour
         PlayTrack("end");
     }
 
+    public void SetMusicDuck(float multiplier)
+    {
+        musicDuck = Mathf.Clamp01(multiplier);
+    }
+
     void PlayForScene(string sceneName)
     {
         switch (sceneName)
@@ -119,13 +125,13 @@ public class GameMusicController : MonoBehaviour
         source.Stop();
         currentTrackId = trackId;
         source.clip = clip;
-        source.volume = baseVolume * AudioSettings.MusicScaled;
+        source.volume = baseVolume * AudioSettings.MusicScaled * musicDuck;
         source.Play();
     }
 
     void Update()
     {
         if (source == null || !source.isPlaying) return;
-        source.volume = baseVolume * AudioSettings.MusicScaled;
+        source.volume = baseVolume * AudioSettings.MusicScaled * musicDuck;
     }
 }

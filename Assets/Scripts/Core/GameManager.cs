@@ -107,13 +107,21 @@ public class GameManager : MonoBehaviour
                 _ => ""
             };
 
-            SceneTransition.Instance?.TransitionToChapter(nextScene, title, subtitle, next);
+            string voiceKey = next switch
+            {
+                2 => Chapter2Voice.Transition,
+                3 => Chapter3Voice.Transition,
+                _ => null
+            };
+
+            SceneTransition.Instance?.TransitionToChapter(nextScene, title, subtitle, next, voiceKey);
         }
         else
         {
             SceneTransition.Instance?.ShowEnding(
                 "Chiến tranh có thể chia cắt con người,\nnhưng hy vọng luôn tìm được đường để đến nơi cần đến.",
-                () => SceneTransition.Instance.LoadScene(SceneMainMenu));
+                () => SceneTransition.Instance.LoadScene(SceneMainMenu),
+                Chapter3Voice.Ending);
         }
     }
 
@@ -125,6 +133,7 @@ public class GameManager : MonoBehaviour
             SceneChapter1,
             "Chương 1: Con Đường Hy Vọng",
             "Nam bắt đầu hành trình đưa thư\nqua vùng chiến sự miền Trung.",
-            1);
+            1,
+            Chapter1Voice.Transition);
     }
 }

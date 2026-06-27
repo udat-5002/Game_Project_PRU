@@ -11,7 +11,7 @@ public class ElderGuideInteractable : Interactable
 
     public override void Interact()
     {
-        DialogueManager.Instance?.ShowDialogue("Cụ già", dialogue, () =>
+        DialogueManager.Instance?.ShowDialogue("Cụ già", dialogue, Chapter1Voice.ElderGuide, () =>
             QuestManager.Instance?.CompleteStep("ask_elder"));
     }
 }

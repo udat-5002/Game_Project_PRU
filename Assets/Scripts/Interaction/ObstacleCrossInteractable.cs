@@ -11,7 +11,7 @@ public class ObstacleCrossInteractable : Interactable
 
     public override void Interact()
     {
-        DialogueManager.Instance?.ShowDialogue("Nam", dialogue, () =>
+        DialogueManager.Instance?.ShowDialogue("Nam", dialogue, Chapter1Voice.CrossObstacle, () =>
             QuestManager.Instance?.CompleteStep("cross_obstacle"));
     }
 }

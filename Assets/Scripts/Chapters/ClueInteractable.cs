@@ -5,6 +5,7 @@ public class ClueInteractable : Interactable
 {
     public string clueTitle;
     [TextArea] public string clueHint;
+    public string voiceKey;
     public bool hideAfterCollect = true;
     public Action onClueFound;
     bool found;
@@ -17,7 +18,7 @@ public class ClueInteractable : Interactable
         if (found) return;
         found = true;
 
-        DialogueManager.Instance?.ShowDialogue(clueTitle, clueHint, () =>
+        DialogueManager.Instance?.ShowDialogue(clueTitle, clueHint, voiceKey, () =>
         {
             onClueFound?.Invoke();
             if (hideAfterCollect)

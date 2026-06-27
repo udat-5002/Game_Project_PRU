@@ -10,7 +10,7 @@ public class SoldierLetterInteractable : Interactable
 
     public override void Interact()
     {
-        DialogueManager.Instance?.ShowDialogue("Người lính trẻ", dialogue, () =>
+        DialogueManager.Instance?.ShowDialogue("Người lính trẻ", dialogue, Chapter2Voice.SoldierLetter, () =>
         {
             MailInventory.Instance?.ReceiveMail("Mẹ anh lính", "Người lính trẻ", "Thư từ tiền tuyến...");
             QuestManager.Instance?.CompleteStep("receive_letter");

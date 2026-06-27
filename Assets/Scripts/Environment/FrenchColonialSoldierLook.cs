@@ -143,8 +143,8 @@ public static class FrenchColonialSoldierLook
 
         cachedUniformMaterial = CreateLitMaterial(
             "FrenchColonialUniform_Runtime",
-            new Color(0.56f, 0.46f, 0.3f),
-            0.2f,
+            new Color(0.72f, 0.6f, 0.38f),
+            0.24f,
             0.02f);
         return cachedUniformMaterial;
     }
