@@ -218,7 +218,7 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateElderNpc()
     {
-        var go = CreateNpcMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), NpcVisualFactory.NpcRole.Civilian);
+        var go = CreateNpcMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/BaLao/BaLao");
         RegisterWaypoint("ask_elder", go.transform.position);
         var elder = go.AddComponent<ElderGuideInteractable>();
         elder.promptText = "Nhấn E - Hỏi đường";
@@ -562,7 +562,7 @@ public class ChapterFlowController : MonoBehaviour
         return go;
     }
 
-    GameObject CreateNpcMarker(string name, Vector3 pos, Color accent, NpcVisualFactory.NpcRole role)
+    GameObject CreateNpcMarker(string name, Vector3 pos, Color accent, NpcVisualFactory.NpcRole role, string overrideModelPath = null)
     {
         var go = new GameObject(name);
         go.transform.SetParent(chapterRoot.transform);
@@ -573,7 +573,7 @@ public class ChapterFlowController : MonoBehaviour
         col.radius = 1.2f;
         col.center = new Vector3(0f, 0f, 0f);
 
-        NpcVisualFactory.Attach(go.transform, role);
+        NpcVisualFactory.Attach(go.transform, role, overrideModelPath);
         CreateObjectiveLabel(go.transform, name);
         CreateNpcFootRing(go.transform, accent);
         return go;

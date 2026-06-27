@@ -20,11 +20,11 @@ public static class NpcVisualFactory
     static RuntimeAnimatorController cachedAnimController;
     static Transform cachedPlayerModelTransform;
 
-    public static Transform Attach(Transform npcRoot, NpcRole role)
+    public static Transform Attach(Transform npcRoot, NpcRole role, string overrideModelPath = null)
     {
         if (npcRoot == null) return null;
 
-        var template = GetModelTemplate();
+        var template = GetModelTemplate(overrideModelPath);
         if (template == null)
         {
             Debug.LogWarning("[NpcVisualFactory] Không tìm thấy model ChienSi1 — giữ marker mặc định.");
@@ -91,8 +91,13 @@ public static class NpcVisualFactory
         return null;
     }
 
-    static GameObject GetModelTemplate()
+    static GameObject GetModelTemplate(string overrideModelPath)
     {
+        if (!string.IsNullOrEmpty(overrideModelPath))
+        {
+            var overrideTemplate = Resources.Load<GameObject>(overrideModelPath);
+            if (overrideTemplate != null) return overrideTemplate;
+        }
         if (cachedModelTemplate != null)
             return cachedModelTemplate;
 
