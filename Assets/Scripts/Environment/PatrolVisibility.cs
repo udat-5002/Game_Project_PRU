@@ -37,7 +37,14 @@ public static class PatrolVisibility
         var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         ring.name = "PatrolGroundRing";
         ring.transform.SetParent(patrolRoot, false);
-        ring.transform.localPosition = new Vector3(0f, 0.06f, 0f);
+
+        float localY = -1.5f; // Default fallback
+        if (GroundSnap.TryGetGroundY(patrolRoot.position, out float groundY))
+        {
+            localY = groundY - patrolRoot.position.y + 0.06f;
+        }
+
+        ring.transform.localPosition = new Vector3(0f, localY, 0f);
         ring.transform.localScale = new Vector3(2.4f, 0.02f, 2.4f);
 
         var col = ring.GetComponent<Collider>();

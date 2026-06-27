@@ -1284,6 +1284,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a83c28174573f174b9cda10a02f6ba4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueManager
+  autoAdvance: 1
+  typewriter: 1
+  voiceEnabled: 1
+  charsPerSecond: 34
+  minAutoPause: 1.8
+  maxAutoPause: 6
 --- !u!4 &1774340430
 Transform:
   m_ObjectHideFlags: 0
@@ -3044,7 +3050,7 @@ Transform:
   m_GameObject: {fileID: 6193868568686905490}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071067}
-  m_LocalPosition: {x: -14.787164, y: -0.69, z: -17.862545}
+  m_LocalPosition: {x: -14.787164, y: -1.43, z: -17.862545}
   m_LocalScale: {x: 441.65643, y: 441.65643, z: 441.65643}
   m_ConstrainProportionsScale: 0
   m_Children: []

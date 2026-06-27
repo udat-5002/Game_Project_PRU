@@ -432,6 +432,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8669097431711555243, guid: 92311bc82bc50e248bd05aaa590a2de0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.45
+      objectReference: {fileID: 0}
     - target: {fileID: -8652731601192450803, guid: 92311bc82bc50e248bd05aaa590a2de0, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -3781,6 +3785,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a83c28174573f174b9cda10a02f6ba4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueManager
+  autoAdvance: 1
+  typewriter: 1
+  voiceEnabled: 1
+  charsPerSecond: 34
+  minAutoPause: 1.8
+  maxAutoPause: 6
 --- !u!4 &1774340430
 Transform:
   m_ObjectHideFlags: 0
