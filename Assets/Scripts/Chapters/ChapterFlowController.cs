@@ -222,8 +222,8 @@ public class ChapterFlowController : MonoBehaviour
         var model = go.transform.Find("NpcModel");
         if (model != null)
         {
-            model.localPosition = new Vector3(0f, -0.354f, 0f);
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+            NpcVisualFactory.AutoAdjustGroundPlacement(model);
         }
         RegisterWaypoint("ask_elder", go.transform.position);
         var elder = go.AddComponent<ElderGuideInteractable>();
@@ -324,8 +324,8 @@ public class ChapterFlowController : MonoBehaviour
         var model = go.transform.Find("NpcModel");
         if (model != null)
         {
-            model.localPosition = new Vector3(0f, 0.036f, 0f);
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+            NpcVisualFactory.AutoAdjustGroundPlacement(model);
         }
         RegisterWaypoint("deliver_mail", go.transform.position);
         var delivery = go.AddComponent<MailDeliveryInteractable>();
@@ -435,8 +435,8 @@ public class ChapterFlowController : MonoBehaviour
         var model = go.transform.Find("NpcModel");
         if (model != null)
         {
-            model.localPosition = Vector3.zero;
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+            NpcVisualFactory.AutoAdjustGroundPlacement(model);
         }
         RegisterWaypoint("deliver_mother", go.transform.position);
         go.AddComponent<MotherDeliveryInteractable>();

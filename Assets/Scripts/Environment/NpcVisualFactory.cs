@@ -38,6 +38,7 @@ public static class NpcVisualFactory
         StripGameplayComponents(model);
         SetupAnimator(model);
         ApplyRoleAppearance(model, role);
+        AutoAdjustGroundPlacement(model.transform);
 
         return model.transform;
     }
@@ -110,6 +111,29 @@ public static class NpcVisualFactory
 
         cachedModelTemplate = Resources.Load<GameObject>("NhanVat/ChienSi1");
         return cachedModelTemplate;
+    }
+
+    public static void AutoAdjustGroundPlacement(Transform modelTransform)
+    {
+        float minWorldY = float.MaxValue;
+        var renderers = modelTransform.GetComponentsInChildren<Renderer>();
+        foreach (var r in renderers)
+        {
+            if (r is SkinnedMeshRenderer || r is MeshRenderer)
+            {
+                if (r.bounds.min.y < minWorldY)
+                    minWorldY = r.bounds.min.y;
+            }
+        }
+
+        if (minWorldY != float.MaxValue)
+        {
+            if (GroundSnap.TryGetGroundY(modelTransform.position, out float groundY))
+            {
+                float difference = groundY - minWorldY;
+                modelTransform.position += new Vector3(0f, difference, 0f);
+            }
+        }
     }
 
     static RuntimeAnimatorController GetAnimController()
