@@ -320,7 +320,13 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateDeliveryNpc(string name, Vector3 pos)
     {
-        var go = CreateNpcMarker(name, pos, Color.yellow, NpcVisualFactory.NpcRole.Civilian, null, false);
+        var go = CreateNpcMarker(name, pos, Color.yellow, NpcVisualFactory.NpcRole.Civilian, "NhanVat/BaLan/BaLan", false);
+        var model = go.transform.Find("NpcModel");
+        if (model != null)
+        {
+            model.localPosition = Vector3.zero;
+            model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+        }
         RegisterWaypoint("deliver_mail", go.transform.position);
         var delivery = go.AddComponent<MailDeliveryInteractable>();
         delivery.recipientName = "Bà Lan - Làng Bình An";
