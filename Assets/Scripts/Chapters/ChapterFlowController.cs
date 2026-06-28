@@ -687,9 +687,17 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateFallenLogProp(Transform parent)
     {
-        CreateLog(parent, "WoodLogs/SM_AFS_Log02_LowEndPC", new Vector3(-1.2f, 0f, 0f), new Vector3(3f, 3f, 3f), Quaternion.Euler(0f, 15f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log05_LowEndPC", new Vector3(0.8f, 0f, 0.6f), new Vector3(2.5f, 2.5f, 2.5f), Quaternion.Euler(5f, -25f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(0.2f, 0.35f, -0.5f), new Vector3(2.2f, 2.2f, 2.2f), Quaternion.Euler(-8f, 40f, 0f));
+        // Lớp dưới cùng - rải rộng
+        CreateLog(parent, "WoodLogs/SM_AFS_Log02_LowEndPC", new Vector3(-2.5f, 0f, -0.2f), new Vector3(3.5f, 3.5f, 3.5f), Quaternion.Euler(0f, 8f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log12_LowEndPC", new Vector3(-1.0f, 0f, 0.5f), new Vector3(3f, 3f, 3f), Quaternion.Euler(2f, 35f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log05_LowEndPC", new Vector3(1.2f, 0f, -0.1f), new Vector3(3.2f, 3.2f, 3.2f), Quaternion.Euler(-5f, -15f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log20_LowEndPC", new Vector3(2.8f, 0f, 0.3f), new Vector3(2.8f, 2.8f, 2.8f), Quaternion.Euler(0f, -40f, 0f));
+
+        // Lớp chồng lên trên
+        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(-1.5f, 0.4f, 0f), new Vector3(2.5f, 2.5f, 2.5f), Quaternion.Euler(-8f, 20f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log15_LowEndPC", new Vector3(0.5f, 0.45f, 0.4f), new Vector3(2.8f, 2.8f, 2.8f), Quaternion.Euler(5f, -25f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log25_LowEndPC", new Vector3(-0.2f, 0.6f, -0.3f), new Vector3(2.6f, 2.6f, 2.6f), Quaternion.Euler(10f, 85f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log28_LowEndPC", new Vector3(1.8f, 0.35f, 0.1f), new Vector3(3f, 3f, 3f), Quaternion.Euler(-5f, -60f, 0f));
     }
 
     void CreateLog(Transform parent, string prefabPath, Vector3 localPos, Vector3 scale, Quaternion rotation)
