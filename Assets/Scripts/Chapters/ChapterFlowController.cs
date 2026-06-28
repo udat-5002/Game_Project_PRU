@@ -459,7 +459,22 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateRainEvent()
     {
-        CreateZone("RainShelter", rainShelterPosition, new Vector3(5, 3, 5), "survive_rain", new Color(0.4f, 0.3f, 0.2f));
+        var go = CreateZone("RainShelter", rainShelterPosition, new Vector3(5, 3, 5), "survive_rain", new Color(0.4f, 0.3f, 0.2f));
+        
+        var prefab = Resources.Load<GameObject>("CrackedTree");
+        if (prefab != null)
+        {
+            var tree = Object.Instantiate(prefab, go.transform);
+            tree.transform.localPosition = Vector3.zero;
+            tree.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+            
+            // Lấy Ground Y nếu cần
+            if (GroundSnap.TryGetGroundY(go.transform.position, out float groundY))
+            {
+                go.transform.position = new Vector3(go.transform.position.x, groundY, go.transform.position.z);
+            }
+        }
+
         RegisterWaypoint("survive_rain", rainShelterPosition);
         var rain = chapterRoot.AddComponent<RainEvent>();
         rain.triggerDuringStepId = "stealth_cross";
