@@ -54,8 +54,10 @@ public static class ChapterDifficulty
                 hide = i >= 6; // cross_danger thì bắt buộc núp
             }
 
-            float rx = zone.center.x + UnityEngine.Random.Range(-zone.groundSize.x * 0.45f, zone.groundSize.x * 0.45f);
-            float rz = zone.center.z + UnityEngine.Random.Range(-zone.groundSize.z * 0.45f, zone.groundSize.z * 0.45f);
+            // Phân bố khắp Toàn Bộ Bản Đồ thay vì chỉ gói gọn trong khu vực Zone của chapter hiện tại!
+            // Map boundaries: X khoảng từ -50 đến 50. Z khoảng từ -75 đến 15.
+            float rx = UnityEngine.Random.Range(-50f, 50f);
+            float rz = UnityEngine.Random.Range(-70f, 15f);
 
             patrols[i] = new PatrolSetup
             {
