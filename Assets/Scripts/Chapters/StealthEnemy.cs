@@ -36,9 +36,31 @@ public class StealthEnemy : MonoBehaviour
 
     void Update()
     {
-        transform.position = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
+        var step = moveSpeed * Time.deltaTime;
+        transform.position = Vector3.MoveTowards(transform.position, target, step);
+        
+        var dir = target - transform.position;
+        dir.y = 0;
+        if (dir.sqrMagnitude > 0.001f)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), 360f * Time.deltaTime);
+
         if (Vector3.Distance(transform.position, target) < 0.2f)
-            target = target == pointB ? pointA : pointB;
+        {
+            // Chọn một điểm ngẫu nhiên mới trong bán kính xung quanh vị trí gốc
+            for (int i = 0; i < 10; i++)
+            {
+                var offset = Random.insideUnitSphere * 20f;
+                offset.y = 0;
+                var potential = resetPosition + offset;
+                
+                if (GroundSnap.TryGetGroundY(potential, out float y))
+                {
+                    potential.y = y + GroundSnap.CharacterFootToPivot + 0.1f;
+                    target = potential;
+                    break;
+                }
+            }
+        }
 
 
 

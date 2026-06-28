@@ -15,7 +15,7 @@ public class ThirdPersonController : MonoBehaviour
     public float speedAnimBlend = 10f;
 
     [Header("Jumping & Gravity")]
-    public float jumpHeight = 1.2f;
+    public float jumpHeight = 2.5f;
     public float gravity = -15f;
     public float groundedOffset = -0.14f;
     public float groundedRadius = 0.28f;

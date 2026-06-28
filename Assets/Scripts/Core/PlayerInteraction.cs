@@ -39,7 +39,10 @@ public class PlayerInteraction : MonoBehaviour
 
         if (currentTarget != null && interactAction.WasPressedThisFrame())
         {
-            if (currentTarget.GetComponent<Collider>() != null && !currentTarget.name.Contains("Clue"))
+            if (currentTarget.GetComponent<Collider>() != null && 
+                !currentTarget.name.Contains("Clue") &&
+                !currentTarget.name.Contains("TramLienLac") &&
+                !currentTarget.name.Contains("FallenLog"))
             {
                 var toPlayer = transform.position - currentTarget.transform.position;
                 toPlayer.y = 0;
