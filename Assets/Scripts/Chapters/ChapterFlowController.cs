@@ -672,23 +672,34 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateFallenLogProp(Transform parent)
     {
-        var logColor = new Color(0.42f, 0.26f, 0.12f);
-        CreateLog(parent, new Vector3(-1.2f, 0.35f, 0f), new Vector3(3.2f, 0.45f, 0.55f), Quaternion.Euler(0f, 15f, 88f), logColor);
-        CreateLog(parent, new Vector3(0.8f, 0.28f, 0.6f), new Vector3(2.8f, 0.4f, 0.5f), Quaternion.Euler(5f, -25f, 92f), logColor);
-        CreateLog(parent, new Vector3(0.2f, 0.55f, -0.5f), new Vector3(2.4f, 0.38f, 0.48f), Quaternion.Euler(-8f, 40f, 85f), logColor * 0.9f);
+        CreateLog(parent, "WoodLogs/SM_AFS_Log02", new Vector3(-1.2f, 0f, 0f), new Vector3(3f, 3f, 3f), Quaternion.Euler(0f, 15f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log05", new Vector3(0.8f, 0f, 0.6f), new Vector3(2.5f, 2.5f, 2.5f), Quaternion.Euler(5f, -25f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log10", new Vector3(0.2f, 0.35f, -0.5f), new Vector3(2.2f, 2.2f, 2.2f), Quaternion.Euler(-8f, 40f, 0f));
     }
 
-    void CreateLog(Transform parent, Vector3 localPos, Vector3 scale, Quaternion rotation, Color color)
+    void CreateLog(Transform parent, string prefabPath, Vector3 localPos, Vector3 scale, Quaternion rotation)
     {
-        var log = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        log.name = "FallenLog";
-        log.transform.SetParent(parent);
-        log.transform.localPosition = localPos;
-        log.transform.localScale = scale;
-        log.transform.localRotation = rotation;
-        if (log.GetComponent<Collider>() != null) Destroy(log.GetComponent<Collider>());
-        var renderer = log.GetComponent<Renderer>();
-        if (renderer != null) renderer.material = CreateURPMaterial(color, 1f);
+        var prefab = Resources.Load<GameObject>(prefabPath);
+        if (prefab != null)
+        {
+            var log = Object.Instantiate(prefab, parent);
+            log.name = "FallenLog";
+            log.transform.localPosition = localPos;
+            log.transform.localScale = scale;
+            log.transform.localRotation = rotation;
+            return;
+        }
+
+        // Fallback
+        var fallback = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        fallback.name = "FallenLog_Fallback";
+        fallback.transform.SetParent(parent);
+        fallback.transform.localPosition = localPos + Vector3.up * 0.5f;
+        fallback.transform.localScale = new Vector3(scale.x, 0.5f, 0.5f);
+        fallback.transform.localRotation = rotation * Quaternion.Euler(0, 0, 90);
+        if (fallback.GetComponent<Collider>() != null) Destroy(fallback.GetComponent<Collider>());
+        var renderer = fallback.GetComponent<Renderer>();
+        if (renderer != null) renderer.material = CreateURPMaterial(new Color(0.42f, 0.26f, 0.12f), 1f);
     }
 
     void CreateObjectiveLabel(Transform parent, string label)
