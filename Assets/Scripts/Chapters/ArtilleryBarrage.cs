@@ -51,7 +51,7 @@ public class ArtilleryBarrage : MonoBehaviour
     IEnumerator ShellStrikeRoutine(Vector3 impactPoint)
     {
         GameObject shell = null;
-        var prefab = Resources.Load<GameObject>("RustyShell");
+        var prefab = Resources.Load<GameObject>("RustyShell/RustyShell");
         if (prefab != null)
         {
             shell = Object.Instantiate(prefab);

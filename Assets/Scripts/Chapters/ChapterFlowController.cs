@@ -441,7 +441,7 @@ public class ChapterFlowController : MonoBehaviour
         barrage.activeQuestId = "cross_danger";
         barrage.zoneRadius = 8.5f;
 
-        var shellPrefab = Resources.Load<GameObject>("RustyShell");
+        var shellPrefab = Resources.Load<GameObject>("RustyShell/RustyShell");
         if (shellPrefab != null)
         {
             for (int i = 0; i < 8; i++)
@@ -518,8 +518,8 @@ public class ChapterFlowController : MonoBehaviour
         CreateHouseClue("Ngôi nhà bỏ hoang",
             "Căn nhà hoang vắng cạnh chiến trường cũ. Có dấu vết ai đó từng ghé qua...",
             Chapter3Voice.ClueHouse);
-        CreateClue(clue2Position, "Hầm trú ẩn", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker, "TornBag");
-        CreateClue(clue3Position, "Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort, "OldMailBag");
+        CreateClue(clue2Position, "Hầm trú ẩn", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker, "TornBag/TornBag");
+        CreateClue(clue3Position, "Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort, "OldMailBag/OldMailBag");
     }
 
     void CreateHouseClue(string title, string hint, string voiceKey)
