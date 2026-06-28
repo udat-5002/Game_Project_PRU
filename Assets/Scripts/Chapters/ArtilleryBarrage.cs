@@ -50,19 +50,31 @@ public class ArtilleryBarrage : MonoBehaviour
 
     IEnumerator ShellStrikeRoutine(Vector3 impactPoint)
     {
-        var shell = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        shell.name = "IncomingShell";
-        shell.transform.localScale = Vector3.one * 0.35f;
-        var shellCol = shell.GetComponent<Collider>();
-        if (shellCol != null) Destroy(shellCol);
-
-        var shellR = shell.GetComponent<Renderer>();
-        if (shellR != null)
+        GameObject shell = null;
+        var prefab = Resources.Load<GameObject>("RustyShell");
+        if (prefab != null)
         {
-            var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-            mat.color = new Color(0.25f, 0.22f, 0.2f, 1f);
-            shellR.material = mat;
+            shell = Object.Instantiate(prefab);
+            shell.transform.localScale = Vector3.one * 1.5f; // Chỉnh scale cho hợp lý
+            shell.transform.rotation = Quaternion.Euler(90f, 0f, 0f); // Mũi đạn hướng xuống đất
         }
+        else
+        {
+            shell = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            shell.transform.localScale = Vector3.one * 0.35f;
+            var shellCol = shell.GetComponent<Collider>();
+            if (shellCol != null) Destroy(shellCol);
+
+            var shellR = shell.GetComponent<Renderer>();
+            if (shellR != null)
+            {
+                var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
+                mat.color = new Color(0.25f, 0.22f, 0.2f, 1f);
+                shellR.material = mat;
+            }
+        }
+        
+        shell.name = "IncomingShell";
 
         var start = impactPoint + Vector3.up * shellHeight;
         shell.transform.position = start;

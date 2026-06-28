@@ -441,6 +441,22 @@ public class ChapterFlowController : MonoBehaviour
         barrage.activeQuestId = "cross_danger";
         barrage.zoneRadius = 8.5f;
 
+        var shellPrefab = Resources.Load<GameObject>("RustyShell");
+        if (shellPrefab != null)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                var shellGo = Object.Instantiate(shellPrefab, go.transform);
+                var offset = new Vector3(Random.Range(-12f, 12f), 0, Random.Range(-12f, 12f));
+                var pos = center + offset;
+                if (GroundSnap.TryGetGroundY(pos, out float y))
+                    pos.y = y;
+                shellGo.transform.position = pos;
+                shellGo.transform.rotation = Quaternion.Euler(Random.Range(40f, 90f), Random.Range(0f, 360f), 0f);
+                shellGo.transform.localScale = Vector3.one * 1.5f;
+            }
+        }
+
         var safeEnd = GroundSnap.Snap(ForestZoneLayout.Ch3DangerExit);
         CreateZone("DangerCrossEnd", safeEnd, new Vector3(5f, 3f, 5f), "cross_danger", Color.clear);
         RegisterWaypoint("cross_danger", safeEnd);
@@ -502,8 +518,8 @@ public class ChapterFlowController : MonoBehaviour
         CreateHouseClue("Ngôi nhà bỏ hoang",
             "Căn nhà hoang vắng cạnh chiến trường cũ. Có dấu vết ai đó từng ghé qua...",
             Chapter3Voice.ClueHouse);
-        CreateClue(clue2Position, "Hầm trú ẩn", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker);
-        CreateClue(clue3Position, "Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort);
+        CreateClue(clue2Position, "Hầm trú ẩn", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker, "TornBag");
+        CreateClue(clue3Position, "Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort, "OldMailBag");
     }
 
     void CreateHouseClue(string title, string hint, string voiceKey)
@@ -538,9 +554,22 @@ public class ChapterFlowController : MonoBehaviour
         BoostClueVisibility(trigger.transform);
     }
 
-    void CreateClue(Vector3 pos, string title, string hint, string voiceKey)
+    void CreateClue(Vector3 pos, string title, string hint, string voiceKey, string modelPrefab = null)
     {
         var go = CreateMarker(title, pos, new Color(1f, 0.84f, 0.18f), new Vector3(2.6f, 2.8f, 2.6f));
+        
+        if (!string.IsNullOrEmpty(modelPrefab))
+        {
+            var prefab = Resources.Load<GameObject>(modelPrefab);
+            if (prefab != null)
+            {
+                var model = Object.Instantiate(prefab, go.transform);
+                model.transform.localPosition = Vector3.zero;
+                model.transform.localScale = Vector3.one * 1.5f;
+                model.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+            }
+        }
+
         BoostClueVisibility(go.transform);
         AttachClueInteractable(go, title, hint, voiceKey, hideAfterCollect: true);
     }
