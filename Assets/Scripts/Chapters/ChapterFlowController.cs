@@ -758,21 +758,24 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateFallenLogProp(Transform parent)
     {
-        // Lớp dưới cùng - rải rộng
-        CreateLog(parent, "WoodLogs/SM_AFS_Log02_LowEndPC", new Vector3(-3.5f, 0f, -0.2f), new Vector3(4f, 4f, 4f), Quaternion.Euler(0f, 8f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log12_LowEndPC", new Vector3(-1.8f, 0f, 0.5f), new Vector3(3.5f, 3.5f, 3.5f), Quaternion.Euler(2f, 35f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log05_LowEndPC", new Vector3(1.5f, 0f, -0.1f), new Vector3(3.8f, 3.8f, 3.8f), Quaternion.Euler(-5f, -15f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log20_LowEndPC", new Vector3(3.5f, 0f, 0.3f), new Vector3(3.5f, 3.5f, 3.5f), Quaternion.Euler(0f, -40f, 0f));
+        // Lớp dưới cùng - rải rộng (Nằm ngang: X = 90)
+        CreateLog(parent, "WoodLogs/SM_AFS_Log02_LowEndPC", new Vector3(-4.5f, 0.2f, -0.5f), new Vector3(10f, 10f, 10f), Quaternion.Euler(90f, 8f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log12_LowEndPC", new Vector3(-1.8f, 0.2f, 0.5f), new Vector3(9f, 9f, 9f), Quaternion.Euler(90f, 35f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log05_LowEndPC", new Vector3(2.5f, 0.2f, -0.1f), new Vector3(10.5f, 10.5f, 10.5f), Quaternion.Euler(90f, -15f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log20_LowEndPC", new Vector3(5.5f, 0.2f, 0.3f), new Vector3(9.5f, 9.5f, 9.5f), Quaternion.Euler(90f, -40f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(-7.5f, 0.2f, 0.2f), new Vector3(10f, 10f, 10f), Quaternion.Euler(90f, 20f, 0f));
 
-        // Lớp chồng lên trên
-        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(-2.2f, 0.5f, 0f), new Vector3(3f, 3f, 3f), Quaternion.Euler(-8f, 20f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log15_LowEndPC", new Vector3(0.5f, 0.5f, 0.4f), new Vector3(3.5f, 3.5f, 3.5f), Quaternion.Euler(5f, -25f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log25_LowEndPC", new Vector3(-0.5f, 0.6f, -0.3f), new Vector3(3.2f, 3.2f, 3.2f), Quaternion.Euler(10f, 85f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log28_LowEndPC", new Vector3(2.2f, 0.45f, 0.1f), new Vector3(3.5f, 3.5f, 3.5f), Quaternion.Euler(-5f, -60f, 0f));
+        // Lớp chồng lên trên (Nằm ngang nhưng hơi xiên: X = 80-100)
+        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(-3.2f, 1.2f, 0f), new Vector3(9f, 9f, 9f), Quaternion.Euler(85f, 20f, 15f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log15_LowEndPC", new Vector3(0.5f, 1.5f, 0.4f), new Vector3(10f, 10f, 10f), Quaternion.Euler(95f, -25f, -10f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log25_LowEndPC", new Vector3(4.2f, 1.4f, -0.3f), new Vector3(9.5f, 9.5f, 9.5f), Quaternion.Euler(88f, 85f, 5f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log28_LowEndPC", new Vector3(-0.5f, 2.5f, 0.1f), new Vector3(10f, 10f, 10f), Quaternion.Euler(92f, -60f, -5f));
 
-        // Khúc gỗ đứng / dựa
-        CreateLog(parent, "WoodLogs/SM_AFS_Log03_LowEndPC", new Vector3(-1.0f, 1.2f, -1.0f), new Vector3(2.8f, 2.8f, 2.8f), Quaternion.Euler(75f, 15f, 20f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log04_LowEndPC", new Vector3(1.2f, 1.5f, 0.8f), new Vector3(3.2f, 3.2f, 3.2f), Quaternion.Euler(60f, -45f, -10f));
+        // Khúc gỗ đứng / dựa (Đứng: X = 0, hơi nghiêng: X = 10-30)
+        CreateLog(parent, "WoodLogs/SM_AFS_Log03_LowEndPC", new Vector3(-2.0f, 1.2f, -1.5f), new Vector3(9f, 9f, 9f), Quaternion.Euler(15f, 15f, 20f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log04_LowEndPC", new Vector3(2.2f, 1.5f, 1.2f), new Vector3(10f, 10f, 10f), Quaternion.Euler(20f, -45f, -10f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log06_LowEndPC", new Vector3(-5.2f, 1.0f, 0.8f), new Vector3(8.5f, 8.5f, 8.5f), Quaternion.Euler(10f, 75f, -15f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log18_LowEndPC", new Vector3(5.0f, 0.8f, -1.0f), new Vector3(9f, 9f, 9f), Quaternion.Euler(25f, -20f, 10f));
     }
 
     void CreateLog(Transform parent, string prefabPath, Vector3 localPos, Vector3 scale, Quaternion rotation)
