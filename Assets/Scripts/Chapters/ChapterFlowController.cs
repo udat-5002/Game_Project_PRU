@@ -294,7 +294,7 @@ public class ChapterFlowController : MonoBehaviour
         if (prefab != null)
         {
             var model = Object.Instantiate(prefab, parent);
-            model.transform.localPosition = Vector3.zero;
+            model.transform.localPosition = new Vector3(0f, 0.274f, 0f);
             model.transform.localScale = Vector3.one;
             return;
         }
@@ -687,9 +687,9 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateFallenLogProp(Transform parent)
     {
-        CreateLog(parent, "WoodLogs/SM_AFS_Log02", new Vector3(-1.2f, 0f, 0f), new Vector3(3f, 3f, 3f), Quaternion.Euler(0f, 15f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log05", new Vector3(0.8f, 0f, 0.6f), new Vector3(2.5f, 2.5f, 2.5f), Quaternion.Euler(5f, -25f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log10", new Vector3(0.2f, 0.35f, -0.5f), new Vector3(2.2f, 2.2f, 2.2f), Quaternion.Euler(-8f, 40f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log02_LowEndPC", new Vector3(-1.2f, 0f, 0f), new Vector3(3f, 3f, 3f), Quaternion.Euler(0f, 15f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log05_LowEndPC", new Vector3(0.8f, 0f, 0.6f), new Vector3(2.5f, 2.5f, 2.5f), Quaternion.Euler(5f, -25f, 0f));
+        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(0.2f, 0.35f, -0.5f), new Vector3(2.2f, 2.2f, 2.2f), Quaternion.Euler(-8f, 40f, 0f));
     }
 
     void CreateLog(Transform parent, string prefabPath, Vector3 localPos, Vector3 scale, Quaternion rotation)
