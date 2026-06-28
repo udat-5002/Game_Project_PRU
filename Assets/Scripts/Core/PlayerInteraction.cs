@@ -38,7 +38,18 @@ public class PlayerInteraction : MonoBehaviour
         FindTarget();
 
         if (currentTarget != null && interactAction.WasPressedThisFrame())
+        {
+            var npcModel = currentTarget.transform.Find("NpcModel") ?? currentTarget.transform;
+            if (npcModel != null && currentTarget.GetComponent<Collider>() != null && !currentTarget.name.Contains("Clue"))
+            {
+                var toPlayer = transform.position - npcModel.position;
+                toPlayer.y = 0;
+                if (toPlayer.sqrMagnitude > 0.1f)
+                    npcModel.rotation = Quaternion.LookRotation(toPlayer);
+            }
+
             currentTarget.Interact();
+        }
     }
 
     void FindTarget()

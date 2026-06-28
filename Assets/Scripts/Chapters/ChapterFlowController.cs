@@ -290,6 +290,15 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateMailBagProp(Transform parent)
     {
+        var prefab = Resources.Load<GameObject>("TramLienLac/TramLienLac");
+        if (prefab != null)
+        {
+            var model = Object.Instantiate(prefab, parent);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localScale = Vector3.one;
+            return;
+        }
+
         var bag = GameObject.CreatePrimitive(PrimitiveType.Cube);
         bag.name = "MailBag";
         bag.transform.SetParent(parent);
@@ -484,23 +493,31 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateHouseClue(string title, string hint, string voiceKey)
     {
-        clue1Position = ForestZoneLayout.ResolveHouseCluePosition();
-        RegisterWaypoint("find_clues", clue1Position);
-
         var house = GameObject.Find("house");
         if (house == null)
         {
+            clue1Position = ForestZoneLayout.ResolveHouseCluePosition();
+            RegisterWaypoint("find_clues", clue1Position);
             CreateClue(clue1Position, title, hint, voiceKey);
             return;
         }
 
+        foreach (var mf in house.GetComponentsInChildren<MeshFilter>())
+        {
+            if (mf.GetComponent<Collider>() == null)
+                mf.gameObject.AddComponent<MeshCollider>();
+        }
+
+        clue1Position = house.transform.position + Vector3.up * 1f;
+        RegisterWaypoint("find_clues", clue1Position);
+
         var trigger = new GameObject("Clue_NgoiNha");
         trigger.transform.SetParent(chapterRoot.transform);
-        trigger.transform.position = house.transform.position + Vector3.up * 2f;
+        trigger.transform.position = clue1Position;
 
         var box = trigger.AddComponent<BoxCollider>();
         box.isTrigger = true;
-        box.size = new Vector3(12f, 6f, 12f);
+        box.size = new Vector3(4f, 3f, 4f);
 
         AttachClueInteractable(trigger, title, hint, voiceKey, hideAfterCollect: true);
         BoostClueVisibility(trigger.transform);
