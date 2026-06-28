@@ -5,12 +5,11 @@ using UnityEngine;
 /// </summary>
 public static class PatrolVisibility
 {
-    public static void Apply(Transform patrolRoot)
+    public static void Apply(Transform patrolRoot, float detectRadius)
     {
         if (patrolRoot == null) return;
 
         AddHighlightLight(patrolRoot);
-        AddGroundRing(patrolRoot);
         BrightenRenderers(patrolRoot);
     }
 
@@ -30,38 +29,7 @@ public static class PatrolVisibility
         light.shadows = LightShadows.None;
     }
 
-    static void AddGroundRing(Transform patrolRoot)
-    {
-        if (patrolRoot.Find("PatrolGroundRing") != null) return;
 
-        var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        ring.name = "PatrolGroundRing";
-        ring.transform.SetParent(patrolRoot, false);
-
-        float localY = -1.5f; // Default fallback
-        if (GroundSnap.TryGetGroundY(patrolRoot.position, out float groundY))
-        {
-            localY = groundY - patrolRoot.position.y + 0.06f;
-        }
-
-        ring.transform.localPosition = new Vector3(0f, localY, 0f);
-        ring.transform.localScale = new Vector3(2.4f, 0.02f, 2.4f);
-
-        var col = ring.GetComponent<Collider>();
-        if (col != null) Object.Destroy(col);
-
-        var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-        var mat = new Material(shader);
-        var ringColor = new Color(1f, 0.78f, 0.15f, 0.55f);
-        mat.SetColor("_BaseColor", ringColor);
-        mat.color = ringColor;
-        mat.EnableKeyword("_EMISSION");
-        mat.SetColor("_EmissionColor", new Color(1f, 0.65f, 0.1f) * 0.35f);
-
-        var renderer = ring.GetComponent<Renderer>();
-        if (renderer != null)
-            renderer.material = mat;
-    }
 
     static void BrightenRenderers(Transform patrolRoot)
     {

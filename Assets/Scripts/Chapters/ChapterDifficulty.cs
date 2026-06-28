@@ -24,79 +24,53 @@ public static class ChapterDifficulty
         _ => 0f
     };
 
-    public static PatrolSetup[] GetPatrols(int chapter) => chapter switch
+    public static PatrolSetup[] GetPatrols(int chapter)
     {
-        1 => new[]
+        var zone = ForestZoneLayout.GetZone(chapter);
+        var patrols = new PatrolSetup[10];
+
+        // Đảm bảo seed ngẫu nhiên nhưng thay đổi theo thời gian thực (để lính đổi vị trí mỗi lần chơi)
+        // Hoặc giữ nguyên để dễ test. Ở đây dùng random thực.
+
+        for (int i = 0; i < 10; i++)
         {
-            new PatrolSetup
+            string questId = "";
+            bool hide = false;
+
+            if (chapter == 1)
             {
-                pointA = ForestZoneLayout.Ch1PatrolStart,
-                pointB = ForestZoneLayout.Ch1PatrolEnd,
-                moveSpeed = 2.2f,
-                detectRadius = 5.5f,
-                detectSeconds = 1.5f,
-                mustHideToPass = false,
-                activeQuestId = "sneak_patrol"
+                questId = "sneak_patrol";
+                hide = false;
             }
-        },
-        2 => new[]
-        {
-            new PatrolSetup
+            else if (chapter == 2)
             {
-                pointA = ForestZoneLayout.Ch2PatrolStart,
-                pointB = ForestZoneLayout.Ch2PatrolEnd,
-                moveSpeed = 2.8f,
-                detectRadius = 6f,
-                detectSeconds = 1.2f,
-                mustHideToPass = true,
-                activeQuestId = "stealth_cross"
-            },
-            new PatrolSetup
-            {
-                pointA = ForestZoneLayout.Ch2Patrol2Start,
-                pointB = ForestZoneLayout.Ch2Patrol2End,
-                moveSpeed = 3.2f,
-                detectRadius = 5.5f,
-                detectSeconds = 1f,
-                mustHideToPass = true,
-                activeQuestId = "stealth_cross"
+                questId = "stealth_cross";
+                hide = true;
             }
-        },
-        3 => new[]
-        {
-            new PatrolSetup
+            else if (chapter == 3)
             {
-                pointA = ForestZoneLayout.Ch3PatrolStart,
-                pointB = ForestZoneLayout.Ch3PatrolEnd,
-                moveSpeed = 2.3f,
-                detectRadius = 4.8f,
-                detectSeconds = 1.7f,
-                mustHideToPass = false,
-                activeQuestId = "find_clues"
-            },
-            new PatrolSetup
-            {
-                pointA = ForestZoneLayout.Ch3Patrol2Start,
-                pointB = ForestZoneLayout.Ch3Patrol2End,
-                moveSpeed = 2.5f,
-                detectRadius = 4.2f,
-                detectSeconds = 1.6f,
-                mustHideToPass = false,
-                activeQuestId = "find_clues"
-            },
-            new PatrolSetup
-            {
-                pointA = ForestZoneLayout.Ch3DangerPatrolStart,
-                pointB = ForestZoneLayout.Ch3DangerPatrolEnd,
-                moveSpeed = 3.8f,
-                detectRadius = 7.5f,
-                detectSeconds = 0.7f,
-                mustHideToPass = true,
-                activeQuestId = "cross_danger"
+                // Chia đều cho 2 nhiệm vụ
+                questId = i < 6 ? "find_clues" : "cross_danger";
+                hide = i >= 6; // cross_danger thì bắt buộc núp
             }
-        },
-        _ => System.Array.Empty<PatrolSetup>()
-    };
+
+            float rx = zone.center.x + UnityEngine.Random.Range(-zone.groundSize.x * 0.45f, zone.groundSize.x * 0.45f);
+            float rz = zone.center.z + UnityEngine.Random.Range(-zone.groundSize.z * 0.45f, zone.groundSize.z * 0.45f);
+
+            patrols[i] = new PatrolSetup
+            {
+                pointA = new Vector3(rx, 0, rz),
+                pointB = new Vector3(rx + UnityEngine.Random.Range(-15f, 15f), 0, rz + UnityEngine.Random.Range(-15f, 15f)),
+                moveSpeed = UnityEngine.Random.Range(2.2f, 3.5f),
+                detectRadius = UnityEngine.Random.Range(6.75f, 9.75f),
+                detectSeconds = UnityEngine.Random.Range(1.0f, 1.8f),
+                mustHideToPass = hide,
+                activeQuestId = questId
+            };
+        }
+
+        return patrols;
+    }
 
     public static float DangerExposureLimit(int chapter) => chapter switch
     {

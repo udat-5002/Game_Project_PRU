@@ -16,9 +16,22 @@ public class StealthEnemy : MonoBehaviour
     float detectTimer;
     bool approachWarned;
     bool dangerWarned;
+    
+    CharacterController controller;
+    float stuckTimer;
+    LineRenderer detectRing;
 
     void Start()
     {
+        controller = GetComponent<CharacterController>();
+        if (controller == null)
+        {
+            controller = gameObject.AddComponent<CharacterController>();
+            controller.radius = 0.4f;
+            controller.height = 1.8f;
+            controller.center = new Vector3(0, 0.9f, 0);
+        }
+
         target = pointB;
         if (pointA == Vector3.zero && pointB == Vector3.zero)
         {
@@ -32,37 +45,52 @@ public class StealthEnemy : MonoBehaviour
 
         if (approachRadius <= detectRadius)
             approachRadius = detectRadius * 2f;
+
+        SetupDetectRing();
+    }
+
+    void SetupDetectRing()
+    {
+        var ringObj = new GameObject("DetectRing");
+        ringObj.transform.SetParent(transform, false);
+        detectRing = ringObj.AddComponent<LineRenderer>();
+        detectRing.useWorldSpace = true;
+        detectRing.loop = true;
+        detectRing.positionCount = 36;
+        detectRing.startWidth = 0.1f;
+        detectRing.endWidth = 0.1f;
+        
+        var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
+        var mat = new Material(shader);
+        mat.color = new Color(1f, 0.2f, 0.1f, 0.6f);
+        detectRing.material = mat;
     }
 
     void Update()
     {
-        var step = moveSpeed * Time.deltaTime;
-        transform.position = Vector3.MoveTowards(transform.position, target, step);
-        
+        UpdateDetectRing();
+
         var dir = target - transform.position;
         dir.y = 0;
+        
+        Vector3 moveDir = dir.normalized * moveSpeed;
+        if (!controller.isGrounded)
+            moveDir.y = Physics.gravity.y * 2f;
+        else
+            moveDir.y = -2f; // Ép xuống đất một chút để đi đúng mặt đất
+
+        var flags = controller.Move(moveDir * Time.deltaTime);
+
         if (dir.sqrMagnitude > 0.001f)
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), 360f * Time.deltaTime);
 
-        if (Vector3.Distance(transform.position, target) < 0.2f)
+        stuckTimer += Time.deltaTime;
+
+        if (dir.magnitude < 0.3f || stuckTimer > 8f || (flags & CollisionFlags.Sides) != 0)
         {
-            // Chọn một điểm ngẫu nhiên mới trong bán kính xung quanh vị trí gốc
-            for (int i = 0; i < 10; i++)
-            {
-                var offset = Random.insideUnitSphere * 20f;
-                offset.y = 0;
-                var potential = resetPosition + offset;
-                
-                if (GroundSnap.TryGetGroundY(potential, out float y))
-                {
-                    potential.y = y + GroundSnap.CharacterFootToPivot + 0.1f;
-                    target = potential;
-                    break;
-                }
-            }
+            stuckTimer = 0f;
+            PickNewTarget();
         }
-
-
 
         if (HideSpot.PlayerIsHidden)
         {
@@ -132,5 +160,41 @@ public class StealthEnemy : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, approachRadius);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, detectRadius);
+    }
+
+    void PickNewTarget()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            var offset = Random.insideUnitSphere * 20f;
+            offset.y = 0;
+            var potential = pointA + offset; // Tuần tra quanh vị trí ban đầu của lính, không phải quanh điểm hồi sinh của player!
+            
+            if (GroundSnap.TryGetGroundY(potential, out float y))
+            {
+                potential.y = y;
+                target = potential;
+                break;
+            }
+        }
+    }
+
+    void UpdateDetectRing()
+    {
+        if (detectRing == null) return;
+        
+        int segments = detectRing.positionCount;
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = i * Mathf.PI * 2f / segments;
+            Vector3 pos = transform.position + new Vector3(Mathf.Cos(angle) * detectRadius, 0, Mathf.Sin(angle) * detectRadius);
+            
+            if (GroundSnap.TryGetGroundY(pos, out float y))
+                pos.y = y + 0.15f; // Nâng lên một chút so với mặt đất
+            else
+                pos.y = transform.position.y + 0.15f;
+                
+            detectRing.SetPosition(i, pos);
+        }
     }
 }

@@ -254,7 +254,14 @@ public class ChapterFlowController : MonoBehaviour
     void CreateObstacleSection()
     {
         var go = CreateMarker("Khu gỗ đổ", obstacleZonePosition, new Color(0.25f, 0.65f, 0.3f), new Vector3(2f, 2f, 2f));
-        CreateFallenLogProp(go.transform);
+        
+        var prefab = Resources.Load<GameObject>("FallenLogs");
+        if (prefab != null)
+        {
+            var logs = Object.Instantiate(prefab, go.transform);
+            logs.transform.localPosition = Vector3.zero;
+        }
+
         RegisterWaypoint("cross_obstacle", go.transform.position);
         var obstacle = go.AddComponent<ObstacleCrossInteractable>();
         obstacle.promptText = "Nhấn E - Vượt qua";
@@ -412,16 +419,16 @@ public class ChapterFlowController : MonoBehaviour
             var modelRoot = NpcVisualFactory.Attach(patrol.transform, NpcVisualFactory.NpcRole.Enemy, "NhanVat/LowPolySoldiers_demo/models/Soldier_demo");
             if (modelRoot != null)
             {
+                modelRoot.localPosition = Vector3.zero;
                 modelRoot.localScale = Vector3.one * 1.3f;
-                NpcVisualFactory.AutoAdjustGroundPlacement(modelRoot);
-                PatrolVisibility.Apply(patrol.transform);
+                PatrolVisibility.Apply(patrol.transform, enemy.detectRadius);
                 var patrolAnim = patrol.AddComponent<NpcPatrolAnimator>();
                 patrolAnim.modelRoot = modelRoot;
             }
             else
             {
                 CreateObjectiveLabel(patrol.transform, "Lính tuần tra");
-                PatrolVisibility.Apply(patrol.transform);
+                PatrolVisibility.Apply(patrol.transform, enemy.detectRadius);
             }
         }
     }
@@ -546,7 +553,7 @@ public class ChapterFlowController : MonoBehaviour
         {
             var bush = Object.Instantiate(bushPrefab, chapterRoot.transform);
             bush.transform.position = GroundSnap.Snap(clue2Position + new Vector3(1f, 0, -1f));
-            bush.transform.localScale = Vector3.one * 1.5f;
+            bush.transform.localScale = Vector3.one * 4.5f;
             bush.transform.rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
             bush.name = "ClueBunker_Bush";
         }
@@ -557,9 +564,9 @@ public class ChapterFlowController : MonoBehaviour
         if (wallPrefab != null)
         {
             var wall = Object.Instantiate(wallPrefab, chapterRoot.transform);
-            wall.transform.position = GroundSnap.Snap(clue3Position + new Vector3(0.5f, 0, 0.8f));
-            wall.transform.localScale = Vector3.one * 1.5f;
-            wall.transform.rotation = Quaternion.Euler(0, 135f, 0); // Xoay để che góc
+            wall.transform.position = new Vector3(11.815f, 1.869f, -27.885f);
+            wall.transform.rotation = new Quaternion(0.0f, 0.9238796f, 0.0f, 0.3826835f);
+            wall.transform.localScale = new Vector3(3.0f, 3.0f, 3.0f);
             wall.name = "ClueFort_RuinedWall";
         }
     }
@@ -605,10 +612,13 @@ public class ChapterFlowController : MonoBehaviour
             var prefab = Resources.Load<GameObject>(modelPrefab);
             if (prefab != null)
             {
-                var model = Object.Instantiate(prefab, go.transform);
-                model.transform.localPosition = Vector3.zero;
-                model.transform.localScale = Vector3.one * 1.5f;
-                model.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+                var visual = Object.Instantiate(prefab, go.transform);
+                if (modelPrefab.Contains("OldMailBag"))
+                    visual.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+                else
+                    visual.transform.localPosition = Vector3.zero;
+                visual.transform.localScale = Vector3.one * 1.5f;
+                visual.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
             }
         }
 
@@ -754,68 +764,6 @@ public class ChapterFlowController : MonoBehaviour
         CreateObjectiveLabel(go.transform, name);
         CreateBeaconLight(go.transform, color);
         return go;
-    }
-
-    void CreateFallenLogProp(Transform parent)
-    {
-        // Lớp dưới cùng - rải rộng (Nằm ngang: X = 90)
-        CreateLog(parent, "WoodLogs/SM_AFS_Log02_LowEndPC", new Vector3(-8.5f, 0.2f, -0.5f), new Vector3(10f, 10f, 10f), Quaternion.Euler(90f, 8f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log12_LowEndPC", new Vector3(-4.8f, 0.2f, 0.5f), new Vector3(9f, 9f, 9f), Quaternion.Euler(90f, 35f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log05_LowEndPC", new Vector3(0f, 0.2f, -0.1f), new Vector3(10.5f, 10.5f, 10.5f), Quaternion.Euler(90f, -15f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log20_LowEndPC", new Vector3(4.5f, 0.2f, 0.3f), new Vector3(9.5f, 9.5f, 9.5f), Quaternion.Euler(90f, -40f, 0f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(8.5f, 0.2f, 0.2f), new Vector3(10f, 10f, 10f), Quaternion.Euler(90f, 20f, 0f));
-
-        // Lớp chồng lên trên (Nằm ngang nhưng hơi xiên: X = 80-100)
-        CreateLog(parent, "WoodLogs/SM_AFS_Log10_LowEndPC", new Vector3(-6.2f, 1.2f, 0f), new Vector3(9f, 9f, 9f), Quaternion.Euler(85f, 20f, 15f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log15_LowEndPC", new Vector3(-2.5f, 1.5f, 0.4f), new Vector3(10f, 10f, 10f), Quaternion.Euler(95f, -25f, -10f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log25_LowEndPC", new Vector3(2.2f, 1.4f, -0.3f), new Vector3(9.5f, 9.5f, 9.5f), Quaternion.Euler(88f, 85f, 5f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log28_LowEndPC", new Vector3(6.5f, 2.5f, 0.1f), new Vector3(10f, 10f, 10f), Quaternion.Euler(92f, -60f, -5f));
-
-        // Khúc gỗ đứng / dựa (Đứng: X = 0, hơi nghiêng: X = 10-30)
-        CreateLog(parent, "WoodLogs/SM_AFS_Log03_LowEndPC", new Vector3(-3.0f, 1.2f, -1.5f), new Vector3(9f, 9f, 9f), Quaternion.Euler(15f, 15f, 20f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log04_LowEndPC", new Vector3(3.2f, 1.5f, 1.2f), new Vector3(10f, 10f, 10f), Quaternion.Euler(20f, -45f, -10f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log06_LowEndPC", new Vector3(-10.2f, 1.0f, 0.8f), new Vector3(8.5f, 8.5f, 8.5f), Quaternion.Euler(10f, 75f, -15f));
-        CreateLog(parent, "WoodLogs/SM_AFS_Log18_LowEndPC", new Vector3(10.0f, 0.8f, -1.0f), new Vector3(9f, 9f, 9f), Quaternion.Euler(25f, -20f, 10f));
-    }
-
-    void CreateLog(Transform parent, string prefabPath, Vector3 localPos, Vector3 scale, Quaternion rotation)
-    {
-        var prefab = Resources.Load<GameObject>(prefabPath);
-        if (prefab != null)
-        {
-            var log = Object.Instantiate(prefab, parent);
-            log.name = "FallenLog";
-            
-            // Xoay và scale trước
-            log.transform.localScale = scale;
-            log.transform.localRotation = rotation;
-
-            // Đặt vị trí ban đầu theo parent + offset
-            Vector3 worldPos = parent.position + parent.TransformVector(localPos);
-            
-            // Tìm Y thật trên mặt đất để khúc gỗ không bị bay lơ lửng nếu dốc
-            if (GroundSnap.TryGetGroundY(worldPos, out float y))
-            {
-                // localPos.y lúc này đóng vai trò là độ cao tăng thêm (nếu gỗ chồng lên nhau)
-                log.transform.position = new Vector3(worldPos.x, y + localPos.y, worldPos.z);
-            }
-            else
-            {
-                log.transform.localPosition = localPos;
-            }
-            return;
-        }
-
-        // Fallback
-        var fallback = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        fallback.name = "FallenLog_Fallback";
-        fallback.transform.SetParent(parent);
-        fallback.transform.localPosition = localPos + Vector3.up * 0.5f;
-        fallback.transform.localScale = new Vector3(scale.x, 0.5f, 0.5f);
-        fallback.transform.localRotation = rotation * Quaternion.Euler(0, 0, 90);
-        if (fallback.GetComponent<Collider>() != null) Destroy(fallback.GetComponent<Collider>());
-        var renderer = fallback.GetComponent<Renderer>();
-        if (renderer != null) renderer.material = CreateURPMaterial(new Color(0.42f, 0.26f, 0.12f), 1f);
     }
 
     void CreateObjectiveLabel(Transform parent, string label)
