@@ -540,7 +540,28 @@ public class ChapterFlowController : MonoBehaviour
             "Căn nhà hoang vắng cạnh chiến trường cũ. Có dấu vết ai đó từng ghé qua...",
             Chapter3Voice.ClueHouse);
         CreateClue(clue2Position, "Hầm trú ẩn", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker, "TornBag/TornBag");
+        
+        var bushPrefab = Resources.Load<GameObject>("WildGrass/Bush");
+        if (bushPrefab != null)
+        {
+            var bush = Object.Instantiate(bushPrefab, chapterRoot.transform);
+            bush.transform.position = GroundSnap.Snap(clue2Position + new Vector3(1f, 0, -1f));
+            bush.transform.localScale = Vector3.one * 1.5f;
+            bush.transform.rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
+            bush.name = "ClueBunker_Bush";
+        }
+
         CreateClue(clue3Position, "Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort, "OldMailBag/OldMailBag");
+
+        var wallPrefab = Resources.Load<GameObject>("RuinedWall/RuinedWall");
+        if (wallPrefab != null)
+        {
+            var wall = Object.Instantiate(wallPrefab, chapterRoot.transform);
+            wall.transform.position = GroundSnap.Snap(clue3Position + new Vector3(0.5f, 0, 0.8f));
+            wall.transform.localScale = Vector3.one * 1.5f;
+            wall.transform.rotation = Quaternion.Euler(0, 135f, 0); // Xoay để che góc
+            wall.name = "ClueFort_RuinedWall";
+        }
     }
 
     void CreateHouseClue(string title, string hint, string voiceKey)
