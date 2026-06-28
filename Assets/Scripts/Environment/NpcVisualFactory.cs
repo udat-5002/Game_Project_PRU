@@ -54,7 +54,6 @@ public static class NpcVisualFactory
             return;
         }
 
-        CharacterMaterialFixer.ApplyTo(model.transform);
         ApplyRoleTint(model, role);
     }
 
@@ -105,14 +104,7 @@ public static class NpcVisualFactory
         if (cachedModelTemplate != null)
             return cachedModelTemplate;
 
-        var playerModel = GetPlayerModelTransform();
-        if (playerModel != null)
-        {
-            cachedModelTemplate = playerModel.gameObject;
-            return cachedModelTemplate;
-        }
-
-        cachedModelTemplate = Resources.Load<GameObject>("NhanVat/ChienSi1");
+        cachedModelTemplate = Resources.Load<GameObject>("NhanVat/AnhLinh/anhLinh");
         return cachedModelTemplate;
     }
 
