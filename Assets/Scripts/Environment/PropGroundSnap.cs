@@ -7,7 +7,7 @@ public static class PropGroundSnap
 {
     static readonly string[] NameHints =
     {
-        "Log", "log", "Fallen", "Wood", "wood", "gỗ"
+        "Log", "log", "Fallen", "Wood", "wood", "gỗ", "FallenLog"
     };
 
     public static void SnapLogsInScene()

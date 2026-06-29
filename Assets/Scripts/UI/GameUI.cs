@@ -72,7 +72,7 @@ public class GameUI : MonoBehaviour
         questText = CreateHudLine("Quest", 34, new Vector2(24, -130), 80);
         questText.lineSpacing = 1.25f;
         waypointText = CreateHudLine("Waypoint", 30, new Vector2(24, -218), 44);
-        waypointText.color = CrispUiText.Cyan;
+        waypointText.color = CrispUiText.White;
 
         interactPrompt = CreatePanel("InteractPrompt", new Color(0.02f, 0.02f, 0.03f, 1f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 96), new Vector2(620, 80));
         interactText = CreateAnchoredText("InteractText", 36, Vector2.zero, TextAnchor.MiddleCenter, new Vector2(0.5f, 0), FontStyle.Bold);

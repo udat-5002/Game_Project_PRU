@@ -272,16 +272,21 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateObstacleSection()
     {
-        var go = CreateMarker("Khu gỗ đổ", obstacleZonePosition, new Color(0.25f, 0.65f, 0.3f), new Vector3(2f, 2f, 2f));
+        var pos = obstacleZonePosition;
+        Transform mapWood = null;
+        if (TryFindMapWoodNear(pos, 22f, out mapWood, out var woodCenter))
+            pos = woodCenter;
 
-        SpawnFallenLogs(go.transform);
+        var go = CreateMarker("Khu gỗ đổ", pos, new Color(0.25f, 0.65f, 0.3f), new Vector3(2f, 2f, 2f));
+
+        SpawnFallenLogs(go.transform, mapWood);
 
         RegisterWaypoint("cross_obstacle", go.transform.position);
         var obstacle = go.AddComponent<ObstacleCrossInteractable>();
         obstacle.promptText = "Nhấn E - Vượt qua";
     }
 
-    void SpawnFallenLogs(Transform parent)
+    void SpawnFallenLogs(Transform parent, Transform mapWoodPrototype = null)
     {
         var prefab = Resources.Load<GameObject>("FallenLogs");
         if (prefab != null)
@@ -292,25 +297,166 @@ public class ChapterFlowController : MonoBehaviour
             return;
         }
 
-        var logPrefab = Resources.Load<GameObject>("WoodLogs/SM_AFS_Log10_LowEndPC");
-        if (logPrefab == null) return;
-
-        var offsets = new[]
+        if (mapWoodPrototype != null && SpawnFallenWoodPile(parent, mapWoodPrototype))
         {
-            new Vector3(-1.2f, 0f, 0.2f),
-            new Vector3(0.6f, 0f, -0.4f),
-            new Vector3(0.1f, 0f, 0.8f)
+            PropGroundSnap.SnapLogsInScene();
+            return;
+        }
+
+        var cracked = Resources.Load<GameObject>("CrackedTree");
+        if (cracked != null && SpawnCrackedTreePile(parent, cracked))
+        {
+            PropGroundSnap.SnapLogsInScene();
+            return;
+        }
+
+        const float logScale = 12f;
+        var pile = new (string resource, Vector3 offset, Vector3 euler)[]
+        {
+            ("WoodLogs/SM_AFS_Log14_LowEndPC", new Vector3(-2.5f, 0f, 0f), new Vector3(0f, 20f, 90f)),
+            ("WoodLogs/SM_AFS_Log06_LowEndPC", new Vector3(0f, 0f, 0f), new Vector3(0f, -10f, 90f)),
+            ("WoodLogs/SM_AFS_Log04_LowEndPC", new Vector3(2.5f, 0f, 0.3f), new Vector3(5f, 35f, 88f)),
         };
 
-        foreach (var offset in offsets)
+        foreach (var entry in pile)
         {
+            var logPrefab = Resources.Load<GameObject>(entry.resource);
+            if (logPrefab == null) continue;
+
             var log = Object.Instantiate(logPrefab, parent);
-            log.transform.localPosition = offset;
-            log.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 90f);
-            log.transform.localScale = Vector3.one * 1.4f;
+            log.name = "FallenLog_" + log.name;
+            log.transform.localPosition = entry.offset;
+            log.transform.localRotation = Quaternion.Euler(entry.euler);
+            log.transform.localScale = Vector3.one * logScale;
         }
 
         PropGroundSnap.SnapLogsInScene();
+    }
+
+    static bool TryFindMapWoodNear(Vector3 point, float radius, out Transform prototype, out Vector3 center)
+    {
+        prototype = null;
+        center = point;
+
+        float bestScore = float.MaxValue;
+        foreach (var rootName in new[] { "Map", "Environment_Decor" })
+        {
+            var root = GameObject.Find(rootName)?.transform;
+            if (root == null) continue;
+
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (!IsMapWoodCandidate(t)) continue;
+
+                var renderer = t.GetComponent<Renderer>() ?? t.GetComponentInChildren<Renderer>();
+                if (renderer == null) continue;
+
+                var c = renderer.bounds.center;
+                float dist = HorizontalDistance(point, c);
+                if (dist > radius) continue;
+
+                float score = dist;
+                if (IsMapLogLike(renderer.bounds)) score -= 3f;
+                if (t.name.IndexOf("NewTree", System.StringComparison.OrdinalIgnoreCase) >= 0) score -= 1f;
+
+                if (score >= bestScore) continue;
+
+                bestScore = score;
+                prototype = t;
+                center = new Vector3(c.x, 0f, c.z);
+            }
+        }
+
+        return prototype != null;
+    }
+
+    static bool IsMapWoodCandidate(Transform t)
+    {
+        var name = t.name;
+        if (name.IndexOf("NewTree", System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
+        if (name.IndexOf("Log", System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
+        if (name.IndexOf("leaves", System.StringComparison.OrdinalIgnoreCase) >= 0) return false;
+
+        var renderer = t.GetComponent<Renderer>();
+        return renderer != null && IsMapLogLike(renderer.bounds);
+    }
+
+    static bool IsMapLogLike(Bounds b)
+    {
+        var s = b.size;
+        float height = s.y;
+        float longAxis = Mathf.Max(s.x, s.z);
+        float shortAxis = Mathf.Min(s.x, s.z);
+
+        if (height > 2.2f || longAxis < 0.6f) return false;
+        if (height > 1.1f && longAxis / Mathf.Max(shortAxis, 0.01f) < 1.6f) return false;
+        return longAxis >= 0.9f && shortAxis <= 1.4f;
+    }
+
+    static bool SpawnFallenWoodPile(Transform parent, Transform prototype)
+    {
+        if (prototype == null) return false;
+
+        bool isTree = prototype.name.IndexOf("NewTree", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        var scale = prototype.lossyScale;
+        var offsets = new[]
+        {
+            Vector3.zero,
+            new Vector3(-2.8f, 0f, 0.45f),
+            new Vector3(2.6f, 0f, -0.35f),
+        };
+
+        for (int i = 0; i < offsets.Length; i++)
+        {
+            var copy = Object.Instantiate(prototype.gameObject, parent);
+            copy.name = $"FallenLog_{i + 1}";
+
+            var rot = isTree
+                ? Quaternion.Euler(0f, prototype.eulerAngles.y + i * 28f, 90f)
+                : Quaternion.Euler(prototype.eulerAngles.x, prototype.eulerAngles.y + i * 18f, prototype.eulerAngles.z);
+
+            copy.transform.SetPositionAndRotation(parent.position + offsets[i], rot);
+            copy.transform.localScale = scale;
+            copy.transform.SetParent(parent, true);
+            StripColliders(copy);
+        }
+
+        return true;
+    }
+
+    static bool SpawnCrackedTreePile(Transform parent, GameObject crackedPrefab)
+    {
+        var offsets = new[]
+        {
+            Vector3.zero,
+            new Vector3(-2.4f, 0f, 0.35f),
+            new Vector3(2.2f, 0f, -0.25f),
+        };
+
+        for (int i = 0; i < offsets.Length; i++)
+        {
+            var copy = Object.Instantiate(crackedPrefab, parent);
+            copy.name = $"FallenLog_{i + 1}";
+            copy.transform.localPosition = offsets[i];
+            copy.transform.localRotation = Quaternion.Euler(0f, i * 35f, 90f);
+            copy.transform.localScale = Vector3.one * 1.2f;
+            StripColliders(copy);
+        }
+
+        return true;
+    }
+
+    static void StripColliders(GameObject go)
+    {
+        foreach (var col in go.GetComponentsInChildren<Collider>())
+            Object.Destroy(col);
+    }
+
+    static float HorizontalDistance(Vector3 a, Vector3 b)
+    {
+        a.y = 0f;
+        b.y = 0f;
+        return Vector3.Distance(a, b);
     }
 
     void SetupChapter2()
@@ -489,6 +635,12 @@ public class ChapterFlowController : MonoBehaviour
         tag.Configure(label, 3.2f);
     }
 
+    void AttachClueHeadLabel(GameObject go, string label)
+    {
+        var tag = go.GetComponent<NpcHeadLabel>() ?? go.AddComponent<NpcHeadLabel>();
+        tag.Configure(label, 2.8f);
+    }
+
     void CreateHideSpot(Vector3 hidePos, string questId)
     {
         var hideGo = CreateInvisibleTrigger($"HideSpot_{questId}", GroundSnap.Snap(hidePos), new Vector3(3.5f, 2.5f, 3.5f));
@@ -659,6 +811,7 @@ public class ChapterFlowController : MonoBehaviour
 
         AttachClueInteractable(trigger, "house", title, hint, voiceKey, hideAfterCollect: true);
         BoostClueVisibility(trigger.transform);
+        AttachClueHeadLabel(trigger, title);
     }
 
     void CreateFortClue(string title, string hint, string voiceKey)
@@ -694,6 +847,7 @@ public class ChapterFlowController : MonoBehaviour
 
         BoostClueVisibility(go.transform);
         AttachClueInteractable(go, "fort", title, hint, voiceKey, hideAfterCollect: false);
+        AttachClueHeadLabel(go, title);
 
         foreach (var col in go.GetComponentsInChildren<Collider>())
         {
@@ -705,6 +859,11 @@ public class ChapterFlowController : MonoBehaviour
     void CreateClue(string clueId, Vector3 pos, string title, string hint, string voiceKey, string modelPrefab = null)
     {
         var go = CreateMarker(title, pos, new Color(1f, 0.84f, 0.18f), new Vector3(2.6f, 2.8f, 2.6f));
+
+        var worldLabel = go.transform.Find("ObjectiveLabel");
+        if (worldLabel != null)
+            Destroy(worldLabel.gameObject);
+        AttachClueHeadLabel(go, title);
         
         if (!string.IsNullOrEmpty(modelPrefab))
         {
@@ -808,7 +967,9 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateFinalDeliveryNpc()
     {
-        var go = CreateNpcMarker("Trạm thư cuối", finalDeliveryPosition, new Color(0.9f, 0.75f, 0.2f), NpcVisualFactory.NpcRole.Civilian);
+        var go = CreateNpcMarker("Trạm thư cuối", finalDeliveryPosition, new Color(0.9f, 0.75f, 0.2f),
+            NpcVisualFactory.NpcRole.Civilian, null, true, false);
+        AttachNpcHeadLabel(go, "Trạm thư cuối");
         RegisterWaypoint("final_delivery", go.transform.position);
         go.AddComponent<FinalDeliveryInteractable>();
     }
