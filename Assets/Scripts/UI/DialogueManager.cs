@@ -76,15 +76,22 @@ public class DialogueManager : MonoBehaviour
         bool voiceStarted = voiceEnabled && !string.IsNullOrWhiteSpace(options.voiceKey)
             && voicePlayer != null && voicePlayer.Play(options.voiceKey);
 
-        yield return null;
+        // Tránh phím E (vừa nhấn tương tác) cắt giọng ngay lập tức.
+        for (int i = 0; i < 8; i++)
+            yield return null;
         while (continueAction.IsPressed())
             yield return null;
+
+        float minVoicePlayUntil = voiceStarted
+            ? Time.unscaledTime + Mathf.Clamp(voicePlayer.CurrentClipLength * 0.15f, 0.45f, 2.5f)
+            : 0f;
+
         yield return null;
 
         if (options.typewriter)
         {
             GameUI.Instance?.SetDialogueHint("Space / E để hiện hết");
-            yield return RunTypewriterWithSkip(message, options);
+            yield return RunTypewriterWithSkip(message, options, minVoicePlayUntil);
         }
         else if (GameUI.Instance != null)
         {
@@ -98,7 +105,8 @@ public class DialogueManager : MonoBehaviour
             float endTime = Time.time + readPause;
             while (Time.time < endTime || (voiceStarted && voicePlayer != null && voicePlayer.IsPlaying))
             {
-                if (options.allowSkip && continueAction.WasPressedThisFrame())
+                if (options.allowSkip && continueAction.WasPressedThisFrame()
+                    && Time.unscaledTime >= minVoicePlayUntil)
                 {
                     voicePlayer?.Stop();
                     break;
@@ -122,7 +130,7 @@ public class DialogueManager : MonoBehaviour
         callback?.Invoke();
     }
 
-    IEnumerator RunTypewriterWithSkip(string message, DialogueDisplayOptions options)
+    IEnumerator RunTypewriterWithSkip(string message, DialogueDisplayOptions options, float minVoicePlayUntil)
     {
         var ui = GameUI.Instance;
         if (ui == null) yield break;
@@ -130,7 +138,8 @@ public class DialogueManager : MonoBehaviour
         var typing = ui.StartTypewriter(message, options.charsPerSecond);
         while (typing != null && !ui.IsTypewriterComplete)
         {
-            if (options.allowSkip && continueAction.WasPressedThisFrame())
+            if (options.allowSkip && continueAction.WasPressedThisFrame()
+                && Time.unscaledTime >= minVoicePlayUntil)
             {
                 ui.CompleteTypewriter(message);
                 voicePlayer?.Stop();

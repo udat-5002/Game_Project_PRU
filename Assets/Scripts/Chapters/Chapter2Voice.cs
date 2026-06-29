@@ -1,5 +1,8 @@
 /// <summary>
 /// Giọng đọc Chương 2 — file trong Resources/Audio/Dialogue/
+/// CT2-1: màn chào chương (SceneTransition)
+/// CT2-2: intro HUD khi vào map
+/// CT2-3 … CT2-7: các nhiệm vụ / kết chương
 /// </summary>
 public static class Chapter2Voice
 {

@@ -206,7 +206,7 @@ public class MainMenuUI : MonoBehaviour
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0, 0, 0, 0.55f));
         overlay.GetComponent<Image>().raycastTarget = true;
 
-        CreateLabel(introPanel.transform, "IntroChapter", "Chương 1: Con Đường Hy Vọng",
+        CreateLabel(introPanel.transform, "IntroChapter", "Người đưa thư",
             52, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.88f), new Vector2(980, 76), Accent, FontStyle.Bold);
 
         var box = CreateIntroBox(introPanel.transform, "IntroBox", new Vector2(0.5f, 0.52f), new Vector2(980, 520));
@@ -301,12 +301,14 @@ public class MainMenuUI : MonoBehaviour
         if (string.IsNullOrWhiteSpace(key))
             return;
 
-        var clip = Resources.Load<AudioClip>($"Audio/Dialogue/{key}");
+        var clip = DialogueAudio.Load(key, refreshFromDisk: true);
         if (clip == null)
         {
             Debug.LogWarning($"[MainMenuUI] Không tìm thấy giọng intro: Audio/Dialogue/{key}");
             return;
         }
+
+        Debug.Log($"[MainMenuUI] Phát giọng intro: {key} ({clip.length:0.0}s)");
 
         introVoiceCoroutinePage = pageIndex;
         introVoiceCoroutine = StartCoroutine(IntroVoiceRoutine(pageIndex, clip));
@@ -406,9 +408,14 @@ public class MainMenuUI : MonoBehaviour
         }
 
         introVoiceCoroutinePage = -1;
-        if (introVoiceSource != null && introVoiceSource.isPlaying)
+        if (introVoiceSource != null)
+        {
             introVoiceSource.Stop();
+            introVoiceSource.clip = null;
+        }
     }
+
+    public void StopIntroVoiceNow() => StopIntroVoice();
 
     GameObject CreateIntroBox(Transform parent, string name, Vector2 anchor, Vector2 size)
     {
@@ -491,6 +498,8 @@ public class MainMenuUI : MonoBehaviour
     void StartGame()
     {
         StopIntroVoice();
+        VoicePlayback.StopAll();
+        DialogueAudio.Preload(refreshFromDisk: true, Chapter1Voice.Transition, Chapter1Voice.IntroHud);
         GameSession.StartedFromMenu = true;
         EnsureSystems();
         GameManager.Instance.StartNewGame();

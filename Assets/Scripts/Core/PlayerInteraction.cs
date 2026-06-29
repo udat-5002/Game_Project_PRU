@@ -3,6 +3,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerInteraction : MonoBehaviour
 {
+    public static bool HasActiveTarget { get; private set; }
+
     public float interactRange = 5f;
     public float clueInteractRange = 7.5f;
     public LayerMask interactLayers = ~0;
@@ -25,19 +27,21 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (GameManager.Instance != null && GameManager.Instance.InputLocked)
         {
+            HasActiveTarget = false;
             GameUI.Instance?.SetInteractPrompt(false);
             return;
         }
 
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsShowing)
         {
+            HasActiveTarget = false;
             GameUI.Instance?.SetInteractPrompt(false);
             return;
         }
 
         FindTarget();
 
-        if (currentTarget != null && interactAction.WasPressedThisFrame())
+        if (currentTarget != null && WasInteractPressed())
         {
             if (currentTarget.GetComponent<Collider>() != null && 
                 !currentTarget.name.Contains("Clue") &&
@@ -54,12 +58,20 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
+    bool WasInteractPressed()
+    {
+        if (interactAction != null && interactAction.WasPressedThisFrame())
+            return true;
+        return Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
+    }
+
     void FindTarget()
     {
         Interactable best = null;
         float bestDist = float.MaxValue;
+        float searchRange = Mathf.Max(interactRange, clueInteractRange);
 
-        var hits = Physics.OverlapSphere(transform.position, interactRange, interactLayers, QueryTriggerInteraction.Collide);
+        var hits = Physics.OverlapSphere(transform.position, searchRange, interactLayers, QueryTriggerInteraction.Collide);
         foreach (var col in hits)
         {
             var interactable = col.GetComponent<Interactable>() ?? col.GetComponentInParent<Interactable>();
@@ -91,7 +103,12 @@ public class PlayerInteraction : MonoBehaviour
         if (currentTarget != best)
         {
             currentTarget = best;
+            HasActiveTarget = best != null;
             GameUI.Instance?.SetInteractPrompt(best != null, best != null ? best.PromptText : "");
+        }
+        else
+        {
+            HasActiveTarget = currentTarget != null;
         }
     }
 

@@ -24,54 +24,82 @@ public static class ChapterDifficulty
         _ => 0f
     };
 
-    public static PatrolSetup[] GetPatrols(int chapter)
+    public static PatrolSetup[] GetPatrols(int chapter, string questId)
     {
-        var zone = ForestZoneLayout.GetZone(chapter);
-        var patrols = new PatrolSetup[10];
-
-        // Đảm bảo seed ngẫu nhiên nhưng thay đổi theo thời gian thực (để lính đổi vị trí mỗi lần chơi)
-        // Hoặc giữ nguyên để dễ test. Ở đây dùng random thực.
-
-        for (int i = 0; i < 10; i++)
+        int count = chapter switch
         {
-            string questId = "";
-            bool hide = false;
+            1 => 5,
+            2 => 5,
+            3 => 5,
+            _ => 4
+        };
 
-            if (chapter == 1)
-            {
-                questId = "sneak_patrol";
-                hide = false;
-            }
-            else if (chapter == 2)
-            {
-                questId = "stealth_cross";
-                hide = true;
-            }
-            else if (chapter == 3)
-            {
-                // Chia đều cho 2 nhiệm vụ
-                questId = i < 6 ? "find_clues" : "cross_danger";
-                hide = i >= 6; // cross_danger thì bắt buộc núp
-            }
-
-            // Phân bố khắp Toàn Bộ Bản Đồ thay vì chỉ gói gọn trong khu vực Zone của chapter hiện tại!
-            // Map boundaries: X khoảng từ -50 đến 50. Z khoảng từ -75 đến 15.
-            float rx = UnityEngine.Random.Range(-50f, 50f);
-            float rz = UnityEngine.Random.Range(-70f, 15f);
+        var patrols = new PatrolSetup[count];
+        for (int i = 0; i < count; i++)
+        {
+            bool hide = questId is "stealth_cross";
+            var pointA = PickPatrolPoint(chapter, questId, i);
+            var pointB = PickPatrolPoint(chapter, questId, i + 3);
 
             patrols[i] = new PatrolSetup
             {
-                pointA = new Vector3(rx, 0, rz),
-                pointB = new Vector3(rx + UnityEngine.Random.Range(-15f, 15f), 0, rz + UnityEngine.Random.Range(-15f, 15f)),
-                moveSpeed = UnityEngine.Random.Range(2.2f, 3.5f),
-                detectRadius = UnityEngine.Random.Range(6.75f, 9.75f),
-                detectSeconds = UnityEngine.Random.Range(1.0f, 1.8f),
+                pointA = GroundSnap.Snap(pointA),
+                pointB = GroundSnap.Snap(pointB),
+                moveSpeed = Random.Range(2.2f, 3.2f),
+                detectRadius = Random.Range(6.5f, 8.5f),
+                detectSeconds = Random.Range(1.1f, 1.6f),
                 mustHideToPass = hide,
                 activeQuestId = questId
             };
         }
 
         return patrols;
+    }
+
+    static Vector3 PickPatrolPoint(int chapter, string questId, int index)
+    {
+        return (chapter, questId) switch
+        {
+            (1, "sneak_patrol") => AlongRoute(
+                ForestZoneLayout.Ch1PatrolStart,
+                ForestZoneLayout.Ch1PatrolEnd,
+                index, 5f),
+
+            (2, "stealth_cross") => AlongRoute(
+                ForestZoneLayout.Ch2PatrolStart,
+                ForestZoneLayout.Ch2PatrolEnd,
+                index, 6f),
+
+            (3, "find_clues") => AlongRoute(
+                ForestZoneLayout.Ch3PatrolStart,
+                ForestZoneLayout.Ch3PatrolEnd,
+                index, 6f),
+
+            (3, _) => AlongRoute(
+                ForestZoneLayout.Ch3DangerPatrolStart,
+                ForestZoneLayout.Ch3DangerPatrolEnd,
+                index, 5f),
+
+            _ => AlongRoute(
+                ForestZoneLayout.Ch1PatrolStart,
+                ForestZoneLayout.Ch1PatrolEnd,
+                index, 8f)
+        };
+    }
+
+    static Vector3 AlongRoute(Vector3 start, Vector3 end, int index, float sideOffset)
+    {
+        float t = Mathf.Clamp01((index % 5 + 1) / 6f);
+        var pos = Vector3.Lerp(start, end, t);
+        var forward = (end - start);
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.01f)
+            forward = Vector3.forward;
+        forward.Normalize();
+        var side = Vector3.Cross(Vector3.up, forward);
+        pos += side * ((index % 2 == 0 ? 1f : -1f) * sideOffset);
+        pos += new Vector3(Random.Range(-2f, 2f), 0f, Random.Range(-2f, 2f));
+        return pos;
     }
 
     public static float DangerExposureLimit(int chapter) => chapter switch

@@ -320,6 +320,12 @@ public class GameUI : MonoBehaviour
 
     static void SetWorldLabelsVisible(bool visible)
     {
+        foreach (var label in Object.FindObjectsByType<QuestStepLabel>(FindObjectsSortMode.None))
+            label.SetForcedHidden(!visible);
+
+        foreach (var npcLabel in Object.FindObjectsByType<NpcHeadLabel>(FindObjectsSortMode.None))
+            npcLabel.SetForcedHidden(!visible);
+
         foreach (var canvas in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
         {
             if (canvas.renderMode != RenderMode.WorldSpace) continue;
@@ -369,7 +375,7 @@ public class GameUI : MonoBehaviour
 
         var hintT = CreateAnchoredText("LetterHint", 30, new Vector2(0, -280), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), FontStyle.Bold);
         hintT.transform.SetParent(panel.transform, false);
-        hintT.text = "Space để đóng";
+        hintT.text = "Space / E để đóng";
 
         bool voicePlaying = !string.IsNullOrWhiteSpace(voiceKey)
             && DialogueVoicePlayer.Instance != null
@@ -377,7 +383,7 @@ public class GameUI : MonoBehaviour
 
         while (voicePlaying && DialogueVoicePlayer.Instance != null && DialogueVoicePlayer.Instance.IsPlaying)
         {
-            if (GameInput.SpacePressedThisFrame)
+            if (GameInput.ContinuePressedThisFrame)
             {
                 DialogueVoicePlayer.Instance.Stop();
                 break;
@@ -385,7 +391,7 @@ public class GameUI : MonoBehaviour
             yield return null;
         }
 
-        yield return new WaitUntil(() => GameInput.SpacePressedThisFrame);
+        yield return new WaitUntil(() => GameInput.ContinuePressedThisFrame);
 
         DialogueVoicePlayer.Instance?.Stop();
         GameMusicController.Instance?.SetMusicDuck(1f);

@@ -102,8 +102,8 @@ public class GameManager : MonoBehaviour
 
             string subtitle = next switch
             {
-                2 => "Lén lút qua rừng đêm — tránh lính tuần tra,\ntìm chỗ trú mưa trước khi giao thư.",
-                3 => "Tìm manh mối trên chiến trường cũ,\ngiao lá thư cuối cùng.",
+                2 => Chapter2Dialogue.TransitionSubtitle,
+                3 => Chapter3Dialogue.TransitionSubtitle,
                 _ => ""
             };
 
@@ -132,7 +132,7 @@ public class GameManager : MonoBehaviour
         SceneTransition.Instance?.TransitionToChapter(
             SceneChapter1,
             "Chương 1: Con Đường Hy Vọng",
-            "Nam bắt đầu hành trình đưa thư\nqua vùng chiến sự miền Trung.",
+            Chapter1Dialogue.TransitionSubtitle,
             1,
             Chapter1Voice.Transition);
     }

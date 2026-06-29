@@ -12,6 +12,6 @@ public class RainEvent : MonoBehaviour
 
         triggered = true;
         WeatherController.Instance?.StartStorm(instant: false);
-        GameUI.Instance?.ShowNotification("Mưa bão ập đến! Nhanh tìm chỗ trú!", 4f);
+        GameUI.Instance?.ShowNotification("Mưa bão ập đến! Tiếp tục lẻn qua rừng!", 4f);
     }
 }

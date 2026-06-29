@@ -1,5 +1,8 @@
 /// <summary>
 /// Giọng đọc Chương 1 — file trong Resources/Audio/Dialogue/
+/// CT1-1: màn chào chương (SceneTransition)
+/// CT1-2: intro HUD khi vào map
+/// CT1-3 … CT1-8: các nhiệm vụ / kết chương
 /// </summary>
 public static class Chapter1Voice
 {

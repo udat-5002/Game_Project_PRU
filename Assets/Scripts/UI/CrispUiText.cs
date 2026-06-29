@@ -14,6 +14,12 @@ public static class CrispUiText
     public static readonly Color Gold = new Color(1f, 0.9f, 0.4f, 1f);
     public static readonly Color Cyan = new Color(0.65f, 0.98f, 1f, 1f);
 
+    public static readonly Color NameTagBg = new Color(0.02f, 0.02f, 0.03f, 0.98f);
+    public static readonly Vector2 NameTagSize = new Vector2(260, 44);
+    public const int NameTagFontSize = 36;
+    public static readonly Vector2 NameTagTextInsetMin = new Vector2(5, 4);
+    public static readonly Vector2 NameTagTextInsetMax = new Vector2(-5, -4);
+
     public const string VietnameseChars =
         "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
         "ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵýỷỹ•/:";
@@ -55,7 +61,7 @@ public static class CrispUiText
         WarmAtlas(52, 44, 40, 34);
 
     public static void WarmGameplayAtlas() =>
-        WarmAtlas(40, 36, 34, 30);
+        WarmAtlas(40, 36, 34, 30, 24);
 
     public static void ApplyReadableDefaults(Text t)
     {
@@ -115,5 +121,12 @@ public static class CrispUiText
         t.text = text;
         ApplyReadableDefaults(t);
         WarmAtlas(fontSize);
+    }
+
+    public static void ConfigureNameTagText(Text t, string text)
+    {
+        ConfigureWorldLabel(t, NameTagFontSize, White, text);
+        if (t == null) return;
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
     }
 }

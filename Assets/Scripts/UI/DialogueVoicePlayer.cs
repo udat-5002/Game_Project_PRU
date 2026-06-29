@@ -69,9 +69,11 @@ public class DialogueVoicePlayer : MonoBehaviour
         if (cache.TryGetValue(voiceKey, out var cached))
             return cached;
 
-        var clip = Resources.Load<AudioClip>($"Audio/Dialogue/{voiceKey}");
+        var clip = DialogueAudio.Load(voiceKey);
         if (clip != null)
             cache[voiceKey] = clip;
         return clip;
     }
+
+    public void ClearCache() => cache.Clear();
 }

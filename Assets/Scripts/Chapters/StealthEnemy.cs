@@ -16,6 +16,10 @@ public class StealthEnemy : MonoBehaviour
     float detectTimer;
     bool approachWarned;
     bool dangerWarned;
+    bool patrolActive;
+    int stagingIndex;
+    Vector3 routePointA;
+    Vector3 routePointB;
     
     CharacterController controller;
     float stuckTimer;
@@ -49,6 +53,79 @@ public class StealthEnemy : MonoBehaviour
         SetupDetectRing();
     }
 
+    public void SetRoute(Vector3 a, Vector3 b)
+    {
+        routePointA = a;
+        routePointB = b;
+        pointA = a;
+        pointB = b;
+        target = b;
+    }
+
+    public void SetPatrolActive(bool active)
+    {
+        patrolActive = active;
+        if (detectRing != null)
+            detectRing.enabled = active;
+    }
+
+    public void SetStagingIndex(int index) => stagingIndex = index;
+
+    public void ActivatePatrolRoute()
+    {
+        TeleportTo(GroundSnap.SnapCharacter(routePointA));
+        pointA = routePointA;
+        pointB = routePointB;
+        target = pointB;
+        SetPatrolActive(true);
+    }
+
+    public void StandDownAtRoute()
+    {
+        if (routePointA.sqrMagnitude > 1f)
+            TeleportTo(GroundSnap.SnapCharacter(routePointA));
+        pointA = routePointA;
+        pointB = routePointB;
+        target = pointB;
+        SetPatrolActive(false);
+    }
+
+    public void MoveToStaging()
+    {
+        var staging = stagingIndex switch
+        {
+            0 => new Vector3(-46f, 0f, -62f),
+            1 => new Vector3(46f, 0f, -62f),
+            2 => new Vector3(-46f, 0f, 8f),
+            _ => new Vector3(46f, 0f, 8f)
+        };
+        TeleportTo(GroundSnap.SnapCharacter(staging));
+        SetPatrolActive(false);
+    }
+
+    public void MoveAwayFrom(Vector3 avoid, float minDistance)
+    {
+        var flat = transform.position - avoid;
+        flat.y = 0f;
+        if (flat.sqrMagnitude < minDistance * minDistance)
+        {
+            var dir = flat.sqrMagnitude > 0.01f ? flat.normalized : Vector3.right;
+            TeleportTo(GroundSnap.SnapCharacter(avoid + dir * minDistance));
+        }
+    }
+
+    void TeleportTo(Vector3 pos)
+    {
+        if (controller != null)
+            controller.enabled = false;
+        transform.position = pos;
+        pointA = pos;
+        pointB = pos + transform.forward * 6f;
+        target = pointB;
+        if (controller != null)
+            controller.enabled = true;
+    }
+
     void SetupDetectRing()
     {
         var ringObj = new GameObject("DetectRing");
@@ -72,12 +149,12 @@ public class StealthEnemy : MonoBehaviour
 
         var dir = target - transform.position;
         dir.y = 0;
-        
+
         Vector3 moveDir = dir.normalized * moveSpeed;
         if (!controller.isGrounded)
             moveDir.y = Physics.gravity.y * 2f;
         else
-            moveDir.y = -2f; // Ép xuống đất một chút để đi đúng mặt đất
+            moveDir.y = -2f;
 
         var flags = controller.Move(moveDir * Time.deltaTime);
 
@@ -92,14 +169,22 @@ public class StealthEnemy : MonoBehaviour
             PickNewTarget();
         }
 
-        if (HideSpot.PlayerIsHidden)
+        if (!patrolActive)
         {
             detectTimer = 0f;
+            approachWarned = false;
+            dangerWarned = false;
             return;
         }
 
         var player = GameManager.Instance?.player;
         if (player == null) return;
+
+        if (HideSpot.PlayerIsHidden)
+        {
+            detectTimer = 0f;
+            return;
+        }
 
         float dist = Vector3.Distance(transform.position, player.position);
 

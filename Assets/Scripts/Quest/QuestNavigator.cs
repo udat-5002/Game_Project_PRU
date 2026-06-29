@@ -36,7 +36,7 @@ public class QuestNavigator : MonoBehaviour
         float dist = to.magnitude;
         string arrow = GetDirectionArrow(to, player.forward);
         string label = GetShortLabel(step.id);
-        string hint = dist <= 5f ? "  •  Nhấn E" : "";
+        string hint = PlayerInteraction.HasActiveTarget ? "  •  Nhấn E" : "";
         GameUI.Instance.SetWaypointHint($"{arrow}  {Mathf.RoundToInt(dist)}m  —  {label}{hint}");
     }
 
@@ -49,11 +49,9 @@ public class QuestNavigator : MonoBehaviour
         "deliver_mail" => "Bà Lan",
         "receive_letter" => "Người lính trẻ",
         "stealth_cross" => "Vượt tuần tra",
-        "survive_rain" => "Chỗ trú mưa",
         "deliver_mother" => "Mẹ anh lính",
         "find_clues" => "Manh mối thư",
         "read_brother_letter" => "Đọc thư anh trai",
-        "cross_danger" => "Vùng pháo kích",
         "final_delivery" => "Trạm thư cuối",
         _ => "Mục tiêu"
     };

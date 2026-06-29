@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,6 +29,20 @@ public class ChapterFlowController : MonoBehaviour
     public Vector3 finalDeliveryPosition = new Vector3(25f, 3f, -5f);
 
     GameObject chapterRoot;
+    PatrolRelocator patrolRelocator;
+    readonly HashSet<string> collectedClueIds = new HashSet<string>();
+
+    public static ChapterFlowController Active { get; private set; }
+
+    void OnEnable() => Active = this;
+
+    void OnDisable()
+    {
+        if (Active == this) Active = null;
+    }
+
+    public bool HasCollectedClue(string clueId) =>
+        !string.IsNullOrEmpty(clueId) && collectedClueIds.Contains(clueId);
 
     void Start()
     {
@@ -66,6 +81,9 @@ public class ChapterFlowController : MonoBehaviour
         while (SceneTransition.Instance != null && SceneTransition.Instance.IsShowingChapterTitle)
             yield return null;
 
+        PreloadVoicesForChapter(chapterIndex);
+        DialogueVoicePlayer.Instance?.ClearCache();
+
         SetupChapterIntro();
 
         switch (chapterIndex)
@@ -75,6 +93,7 @@ public class ChapterFlowController : MonoBehaviour
             case 3: SetupChapter3(); break;
         }
 
+        PropGroundSnap.SnapLogsInScene();
         SetupWeather();
     }
 
@@ -176,9 +195,9 @@ public class ChapterFlowController : MonoBehaviour
     {
         string title = chapterIndex switch
         {
-            1 => "Chương 1: Con Đường Hy Vọng",
-            2 => "Chương 2: Bóng Tối Chiến Tranh",
-            3 => "Chương 3: Lá Thư Cuối Cùng",
+            1 => "Khu 1: Con Đường Hy Vọng",
+            2 => "Khu 2: Bóng Tối Chiến Tranh",
+            3 => "Khu 3: Lá Thư Cuối Cùng",
             _ => ""
         };
 
@@ -189,31 +208,30 @@ public class ChapterFlowController : MonoBehaviour
 
         if (chapterIndex == 1)
         {
-            DialogueManager.Instance?.ShowDialogue("",
-                "Chương 1 — Rìa làng.\n\n" +
-                "• Nhiệm vụ dàn khắp map — đi theo mũi tên HUD\n" +
-                "• 5 mục tiêu từ tây nam → đông bắc\n" +
-                "• Tránh vòng đỏ lính tuần tra, dùng bụi xanh nếu cần",
-                Chapter1Voice.IntroHud);
+            ShowIntroWithVoice(Chapter1Dialogue.IntroHudBody, Chapter1Voice.IntroHud);
         }
         else if (chapterIndex == 2)
         {
-            DialogueManager.Instance?.ShowDialogue("",
-                "Chương 2 — Rừng sâu, đêm tối.\n\n" +
-                "• Tiếp tục khám phá map theo mũi tên HUD\n" +
-                "• Lẻn qua lính tuần tra — núp bụi xanh\n" +
-                "• Tìm chỗ trú mưa trước khi giao thư",
-                Chapter2Voice.IntroHud);
+            ShowIntroWithVoice(Chapter2Dialogue.IntroHudBody, Chapter2Voice.IntroHud);
         }
         else if (chapterIndex == 3)
         {
-            DialogueManager.Instance?.ShowDialogue("",
-                "Chương 3 — Vùng chiến sự.\n\n" +
-                "• Manh mối rải khắp map — đi theo mũi tên HUD\n" +
-                "• Tìm 3 manh mối → đọc thư anh trai → vượt pháo kích\n" +
-                "• Giao lá thư cuối ở phía đông bắc map",
-                Chapter3Voice.IntroHud);
+            ShowIntroWithVoice(Chapter3Dialogue.IntroHudBody, Chapter3Voice.IntroHud);
         }
+    }
+
+    void ShowIntroWithVoice(string body, string voiceKey)
+    {
+        var dm = DialogueManager.Instance;
+        if (dm == null) return;
+
+        DialogueAudio.Load(voiceKey, refreshFromDisk: true);
+        DialogueVoicePlayer.Instance?.ClearCache();
+
+        var options = dm.DefaultOptions;
+        options.voiceKey = voiceKey;
+        options.typewriter = false;
+        dm.ShowDialogue("", body, null, options);
     }
 
     void SetupChapter1()
@@ -239,13 +257,14 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateElderNpc()
     {
-        var go = CreateNpcMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/BaLao/BaLao", false);
+        var go = CreateNpcMarker("Cụ già", elderNpcPosition, new Color(0.55f, 0.45f, 0.3f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/BaLao/BaLao", false, false);
         var model = go.transform.Find("NpcModel");
         if (model != null)
         {
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
             NpcVisualFactory.AutoAdjustGroundPlacement(model);
         }
+        AttachNpcHeadLabel(go, "Cụ già");
         RegisterWaypoint("ask_elder", go.transform.position);
         var elder = go.AddComponent<ElderGuideInteractable>();
         elder.promptText = "Nhấn E - Hỏi đường";
@@ -254,17 +273,44 @@ public class ChapterFlowController : MonoBehaviour
     void CreateObstacleSection()
     {
         var go = CreateMarker("Khu gỗ đổ", obstacleZonePosition, new Color(0.25f, 0.65f, 0.3f), new Vector3(2f, 2f, 2f));
-        
-        var prefab = Resources.Load<GameObject>("FallenLogs");
-        if (prefab != null)
-        {
-            var logs = Object.Instantiate(prefab, go.transform);
-            logs.transform.localPosition = Vector3.zero;
-        }
+
+        SpawnFallenLogs(go.transform);
 
         RegisterWaypoint("cross_obstacle", go.transform.position);
         var obstacle = go.AddComponent<ObstacleCrossInteractable>();
         obstacle.promptText = "Nhấn E - Vượt qua";
+    }
+
+    void SpawnFallenLogs(Transform parent)
+    {
+        var prefab = Resources.Load<GameObject>("FallenLogs");
+        if (prefab != null)
+        {
+            var logs = Object.Instantiate(prefab, parent);
+            logs.transform.localPosition = Vector3.zero;
+            PropGroundSnap.SnapLogsInScene();
+            return;
+        }
+
+        var logPrefab = Resources.Load<GameObject>("WoodLogs/SM_AFS_Log10_LowEndPC");
+        if (logPrefab == null) return;
+
+        var offsets = new[]
+        {
+            new Vector3(-1.2f, 0f, 0.2f),
+            new Vector3(0.6f, 0f, -0.4f),
+            new Vector3(0.1f, 0f, 0.8f)
+        };
+
+        foreach (var offset in offsets)
+        {
+            var log = Object.Instantiate(logPrefab, parent);
+            log.transform.localPosition = offset;
+            log.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 90f);
+            log.transform.localScale = Vector3.one * 1.4f;
+        }
+
+        PropGroundSnap.SnapLogsInScene();
     }
 
     void SetupChapter2()
@@ -274,7 +320,6 @@ public class ChapterFlowController : MonoBehaviour
         qm.SetupQuests(
             ("receive_letter", "Nhận thư từ người lính trẻ"),
             ("stealth_cross", "Lẻn qua khu tuần tra"),
-            ("survive_rain", "Trú mưa dưới gốc cây"),
             ("deliver_mother", "Giao thư cho mẹ anh lính")
         );
         qm.OnAllQuestsCompleted += OnChapter2Complete;
@@ -282,7 +327,7 @@ public class ChapterFlowController : MonoBehaviour
         CreateSoldierNpc();
         CreateStealthPath(2, ForestZoneLayout.Ch2StealthEnd, "stealth_cross",
             ForestZoneLayout.Ch2HideSpot, ForestZoneLayout.Ch2Soldier);
-        CreateRainEvent();
+        CreateRainAtmosphere();
         CreateMotherNpc();
     }
 
@@ -293,7 +338,6 @@ public class ChapterFlowController : MonoBehaviour
         qm.SetupQuests(
             ("find_clues", "Tìm manh mối túi thư (0/3)"),
             ("read_brother_letter", "Đọc thư anh trai"),
-            ("cross_danger", "Vượt vùng pháo kích"),
             ("final_delivery", "Giao thư cho các gia đình")
         );
         qm.OnAllQuestsCompleted += OnChapter3Complete;
@@ -301,9 +345,6 @@ public class ChapterFlowController : MonoBehaviour
         CreateCluePoints();
         SpawnPatrols(3, "find_clues", ForestZoneLayout.Ch3Spawn);
         CreateHideSpot(ForestZoneLayout.Ch3DangerReset, "find_clues");
-        CreateDangerArea();
-        SpawnPatrols(3, "cross_danger", ForestZoneLayout.Ch3DangerReset);
-        CreateHideSpot(ForestZoneLayout.Ch3HideSpot, "cross_danger");
         CreateFinalDeliveryNpc();
     }
 
@@ -368,6 +409,7 @@ public class ChapterFlowController : MonoBehaviour
         var delivery = go.AddComponent<MailDeliveryInteractable>();
         delivery.recipientName = "Bà Lan - Làng Bình An";
         delivery.promptText = "Nhấn E - Giao thư";
+        AttachNpcHeadLabel(go, "Bà Lan");
     }
 
     void CreateSoldierNpc()
@@ -389,18 +431,21 @@ public class ChapterFlowController : MonoBehaviour
 
     void SpawnPatrols(int chapter, string questId, Vector3 resetPos)
     {
+        if (patrolRelocator == null)
+            patrolRelocator = chapterRoot.GetComponent<PatrolRelocator>() ?? chapterRoot.AddComponent<PatrolRelocator>();
+
         int index = 0;
-        foreach (var setup in ChapterDifficulty.GetPatrols(chapter))
+        foreach (var setup in ChapterDifficulty.GetPatrols(chapter, questId))
         {
             if (setup.activeQuestId != questId) continue;
 
-            var patrol = new GameObject($"PatrolEnemy_{questId}_{index++}");
+            var patrol = new GameObject($"PatrolEnemy_{questId}_{index}");
             patrol.transform.SetParent(chapterRoot.transform);
-            patrol.transform.position = GroundSnap.SnapCharacter(setup.pointA);
 
             var enemy = patrol.AddComponent<StealthEnemy>();
             enemy.pointA = GroundSnap.SnapCharacter(setup.pointA);
             enemy.pointB = GroundSnap.SnapCharacter(setup.pointB);
+            patrol.transform.position = enemy.pointA;
 
             Vector3 chapterStart = chapter switch
             {
@@ -415,6 +460,9 @@ public class ChapterFlowController : MonoBehaviour
             enemy.detectSeconds = setup.detectSeconds;
             enemy.mustHideToPass = setup.mustHideToPass;
             enemy.activeQuestId = setup.activeQuestId;
+            enemy.SetStagingIndex(index++);
+            enemy.SetRoute(enemy.pointA, enemy.pointB);
+            enemy.SetPatrolActive(false);
 
             var modelRoot = NpcVisualFactory.Attach(patrol.transform, NpcVisualFactory.NpcRole.Enemy, "NhanVat/LowPolySoldiers_demo/models/Soldier_demo");
             if (modelRoot != null)
@@ -430,7 +478,15 @@ public class ChapterFlowController : MonoBehaviour
                 CreateObjectiveLabel(patrol.transform, "Lính tuần tra");
                 PatrolVisibility.Apply(patrol.transform, enemy.detectRadius);
             }
+
+            patrolRelocator.Register(enemy);
         }
+    }
+
+    void AttachNpcHeadLabel(GameObject npc, string label)
+    {
+        var tag = npc.GetComponent<NpcHeadLabel>() ?? npc.AddComponent<NpcHeadLabel>();
+        tag.Configure(label, 3.2f);
     }
 
     void CreateHideSpot(Vector3 hidePos, string questId)
@@ -456,40 +512,6 @@ public class ChapterFlowController : MonoBehaviour
         }
     }
 
-    void CreateDangerArea()
-    {
-        var center = GroundSnap.Snap(ForestZoneLayout.Ch3DangerZone);
-        var go = CreateInvisibleTrigger("ArtilleryZone", center, new Vector3(18f, 4f, 18f));
-        var danger = go.AddComponent<DangerZone>();
-        danger.resetPoint = GroundSnap.Snap(ForestZoneLayout.Ch3DangerReset);
-        danger.exposureLimit = ChapterDifficulty.DangerExposureLimit(3);
-        danger.activeQuestId = "cross_danger";
-
-        var barrage = go.AddComponent<ArtilleryBarrage>();
-        barrage.activeQuestId = "cross_danger";
-        barrage.zoneRadius = 8.5f;
-
-        var shellPrefab = Resources.Load<GameObject>("RustyShell/RustyShell");
-        if (shellPrefab != null)
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                var shellGo = Object.Instantiate(shellPrefab, go.transform);
-                var offset = new Vector3(Random.Range(-12f, 12f), 0, Random.Range(-12f, 12f));
-                var pos = center + offset;
-                if (GroundSnap.TryGetGroundY(pos, out float y))
-                    pos.y = y;
-                shellGo.transform.position = pos;
-                shellGo.transform.rotation = Quaternion.Euler(Random.Range(40f, 90f), Random.Range(0f, 360f), 0f);
-                shellGo.transform.localScale = Vector3.one * 1.5f;
-            }
-        }
-
-        var safeEnd = GroundSnap.Snap(ForestZoneLayout.Ch3DangerExit);
-        CreateZone("DangerCrossEnd", safeEnd, new Vector3(5f, 3f, 5f), "cross_danger", Color.clear);
-        RegisterWaypoint("cross_danger", safeEnd);
-    }
-
     void AddChapterPressureTimer()
     {
         var timer = chapterRoot.AddComponent<ChapterPressureTimer>();
@@ -501,53 +523,100 @@ public class ChapterFlowController : MonoBehaviour
         // Giữ cho tương thích — dùng CreateStealthPath
     }
 
-    void CreateRainEvent()
+    void CreateRainAtmosphere()
     {
-        var go = CreateZone("RainShelter", rainShelterPosition, new Vector3(5, 3, 5), "survive_rain", new Color(0.4f, 0.3f, 0.2f));
-        
+        var pos = GroundSnap.Snap(rainShelterPosition);
+        var go = new GameObject("RainShelterProp");
+        go.transform.SetParent(chapterRoot.transform);
+        go.transform.position = pos;
+
         var prefab = Resources.Load<GameObject>("CrackedTree");
         if (prefab != null)
         {
             var tree = Object.Instantiate(prefab, go.transform);
             tree.transform.localPosition = Vector3.zero;
             tree.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
-            
-            // Lấy Ground Y nếu cần
-            if (GroundSnap.TryGetGroundY(go.transform.position, out float groundY))
-            {
-                go.transform.position = new Vector3(go.transform.position.x, groundY, go.transform.position.z);
-            }
         }
 
-        RegisterWaypoint("survive_rain", rainShelterPosition);
         var rain = chapterRoot.AddComponent<RainEvent>();
         rain.triggerDuringStepId = "stealth_cross";
     }
 
     void CreateMotherNpc()
     {
-        var go = CreateNpcMarker("Mẹ anh lính", motherNpcPosition, new Color(1f, 0.7f, 0.8f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/MeAnhLinh/MeAnhLinh", false);
+        var go = CreateNpcMarker("Mẹ anh lính", motherNpcPosition, new Color(1f, 0.7f, 0.8f), NpcVisualFactory.NpcRole.Civilian, "NhanVat/MeAnhLinh/MeAnhLinh", false, false);
         var model = go.transform.Find("NpcModel");
         if (model != null)
         {
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
             NpcVisualFactory.AutoAdjustGroundPlacement(model);
         }
+        AttachNpcHeadLabel(go, "Mẹ anh lính");
         RegisterWaypoint("deliver_mother", go.transform.position);
         go.AddComponent<MotherDeliveryInteractable>();
     }
 
     int cluesFound;
 
+    void PreloadVoicesForChapter(int chapter)
+    {
+        switch (chapter)
+        {
+            case 1: PreloadChapter1Voices(); break;
+            case 2: PreloadChapter2Voices(); break;
+            case 3: PreloadChapter3Voices(); break;
+        }
+    }
+
+    void PreloadChapter2Voices()
+    {
+        DialogueAudio.Preload(
+            refreshFromDisk: true,
+            Chapter2Voice.Transition,
+            Chapter2Voice.IntroHud,
+            Chapter2Voice.SoldierLetter,
+            Chapter2Voice.MotherNoMail,
+            Chapter2Voice.MotherDeliver,
+            Chapter2Voice.EndBaLan,
+            Chapter2Voice.EndNam);
+    }
+
+    void PreloadChapter1Voices()
+    {
+        DialogueAudio.Preload(
+            refreshFromDisk: true,
+            Chapter1Voice.Transition,
+            Chapter1Voice.IntroHud,
+            Chapter1Voice.PickupMail,
+            Chapter1Voice.ElderGuide,
+            Chapter1Voice.CrossObstacle,
+            Chapter1Voice.DeliverBaLan,
+            Chapter1Voice.EndNam,
+            Chapter1Voice.EndNarrator);
+    }
+
+    void PreloadChapter3Voices()
+    {
+        DialogueAudio.Preload(
+            refreshFromDisk: true,
+            Chapter3Voice.Transition,
+            Chapter3Voice.IntroHud,
+            Chapter3Voice.ClueHouse,
+            Chapter3Voice.ClueBunker,
+            Chapter3Voice.ClueFort,
+            Chapter3Voice.BrotherLetter);
+    }
+
     void CreateCluePoints()
     {
         cluesFound = 0;
+        collectedClueIds.Clear();
         RegisterWaypoint("read_brother_letter", clue3Position);
         CreateHouseClue("Ngôi nhà bỏ hoang",
             "Căn nhà hoang vắng cạnh chiến trường cũ. Có dấu vết ai đó từng ghé qua...",
             Chapter3Voice.ClueHouse);
-        CreateClue(clue2Position, "Hầm trú ẩn", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker, "TornBag/TornBag");
-        
+        CreateClue("bunker", clue2Position, "Bụi cỏ hi vọng", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker, "TornBag/TornBag");
+
         var bushPrefab = Resources.Load<GameObject>("WildGrass/Bush");
         if (bushPrefab != null)
         {
@@ -558,17 +627,8 @@ public class ChapterFlowController : MonoBehaviour
             bush.name = "ClueBunker_Bush";
         }
 
-        CreateClue(clue3Position, "Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort, "OldMailBag/OldMailBag");
-
-        var wallPrefab = Resources.Load<GameObject>("RuinedWall/RuinedWall");
-        if (wallPrefab != null)
-        {
-            var wall = Object.Instantiate(wallPrefab, chapterRoot.transform);
-            wall.transform.position = new Vector3(11.815f, 1.869f, -27.885f);
-            wall.transform.rotation = new Quaternion(0.0f, 0.9238796f, 0.0f, 0.3826835f);
-            wall.transform.localScale = new Vector3(3.0f, 3.0f, 3.0f);
-            wall.name = "ClueFort_RuinedWall";
-        }
+        CreateFortClue("Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort);
+        RefreshClueWaypoint();
     }
 
     void CreateHouseClue(string title, string hint, string voiceKey)
@@ -577,8 +637,7 @@ public class ChapterFlowController : MonoBehaviour
         if (house == null)
         {
             clue1Position = ForestZoneLayout.ResolveHouseCluePosition();
-            RegisterWaypoint("find_clues", clue1Position);
-            CreateClue(clue1Position, title, hint, voiceKey);
+            CreateClue("house", clue1Position, title, hint, voiceKey);
             return;
         }
 
@@ -589,7 +648,6 @@ public class ChapterFlowController : MonoBehaviour
         }
 
         clue1Position = house.transform.position + Vector3.up * 1f;
-        RegisterWaypoint("find_clues", clue1Position);
 
         var trigger = new GameObject("Clue_NgoiNha");
         trigger.transform.SetParent(chapterRoot.transform);
@@ -599,11 +657,52 @@ public class ChapterFlowController : MonoBehaviour
         box.isTrigger = true;
         box.size = new Vector3(4f, 3f, 4f);
 
-        AttachClueInteractable(trigger, title, hint, voiceKey, hideAfterCollect: true);
+        AttachClueInteractable(trigger, "house", title, hint, voiceKey, hideAfterCollect: true);
         BoostClueVisibility(trigger.transform);
     }
 
-    void CreateClue(Vector3 pos, string title, string hint, string voiceKey, string modelPrefab = null)
+    void CreateFortClue(string title, string hint, string voiceKey)
+    {
+        var go = new GameObject("Clue_Fort");
+        go.transform.SetParent(chapterRoot.transform);
+        go.transform.position = GroundSnap.Snap(clue3Position);
+
+        var wallPrefab = Resources.Load<GameObject>("RuinedWall/RuinedWall");
+        if (wallPrefab != null)
+        {
+            var wall = Object.Instantiate(wallPrefab, go.transform);
+            wall.transform.localPosition = Vector3.zero;
+            wall.transform.localRotation = Quaternion.Euler(0f, 135f, 0f);
+            wall.transform.localScale = Vector3.one * 3f;
+            wall.name = "RuinedWall";
+        }
+
+        var bagPrefab = Resources.Load<GameObject>("OldMailBag/OldMailBag");
+        if (bagPrefab != null)
+        {
+            var bag = Object.Instantiate(bagPrefab, go.transform);
+            bag.transform.localPosition = new Vector3(0.4f, 0.15f, 0.6f);
+            bag.transform.localScale = Vector3.one * 1.5f;
+            bag.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+            bag.name = "OldMailBag";
+        }
+
+        var box = go.AddComponent<BoxCollider>();
+        box.isTrigger = true;
+        box.center = new Vector3(0f, 0.9f, 0f);
+        box.size = new Vector3(5.5f, 2.8f, 5.5f);
+
+        BoostClueVisibility(go.transform);
+        AttachClueInteractable(go, "fort", title, hint, voiceKey, hideAfterCollect: false);
+
+        foreach (var col in go.GetComponentsInChildren<Collider>())
+        {
+            if (col != box)
+                Destroy(col);
+        }
+    }
+
+    void CreateClue(string clueId, Vector3 pos, string title, string hint, string voiceKey, string modelPrefab = null)
     {
         var go = CreateMarker(title, pos, new Color(1f, 0.84f, 0.18f), new Vector3(2.6f, 2.8f, 2.6f));
         
@@ -623,7 +722,7 @@ public class ChapterFlowController : MonoBehaviour
         }
 
         BoostClueVisibility(go.transform);
-        AttachClueInteractable(go, title, hint, voiceKey, hideAfterCollect: true);
+        AttachClueInteractable(go, clueId, title, hint, voiceKey, hideAfterCollect: true);
     }
 
     void BoostClueVisibility(Transform root)
@@ -647,34 +746,53 @@ public class ChapterFlowController : MonoBehaviour
             col.radius = 2.2f;
     }
 
-    void AttachClueInteractable(GameObject go, string title, string hint, string voiceKey, bool hideAfterCollect)
+    void AttachClueInteractable(GameObject go, string clueId, string title, string hint, string voiceKey, bool hideAfterCollect)
     {
         var clue = go.AddComponent<ClueInteractable>();
+        clue.clueId = clueId;
         clue.clueTitle = title;
         clue.clueHint = hint;
         clue.voiceKey = voiceKey;
         clue.promptText = "Nhấn E - Khám phá manh mối";
         clue.hideAfterCollect = hideAfterCollect;
-        clue.onClueFound = () =>
-        {
-            cluesFound++;
-            GameUI.Instance?.ShowNotification($"Manh mối {cluesFound}/3");
+    }
 
-            if (cluesFound >= 3 && QuestManager.Instance.IsStepActive("find_clues"))
-            {
-                QuestManager.Instance.CompleteStep("find_clues");
-                ShowBrotherLetter();
-            }
-            else if (QuestManager.Instance.IsStepActive("find_clues"))
-            {
-                var step = QuestManager.Instance.CurrentStep;
-                if (step != null)
-                    step.description = $"Tìm manh mối túi thư ({cluesFound}/3)";
-                GameUI.Instance?.RefreshQuestUI();
-                if (cluesFound == 1) RegisterWaypoint("find_clues", clue2Position);
-                else if (cluesFound == 2) RegisterWaypoint("find_clues", clue3Position);
-            }
-        };
+    public bool TryRegisterClue(string clueId)
+    {
+        if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive("find_clues"))
+            return false;
+        if (!collectedClueIds.Add(clueId))
+            return false;
+
+        cluesFound = collectedClueIds.Count;
+        GameUI.Instance?.ShowNotification($"Manh mối {cluesFound}/3");
+
+        var step = QuestManager.Instance.CurrentStep;
+        if (step != null)
+            step.description = $"Tìm manh mối túi thư ({cluesFound}/3)";
+        GameUI.Instance?.RefreshQuestUI();
+        RefreshClueWaypoint();
+
+        if (cluesFound >= 3)
+        {
+            QuestManager.Instance.CompleteStep("find_clues");
+            ShowBrotherLetter();
+        }
+
+        return true;
+    }
+
+    void RefreshClueWaypoint()
+    {
+        if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive("find_clues"))
+            return;
+
+        if (!HasCollectedClue("house"))
+            RegisterWaypoint("find_clues", clue1Position);
+        else if (!HasCollectedClue("bunker"))
+            RegisterWaypoint("find_clues", clue2Position);
+        else if (!HasCollectedClue("fort"))
+            RegisterWaypoint("find_clues", clue3Position);
     }
 
     void ShowBrotherLetter()
@@ -720,7 +838,7 @@ public class ChapterFlowController : MonoBehaviour
         return go;
     }
 
-    GameObject CreateNpcMarker(string name, Vector3 pos, Color accent, NpcVisualFactory.NpcRole role, string overrideModelPath = null, bool showFootRing = true)
+    GameObject CreateNpcMarker(string name, Vector3 pos, Color accent, NpcVisualFactory.NpcRole role, string overrideModelPath = null, bool showFootRing = true, bool showDefaultLabel = true)
     {
         var go = new GameObject(name);
         go.transform.SetParent(chapterRoot.transform);
@@ -732,7 +850,8 @@ public class ChapterFlowController : MonoBehaviour
         col.center = new Vector3(0f, 0f, 0f);
 
         NpcVisualFactory.Attach(go.transform, role, overrideModelPath);
-        CreateObjectiveLabel(go.transform, name);
+        if (showDefaultLabel)
+            CreateObjectiveLabel(go.transform, name);
         if (showFootRing) CreateNpcFootRing(go.transform, accent);
         return go;
     }
@@ -766,17 +885,19 @@ public class ChapterFlowController : MonoBehaviour
         return go;
     }
 
-    void CreateObjectiveLabel(Transform parent, string label)
+    void CreateObjectiveLabel(Transform parent, string label, string questStepId = null, float height = 2.8f)
     {
         var canvasGo = new GameObject("ObjectiveLabel");
         canvasGo.transform.SetParent(parent);
-        canvasGo.transform.localPosition = new Vector3(0f, 2.8f, 0f);
+        canvasGo.transform.localPosition = new Vector3(0f, height, 0f);
 
         var canvas = canvasGo.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
+        if (Camera.main != null)
+            canvas.worldCamera = Camera.main;
         canvasGo.AddComponent<FaceCamera>();
         var rt = canvasGo.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(260, 44);
+        rt.sizeDelta = CrispUiText.NameTagSize;
         rt.localScale = Vector3.one * 0.011f;
 
         var bgGo = new GameObject("Bg", typeof(RectTransform), typeof(Image));
@@ -786,18 +907,23 @@ public class ChapterFlowController : MonoBehaviour
         bgRt.anchorMax = Vector2.one;
         bgRt.offsetMin = Vector2.zero;
         bgRt.offsetMax = Vector2.zero;
-        bgGo.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.03f, 0.98f);
+        bgGo.GetComponent<Image>().color = CrispUiText.NameTagBg;
 
         var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
         textGo.transform.SetParent(canvasGo.transform, false);
         var textRt = textGo.GetComponent<RectTransform>();
         textRt.anchorMin = Vector2.zero;
         textRt.anchorMax = Vector2.one;
-        textRt.offsetMin = new Vector2(5, 4);
-        textRt.offsetMax = new Vector2(-5, -4);
+        textRt.offsetMin = CrispUiText.NameTagTextInsetMin;
+        textRt.offsetMax = CrispUiText.NameTagTextInsetMax;
 
-        var t = textGo.GetComponent<Text>();
-        CrispUiText.ConfigureWorldLabel(t, 36, Color.white, label);
+        CrispUiText.ConfigureNameTagText(textGo.GetComponent<Text>(), label);
+
+        if (!string.IsNullOrEmpty(questStepId))
+        {
+            var stepLabel = canvasGo.AddComponent<QuestStepLabel>();
+            stepLabel.questStepId = questStepId;
+        }
     }
 
     void CreateBeaconLight(Transform parent, Color color)

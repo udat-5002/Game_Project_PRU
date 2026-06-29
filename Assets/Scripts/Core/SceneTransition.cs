@@ -155,6 +155,7 @@ public class SceneTransition : MonoBehaviour
     IEnumerator TransitionRoutine(string sceneName, string title, string subtitle, int chapterIndex, string voiceKey)
     {
         isTransitioning = true;
+        VoicePlayback.StopAll();
         GameManager.Instance?.LockInput(true);
         GameUI.Instance?.SetHudVisible(false);
 
@@ -175,6 +176,7 @@ public class SceneTransition : MonoBehaviour
 
         yield return Fade(1f, 0f);
 
+        DialogueAudio.StopOtherVoices(titleVoiceSource);
         float waitDuration = PlayTitleVoice(voiceKey);
         float endTime = Time.unscaledTime + waitDuration;
         while (Time.unscaledTime < endTime)
@@ -190,16 +192,19 @@ public class SceneTransition : MonoBehaviour
 
     float PlayTitleVoice(string voiceKey)
     {
-        StopTitleVoice();
+        DialogueAudio.StopOtherVoices(titleVoiceSource);
+
         if (string.IsNullOrWhiteSpace(voiceKey) || titleVoiceSource == null)
             return titleDuration;
 
-        var clip = Resources.Load<AudioClip>($"Audio/Dialogue/{voiceKey.Trim()}");
+        var clip = DialogueAudio.Load(voiceKey.Trim(), refreshFromDisk: true);
         if (clip == null)
         {
-            Debug.LogWarning($"[SceneTransition] Không tìm thấy giọng: Audio/Dialogue/{voiceKey}");
+            Debug.LogWarning($"[SceneTransition] Không tìm thấy giọng: Audio/Dialogue/{voiceKey}.mp3");
             return titleDuration;
         }
+
+        Debug.Log($"[SceneTransition] Phát giọng chào chương: {voiceKey} ({clip.length:0.0}s)");
 
         titleVoiceSource.clip = clip;
         titleVoiceSource.volume = AudioSettings.DialogueVoiceScaled;
@@ -207,6 +212,8 @@ public class SceneTransition : MonoBehaviour
         titleVoiceSource.Play();
         return Mathf.Max(titleDuration, clip.length + 0.25f);
     }
+
+    public void StopChapterVoice() => StopTitleVoice();
 
     void StopTitleVoice()
     {
