@@ -149,25 +149,25 @@ public class WeatherController : MonoBehaviour
         switch (p)
         {
             case WeatherPreset.Overcast:
-                SetTargets(fog: 0.004f, fogColor: new Color(0.62f, 0.65f, 0.68f),
-                    light: 0.72f, lightColor: new Color(0.82f, 0.86f, 0.92f),
+                SetTargets(fog: 0.003f, fogColor: new Color(0.7f, 0.73f, 0.76f),
+                    light: 0.88f, lightColor: new Color(0.88f, 0.91f, 0.96f),
                     rain: 0f, wind: 0.35f);
                 break;
             case WeatherPreset.DarkForest:
-                SetTargets(fog: 0.011f, fogColor: new Color(0.32f, 0.36f, 0.42f),
-                    light: 0.48f, lightColor: new Color(0.72f, 0.78f, 0.88f),
-                    rain: 2400f, wind: 0.7f);
+                SetTargets(fog: 0.008f, fogColor: new Color(0.4f, 0.44f, 0.5f),
+                    light: 0.62f, lightColor: new Color(0.78f, 0.84f, 0.92f),
+                    rain: 2200f, wind: 0.7f);
                 break;
             case WeatherPreset.Storm:
-                SetTargets(fog: 0.016f, fogColor: new Color(0.28f, 0.32f, 0.38f),
-                    light: 0.38f, lightColor: new Color(0.68f, 0.74f, 0.84f),
+                SetTargets(fog: 0.012f, fogColor: new Color(0.34f, 0.38f, 0.44f),
+                    light: 0.5f, lightColor: new Color(0.74f, 0.8f, 0.9f),
                     rain: 7000f, wind: 1.4f);
                 stormActive = true;
                 break;
             case WeatherPreset.Battlefield:
-                SetTargets(fog: 0.009f, fogColor: new Color(0.42f, 0.38f, 0.36f),
-                    light: 0.62f, lightColor: new Color(0.84f, 0.78f, 0.72f),
-                    rain: 2600f, wind: 0.75f);
+                SetTargets(fog: 0.006f, fogColor: new Color(0.5f, 0.46f, 0.44f),
+                    light: 0.78f, lightColor: new Color(0.9f, 0.84f, 0.78f),
+                    rain: 2200f, wind: 0.75f);
                 break;
         }
 
@@ -228,10 +228,10 @@ public class WeatherController : MonoBehaviour
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
 
         // Ambient trung tính — tránh nhuốm xanh toàn scene (kể cả nhân vật)
-        float ambientScale = Mathf.Lerp(0.55f, 0.28f, NormalizedRain);
-        var neutralSky = new Color(0.42f, 0.43f, 0.45f);
-        var neutralEquator = new Color(0.32f, 0.33f, 0.34f);
-        var neutralGround = new Color(0.22f, 0.22f, 0.23f);
+        float ambientScale = Mathf.Lerp(0.65f, 0.36f, NormalizedRain);
+        var neutralSky = new Color(0.48f, 0.49f, 0.51f);
+        var neutralEquator = new Color(0.38f, 0.39f, 0.4f);
+        var neutralGround = new Color(0.28f, 0.28f, 0.29f);
         RenderSettings.ambientSkyColor = Color.Lerp(neutralSky, currentFogColor * 0.35f, NormalizedRain * 0.5f) * ambientScale;
         RenderSettings.ambientEquatorColor = Color.Lerp(neutralEquator, currentFogColor * 0.25f, NormalizedRain * 0.5f) * ambientScale;
         RenderSettings.ambientGroundColor = Color.Lerp(neutralGround, currentFogColor * 0.15f, NormalizedRain * 0.5f) * ambientScale;
