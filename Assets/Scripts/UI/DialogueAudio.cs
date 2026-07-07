@@ -91,7 +91,7 @@ public static class DialogueAudio
 
     public static void Preload(params string[] voiceKeys) => Preload(false, voiceKeys);
 
-    /// <summary>Dừng mọi AudioSource 2D đang phát (trừ nguồn giữ lại).</summary>
+    /// <summary>Dừng mọi AudioSource 2D đang phát (trừ nguồn giữ lại và nhạc nền).</summary>
     public static void StopOtherVoices(AudioSource keep = null)
     {
         foreach (var src in Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None))
@@ -100,6 +100,9 @@ public static class DialogueAudio
                 continue;
             if (src.spatialBlend > 0.01f)
                 continue;
+            if (src.GetComponent<GameMusicController>() != null)
+                continue;
+                
             src.Stop();
             src.clip = null;
         }

@@ -777,6 +777,15 @@ public class ChapterFlowController : MonoBehaviour
             bush.transform.localScale = Vector3.one * 4.5f;
             bush.transform.rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
             bush.name = "ClueBunker_Bush";
+
+            var bushMat = Resources.Load<Material>("WildGrass/BushMat");
+            if (bushMat != null)
+            {
+                foreach (var r in bush.GetComponentsInChildren<Renderer>())
+                {
+                    r.material = bushMat;
+                }
+            }
         }
 
         CreateFortClue("Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort);
