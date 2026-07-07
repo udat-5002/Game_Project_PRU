@@ -61,7 +61,7 @@ public static class CrispUiText
         WarmAtlas(52, 44, 40, 34);
 
     public static void WarmGameplayAtlas() =>
-        WarmAtlas(40, 36, 34, 30, 24);
+        WarmAtlas(40, 36, 34, 32, 30, 28);
 
     public static void ApplyReadableDefaults(Text t)
     {

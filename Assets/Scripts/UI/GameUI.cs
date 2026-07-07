@@ -26,7 +26,7 @@ public class GameUI : MonoBehaviour
     static readonly Color TextBright = Color.white;
     static readonly Color WarningYellow = new Color(1f, 0.88f, 0.12f, 1f);
     static readonly Color HudBg = new Color(0.01f, 0.01f, 0.02f, 0.96f);
-    static readonly Color DialogueBg = new Color(0.01f, 0.01f, 0.02f, 0.98f);
+    static readonly Color DialogueBg = new Color(0.02f, 0.02f, 0.03f, 0.93f);
 
     void Awake()
     {
@@ -92,25 +92,25 @@ public class GameUI : MonoBehaviour
 
     void BuildDialoguePanel()
     {
-        dialoguePanel = CreatePanel("Dialogue", DialogueBg, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 340));
+        dialoguePanel = CreatePanel("Dialogue", DialogueBg, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(12f, 28f), new Vector2(840f, 340f));
 
-        dialogueSpeaker = CreatePanelText(dialoguePanel.transform, "Speaker", 40, CrispUiText.Gold, FontStyle.Bold);
+        dialogueSpeaker = CreatePanelText(dialoguePanel.transform, "Speaker", 36, CrispUiText.Gold, FontStyle.Bold);
         var speakerRt = dialogueSpeaker.rectTransform;
         speakerRt.anchorMin = new Vector2(0f, 1f);
         speakerRt.anchorMax = new Vector2(1f, 1f);
         speakerRt.pivot = new Vector2(0f, 1f);
-        speakerRt.offsetMin = new Vector2(40f, -68f);
-        speakerRt.offsetMax = new Vector2(-40f, -16f);
+        speakerRt.offsetMin = new Vector2(12f, -64f);
+        speakerRt.offsetMax = new Vector2(-12f, -12f);
         dialogueSpeaker.alignment = TextAnchor.UpperLeft;
 
-        dialogueBody = CreatePanelText(dialoguePanel.transform, "Body", 36, TextBright, FontStyle.Bold);
+        dialogueBody = CreatePanelText(dialoguePanel.transform, "Body", 34, TextBright, FontStyle.Bold);
         var bodyRt = dialogueBody.rectTransform;
         bodyRt.anchorMin = Vector2.zero;
         bodyRt.anchorMax = Vector2.one;
-        bodyRt.offsetMin = new Vector2(40f, 56f);
-        bodyRt.offsetMax = new Vector2(-40f, -80f);
+        bodyRt.offsetMin = new Vector2(12f, 48f);
+        bodyRt.offsetMax = new Vector2(-12f, -60f);
         dialogueBody.alignment = TextAnchor.UpperLeft;
-        dialogueBody.lineSpacing = 1.35f;
+        dialogueBody.lineSpacing = 1.18f;
 
         var hint = CreatePanelText(dialoguePanel.transform, "Hint", 28, TextBright, FontStyle.Bold);
         hint.text = "Space / E để tiếp tục";
@@ -119,8 +119,8 @@ public class GameUI : MonoBehaviour
         hintRt.anchorMin = new Vector2(1f, 0f);
         hintRt.anchorMax = new Vector2(1f, 0f);
         hintRt.pivot = new Vector2(1f, 0f);
-        hintRt.anchoredPosition = new Vector2(-40f, 18f);
-        hintRt.sizeDelta = new Vector2(520f, 40f);
+        hintRt.anchoredPosition = new Vector2(-12f, 12f);
+        hintRt.sizeDelta = new Vector2(460f, 36f);
         hint.alignment = TextAnchor.LowerRight;
 
         dialoguePanel.SetActive(false);
@@ -234,7 +234,7 @@ public class GameUI : MonoBehaviour
         {
             dialogueBody.text = "";
             var bodyRt = dialogueBody.rectTransform;
-            bodyRt.offsetMax = new Vector2(-40f, hasSpeaker ? -80f : -68f);
+            bodyRt.offsetMax = new Vector2(-12f, hasSpeaker ? -60f : -52f);
         }
 
         dialoguePanel.SetActive(true);

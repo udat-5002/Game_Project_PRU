@@ -9,8 +9,10 @@ public static class Chapter1Dialogue
 
     /// <summary>CT1-2 — giọng hội thoại intro sau khi vào map.</summary>
     public const string IntroHudBody =
-        "Khu 1 — Rìa làng.\n\n" +
-        "• Nhiệm vụ dàn khắp map — đi theo mũi tên HUD\n" +
-        "• 5 mục tiêu từ tây nam → đông bắc\n" +
-        "• Tránh vòng đỏ lính tuần tra, dùng bụi xanh nếu cần";
+        "Vượt qua thử thách:\n" +
+        "• Lấy túi thư\n" +
+        "• Hỏi đường\n" +
+        "• Vượt vật cản\n" +
+        "• Tránh tuần tra\n" +
+        "• Giao thư cho Bà Lan";
 }
