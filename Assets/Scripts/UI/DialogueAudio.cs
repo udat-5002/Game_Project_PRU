@@ -32,7 +32,7 @@ public static class DialogueAudio
         {
             foreach (var candidate in Resources.LoadAll<AudioClip>("Audio/Dialogue"))
             {
-                if (candidate.name == voiceKey)
+                if (string.Equals(candidate.name, voiceKey, System.StringComparison.OrdinalIgnoreCase))
                 {
                     clip = candidate;
                     break;

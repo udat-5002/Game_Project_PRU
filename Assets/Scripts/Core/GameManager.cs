@@ -119,7 +119,7 @@ public class GameManager : MonoBehaviour
         else
         {
             SceneTransition.Instance?.ShowEnding(
-                "Chiến tranh có thể chia cắt con người,\nnhưng hy vọng luôn tìm được đường để đến nơi cần đến.",
+                "Chiến tranh lấy đi tất cả, chỉ để lại một thứ duy nhất để chúng ta sống tiếp: đó là hy vọng.",
                 () => SceneTransition.Instance.LoadScene(SceneMainMenu),
                 Chapter3Voice.Ending);
         }

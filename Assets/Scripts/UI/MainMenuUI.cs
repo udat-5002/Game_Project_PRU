@@ -22,7 +22,7 @@ public class MainMenuUI : MonoBehaviour
 
     static readonly string[] IntroVoiceKeys =
     {
-        "demo_intro",
+        MenuVoice.Intro,
         null
     };
 
