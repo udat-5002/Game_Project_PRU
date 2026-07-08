@@ -4,7 +4,7 @@ public class ElderGuideInteractable : Interactable
 {
     [TextArea] public string dialogue =
         "Con đi thẳng qua khu gỗ đổ, rồi sang làng Bình An.\n" +
-        "Đường hơi vắng — cẩn thận bom mìn cũ nhé.";
+        "Đường hơi vắng — đi cẩn thận con nhé.";
 
     public override bool CanInteract() =>
         QuestManager.Instance != null && QuestManager.Instance.IsStepActive("ask_elder");

@@ -196,7 +196,7 @@ public class ChapterFlowController : MonoBehaviour
         string title = chapterIndex switch
         {
             1 => "Khu 1: Con Đường Hy Vọng",
-            2 => "Khu 2: Bóng Tối Chiến Tranh",
+            2 => "Khu 2: Lá thư của người lính",
             3 => "Khu 3: Lá Thư Cuối Cùng",
             _ => ""
         };

@@ -5,12 +5,13 @@ public static class Chapter2Dialogue
 {
     /// <summary>CT2-1 — giọng màn chào khi bắt đầu / vào Chương 2.</summary>
     public const string TransitionSubtitle =
-        "Lén lút qua rừng đêm — tránh lính tuần tra,\ngiao thư cho mẹ anh lính.";
+        "Vượt qua rừng đêm tránh lính tuần tra\ngiao thư cho mẹ anh lính";
 
     /// <summary>CT2-2 — giọng hội thoại intro sau khi vào map.</summary>
     public const string IntroHudBody =
-        "Khu 2 — Rừng sâu, đêm tối.\n\n" +
-        "• Tiếp tục khám phá map theo mũi tên HUD\n" +
-        "• Lẻn qua lính tuần tra — núp bụi xanh\n" +
+        "Vượt qua thử thách:\n" +
+        "• Nhận thư từ người lính trẻ\n" +
+        "• Tránh lính tuần tra\n" +
+        "• Trú mưa\n" +
         "• Giao thư cho mẹ anh lính";
 }

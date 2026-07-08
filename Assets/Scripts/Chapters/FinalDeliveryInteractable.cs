@@ -12,9 +12,9 @@ public class FinalDeliveryInteractable : Interactable
         delivered++;
         string flashback = delivered switch
         {
-            1 => "Hồi tưởng: Tiếng cười của người lính trước khi lên đường...",
-            2 => "Hồi tưởng: Bà Lan đợi con từng ngày...",
-            _ => "Hồi tưởng: Anh trai viết thư dưới ánh đèn dầu..."
+            1 => "Tiếng cười của người lính trước khi lên đường...",
+            2 => "Bà Lan đợi con từng ngày...",
+            _ => "Anh trai viết thư dưới ánh đèn dầu..."
         };
 
         string voiceKey = delivered switch

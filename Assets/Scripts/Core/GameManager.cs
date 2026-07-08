@@ -95,7 +95,7 @@ public class GameManager : MonoBehaviour
 
             string title = next switch
             {
-                2 => "Chương 2: Bóng Tối Chiến Tranh",
+                2 => "Chương 2: Lá thư của người lính",
                 3 => "Chương 3: Lá Thư Cuối Cùng",
                 _ => ""
             };

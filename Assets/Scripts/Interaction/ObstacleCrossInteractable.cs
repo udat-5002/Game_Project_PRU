@@ -3,8 +3,7 @@ using UnityEngine;
 public class ObstacleCrossInteractable : Interactable
 {
     [TextArea] public string dialogue =
-        "Cây gỗ đổ chắn ngang đường...\n" +
-        "Nam len qua từng khúc gỗ, cẩn thận không vấp.";
+        "Cây gỗ đổ chắn ngang đường, Nam vượt qua từng khúc gỗ.";
 
     public override bool CanInteract() =>
         QuestManager.Instance != null && QuestManager.Instance.IsStepActive("cross_obstacle");
