@@ -168,7 +168,7 @@ public class MainMenuUI : MonoBehaviour
         CreateStyledTitle(mainPanel.transform, "GameTitle", "NGƯỜI ĐƯA THƯ",
             92, TitleWhite, new Vector2(0.5f, 0.235f), new Vector2(1100, 120), FontStyle.BoldAndItalic);
 
-        CreateLabel(mainPanel.transform, "Tagline", "Mang thư về làng, mang hy vọng về nhà",
+        CreateLabel(mainPanel.transform, "Tagline", "Mỗi lá thư là một tia hy vọng",
             46, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.168f), new Vector2(980, 68), TextBright, FontStyle.Bold);
 
         CreatePosterButton(mainPanel.transform, "BtnStart", "BẮT ĐẦU CHƠI", new Vector2(0.5f, 0.068f), () => ShowIntro());
