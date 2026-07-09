@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class WeatherController : MonoBehaviour
@@ -8,14 +9,25 @@ public class WeatherController : MonoBehaviour
     public WeatherPreset preset = WeatherPreset.Overcast;
     public bool stormOnStart;
 
+    [Header("Hiệu ứng mưa")]
+    [Tooltip("Kéo prefab mưa vào đây. Nếu để trống sẽ tự tìm Resources/Weather/RainEffect")]
+    public GameObject rainPrefab;
+    [Tooltip("Nhân cường độ mưa khi dùng prefab (1 = như trong prefab)")]
+    public float rainPrefabIntensityScale = 1f;
+
     const float RainEmitterSize = 200f;
     const float RainEmitterHeight = 28f;
     const int RainMaxParticles = 18000;
     const float DebrisEmitterSize = 180f;
+    const float StormRainRate = 7000f;
 
     Light sunLight;
     ParticleSystem rainSystem;
+    readonly List<ParticleSystem> rainPrefabSystems = new();
+    readonly List<float> rainPrefabBaseRates = new();
+    GameObject rainPrefabInstance;
     ParticleSystem windDebrisSystem;
+    RainVideoOverlay rainVideoOverlay;
     WindZone windZone;
     Transform rainFollowTarget;
 
@@ -77,6 +89,11 @@ public class WeatherController : MonoBehaviour
         CreateRainParticles();
         CreateWindDebris();
 
+        if (GetComponent<RainVideoOverlay>() == null)
+            rainVideoOverlay = gameObject.AddComponent<RainVideoOverlay>();
+        else
+            rainVideoOverlay = GetComponent<RainVideoOverlay>();
+
         if (GetComponent<WeatherAudio>() == null)
             gameObject.AddComponent<WeatherAudio>();
     }
@@ -91,8 +108,12 @@ public class WeatherController : MonoBehaviour
 
         if (rainFollowTarget != null)
         {
-            if (rainSystem != null)
-                rainSystem.transform.position = rainFollowTarget.position + Vector3.up * RainEmitterHeight;
+            var rainPos = rainFollowTarget.position + Vector3.up * RainEmitterHeight;
+            if (rainPrefabInstance != null)
+                rainPrefabInstance.transform.position = rainPos;
+            else if (rainSystem != null)
+                rainSystem.transform.position = rainPos;
+
             if (windDebrisSystem != null)
                 windDebrisSystem.transform.position = rainFollowTarget.position + Vector3.up * 12f;
         }
@@ -244,11 +265,7 @@ public class WeatherController : MonoBehaviour
                 sunLight.transform.rotation = Quaternion.Euler(12f, 160f, 0f);
         }
 
-        if (rainSystem != null)
-        {
-            var emission = rainSystem.emission;
-            emission.rateOverTime = currentRainRate;
-        }
+        ApplyRainIntensity();
 
         if (windZone != null)
             windZone.windMain = currentWind;
@@ -287,6 +304,13 @@ public class WeatherController : MonoBehaviour
 
     void CreateRainParticles()
     {
+        var prefab = rainPrefab != null ? rainPrefab : Resources.Load<GameObject>("Weather/RainEffect");
+        if (prefab != null)
+        {
+            CreateRainFromPrefab(prefab);
+            return;
+        }
+
         var go = new GameObject("Rain");
         go.transform.SetParent(transform);
         go.transform.position = Vector3.up * 20f;
@@ -327,6 +351,54 @@ public class WeatherController : MonoBehaviour
         renderer.lengthScale = 0.45f;
         renderer.velocityScale = 0.1f;
         renderer.material = CreateParticleMaterial(new Color(0.8f, 0.85f, 0.95f, 0.6f));
+    }
+
+    void CreateRainFromPrefab(GameObject prefab)
+    {
+        rainPrefabInstance = Instantiate(prefab, transform);
+        rainPrefabInstance.name = "Rain (Prefab)";
+        rainPrefabInstance.transform.localPosition = Vector3.up * RainEmitterHeight;
+
+        rainPrefabSystems.Clear();
+        rainPrefabBaseRates.Clear();
+
+        foreach (var ps in rainPrefabInstance.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            rainPrefabSystems.Add(ps);
+            rainPrefabBaseRates.Add(ps.emission.rateOverTime.constantMax);
+
+            var main = ps.main;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+        }
+
+        if (rainPrefabSystems.Count > 0)
+            rainSystem = rainPrefabSystems[0];
+    }
+
+    void ApplyRainIntensity()
+    {
+        float videoBlend = rainVideoOverlay != null ? rainVideoOverlay.ParticleRainMultiplier : 1f;
+        float rainRate = currentRainRate * videoBlend;
+
+        if (rainPrefabSystems.Count > 0)
+        {
+            float intensity = Mathf.Clamp01(rainRate / StormRainRate) * rainPrefabIntensityScale;
+            for (int i = 0; i < rainPrefabSystems.Count; i++)
+            {
+                var emission = rainPrefabSystems[i].emission;
+                emission.rateOverTime = rainPrefabBaseRates[i] * intensity;
+            }
+            return;
+        }
+
+        if (rainSystem != null)
+        {
+            var emission = rainSystem.emission;
+            emission.rateOverTime = rainRate;
+        }
     }
 
     void CreateWindDebris()

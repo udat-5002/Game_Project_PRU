@@ -465,7 +465,7 @@ public class ChapterFlowController : MonoBehaviour
         qm.OnAllQuestsCompleted -= OnChapter2Complete;
         qm.SetupQuests(
             ("receive_letter", "Nhận thư từ người lính trẻ"),
-            ("stealth_cross", "Lẻn qua khu tuần tra"),
+            ("stealth_cross", "Vượt qua lính tuần tra"),
             ("deliver_mother", "Giao thư cho mẹ anh lính")
         );
         qm.OnAllQuestsCompleted += OnChapter2Complete;
@@ -482,7 +482,7 @@ public class ChapterFlowController : MonoBehaviour
         var qm = QuestManager.Instance;
         qm.OnAllQuestsCompleted -= OnChapter3Complete;
         qm.SetupQuests(
-            ("find_clues", "Tìm manh mối túi thư (0/3)"),
+            ("find_clues", "Tìm manh mối túi thư"),
             ("read_brother_letter", "Đọc thư anh trai"),
             ("final_delivery", "Giao thư cho các gia đình")
         );
@@ -708,8 +708,6 @@ public class ChapterFlowController : MonoBehaviour
         go.AddComponent<MotherDeliveryInteractable>();
     }
 
-    int cluesFound;
-
     void PreloadVoicesForChapter(int chapter)
     {
         switch (chapter)
@@ -727,7 +725,6 @@ public class ChapterFlowController : MonoBehaviour
             Chapter2Voice.Transition,
             Chapter2Voice.IntroHud,
             Chapter2Voice.SoldierLetter,
-            Chapter2Voice.MotherNoMail,
             Chapter2Voice.MotherDeliver,
             Chapter2Voice.EndBaLan,
             Chapter2Voice.EndNam);
@@ -754,39 +751,21 @@ public class ChapterFlowController : MonoBehaviour
             Chapter3Voice.Transition,
             Chapter3Voice.IntroHud,
             Chapter3Voice.ClueHouse,
-            Chapter3Voice.ClueBunker,
             Chapter3Voice.ClueFort,
-            Chapter3Voice.BrotherLetter);
+            Chapter3Voice.BrotherLetter,
+            Chapter3Voice.FlashbackSoldier,
+            Chapter3Voice.FlashbackBaLan,
+            Chapter3Voice.FlashbackBrother,
+            Chapter3Voice.Ending);
     }
 
     void CreateCluePoints()
     {
-        cluesFound = 0;
         collectedClueIds.Clear();
         RegisterWaypoint("read_brother_letter", clue3Position);
         CreateHouseClue("Ngôi nhà bỏ hoang",
             "Căn nhà hoang vắng cạnh chiến trường cũ. Có dấu vết ai đó từng ghé qua...",
             Chapter3Voice.ClueHouse);
-        CreateClue("bunker", clue2Position, "Bụi cỏ hi vọng", "Một túi vải rách cũ kỹ.", Chapter3Voice.ClueBunker, "TornBag/TornBag");
-
-        var bushPrefab = Resources.Load<GameObject>("WildGrass/Bush");
-        if (bushPrefab != null)
-        {
-            var bush = Object.Instantiate(bushPrefab, chapterRoot.transform);
-            bush.transform.position = GroundSnap.Snap(clue2Position + new Vector3(1f, 0, -1f));
-            bush.transform.localScale = Vector3.one * 4.5f;
-            bush.transform.rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
-            bush.name = "ClueBunker_Bush";
-
-            var bushMat = Resources.Load<Material>("WildGrass/BushMat");
-            if (bushMat != null)
-            {
-                foreach (var r in bush.GetComponentsInChildren<Renderer>())
-                {
-                    r.material = bushMat;
-                }
-            }
-        }
 
         CreateFortClue("Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort);
         RefreshClueWaypoint();
@@ -932,21 +911,15 @@ public class ChapterFlowController : MonoBehaviour
         if (!collectedClueIds.Add(clueId))
             return false;
 
-        cluesFound = collectedClueIds.Count;
-        GameUI.Instance?.ShowNotification($"Manh mối {cluesFound}/3");
-
-        var step = QuestManager.Instance.CurrentStep;
-        if (step != null)
-            step.description = $"Tìm manh mối túi thư ({cluesFound}/3)";
-        GameUI.Instance?.RefreshQuestUI();
-        RefreshClueWaypoint();
-
-        if (cluesFound >= 3)
+        if (clueId == "fort")
         {
             QuestManager.Instance.CompleteStep("find_clues");
             ShowBrotherLetter();
+            return true;
         }
 
+        GameUI.Instance?.ShowNotification("Đã tìm thấy manh mối");
+        RefreshClueWaypoint();
         return true;
     }
 
@@ -957,9 +930,7 @@ public class ChapterFlowController : MonoBehaviour
 
         if (!HasCollectedClue("house"))
             RegisterWaypoint("find_clues", clue1Position);
-        else if (!HasCollectedClue("bunker"))
-            RegisterWaypoint("find_clues", clue2Position);
-        else if (!HasCollectedClue("fort"))
+        else
             RegisterWaypoint("find_clues", clue3Position);
     }
 

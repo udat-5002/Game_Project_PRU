@@ -11,7 +11,6 @@ public static class Chapter2Dialogue
     public const string IntroHudBody =
         "Vượt qua thử thách:\n" +
         "• Nhận thư từ người lính trẻ\n" +
-        "• Tránh lính tuần tra\n" +
-        "• Trú mưa\n" +
+        "• Vượt qua lính tuần tra\n" +
         "• Giao thư cho mẹ anh lính";
 }
