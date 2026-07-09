@@ -8,26 +8,31 @@ public class RainVideoOverlay : MonoBehaviour
     [Header("Video mưa (mp4)")]
     [Tooltip("Kéo file mp4 đã import vào Unity. Nếu để trống sẽ tìm Resources/Weather/RainVideo")]
     public VideoClip rainVideo;
-    [Range(0f, 1f)] public float maxOpacity = 0.85f;
+    [Range(0f, 1f)] public float maxOpacity = 0.92f;
     [Tooltip("Giảm particle mưa code khi dùng video (0 = tắt hẳn)")]
-    [Range(0f, 1f)] public float particleRainBlend = 0.15f;
+    [Range(0f, 1f)] public float particleRainBlend = 0f;
 
     VideoPlayer player;
     RawImage screen;
     Canvas overlayCanvas;
     float currentOpacity;
 
+    public bool HasVideo => rainVideo != null;
     public bool IsActive => rainVideo != null && player != null;
     public float ParticleRainMultiplier => IsActive ? particleRainBlend : 1f;
 
-    void Start()
+    void Awake()
     {
         if (rainVideo == null)
             rainVideo = Resources.Load<VideoClip>("Weather/RainVideo");
+    }
 
+    void Start()
+    {
         if (rainVideo == null) return;
 
         BuildOverlay();
+        player.Prepare();
     }
 
     void Update()
@@ -92,9 +97,8 @@ public class RainVideoOverlay : MonoBehaviour
 
     static Material CreateRainBlendMaterial()
     {
-        var shader = Shader.Find("Legacy Shaders/Particles/Additive")
-                     ?? Shader.Find("Mobile/Particles/Additive")
-                     ?? Shader.Find("Particles/Additive")
+        var shader = Shader.Find("UI/RainOverlay")
+                     ?? Shader.Find("Legacy Shaders/Particles/Additive")
                      ?? Shader.Find("UI/Default");
 
         return new Material(shader);

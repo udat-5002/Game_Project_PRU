@@ -20,6 +20,7 @@ public class WeatherController : MonoBehaviour
     const int RainMaxParticles = 18000;
     const float DebrisEmitterSize = 180f;
     const float StormRainRate = 7000f;
+    const float ChapterRainRate = 5600f;
 
     Light sunLight;
     ParticleSystem rainSystem;
@@ -51,7 +52,7 @@ public class WeatherController : MonoBehaviour
 
     public bool IsStormActive => stormActive;
     public WeatherPreset CurrentPreset => activePreset;
-    public float NormalizedRain => Mathf.Clamp01(currentRainRate / 9000f);
+    public float NormalizedRain => Mathf.Clamp01(currentRainRate / StormRainRate);
     public float NormalizedWind => Mathf.Clamp01(currentWind / 1.4f);
 
     public enum WeatherPreset
@@ -70,6 +71,11 @@ public class WeatherController : MonoBehaviour
             return;
         }
         Instance = this;
+
+        if (GetComponent<RainVideoOverlay>() == null)
+            rainVideoOverlay = gameObject.AddComponent<RainVideoOverlay>();
+        else
+            rainVideoOverlay = GetComponent<RainVideoOverlay>();
     }
 
     void OnDestroy()
@@ -88,11 +94,6 @@ public class WeatherController : MonoBehaviour
         CreateWindZone();
         CreateRainParticles();
         CreateWindDebris();
-
-        if (GetComponent<RainVideoOverlay>() == null)
-            rainVideoOverlay = gameObject.AddComponent<RainVideoOverlay>();
-        else
-            rainVideoOverlay = GetComponent<RainVideoOverlay>();
 
         if (GetComponent<WeatherAudio>() == null)
             gameObject.AddComponent<WeatherAudio>();
@@ -177,7 +178,7 @@ public class WeatherController : MonoBehaviour
             case WeatherPreset.DarkForest:
                 SetTargets(fog: 0.008f, fogColor: new Color(0.4f, 0.44f, 0.5f),
                     light: 0.62f, lightColor: new Color(0.78f, 0.84f, 0.92f),
-                    rain: 2200f, wind: 0.7f);
+                    rain: ChapterRainRate, wind: 0.85f);
                 break;
             case WeatherPreset.Storm:
                 SetTargets(fog: 0.012f, fogColor: new Color(0.34f, 0.38f, 0.44f),
@@ -188,7 +189,7 @@ public class WeatherController : MonoBehaviour
             case WeatherPreset.Battlefield:
                 SetTargets(fog: 0.006f, fogColor: new Color(0.5f, 0.46f, 0.44f),
                     light: 0.78f, lightColor: new Color(0.9f, 0.84f, 0.78f),
-                    rain: 2200f, wind: 0.75f);
+                    rain: ChapterRainRate, wind: 0.8f);
                 break;
         }
 
@@ -203,6 +204,18 @@ public class WeatherController : MonoBehaviour
             currentFogDensity = targetFogDensity;
             currentFogColor = targetFogColor;
             currentLightColor = targetLightColor;
+            ApplyImmediate();
+        }
+    }
+
+    public void EnableChapterRain(bool instant = false)
+    {
+        if (activePreset == WeatherPreset.Overcast) return;
+
+        targetRainRate = Mathf.Max(targetRainRate, ChapterRainRate);
+        if (instant)
+        {
+            currentRainRate = targetRainRate;
             ApplyImmediate();
         }
     }
@@ -304,6 +317,9 @@ public class WeatherController : MonoBehaviour
 
     void CreateRainParticles()
     {
+        if (rainVideoOverlay != null && rainVideoOverlay.HasVideo)
+            return;
+
         var prefab = rainPrefab != null ? rainPrefab : Resources.Load<GameObject>("Weather/RainEffect");
         if (prefab != null)
         {

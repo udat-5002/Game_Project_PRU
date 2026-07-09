@@ -136,9 +136,11 @@ public class ChapterFlowController : MonoBehaviour
                 break;
             case 2:
                 WeatherController.Create(WeatherController.WeatherPreset.DarkForest);
+                WeatherController.Instance?.EnableChapterRain(instant: true);
                 break;
             case 3:
                 WeatherController.Create(WeatherController.WeatherPreset.Battlefield);
+                WeatherController.Instance?.EnableChapterRain(instant: true);
                 break;
         }
     }
@@ -489,6 +491,7 @@ public class ChapterFlowController : MonoBehaviour
         qm.OnAllQuestsCompleted += OnChapter3Complete;
 
         CreateCluePoints();
+        CreateChapter3Rain();
         SpawnPatrols(3, "find_clues", ForestZoneLayout.Ch3Spawn);
         CreateHideSpot(ForestZoneLayout.Ch3DangerReset, "find_clues");
         CreateFinalDeliveryNpc();
@@ -692,6 +695,19 @@ public class ChapterFlowController : MonoBehaviour
 
         var rain = chapterRoot.AddComponent<RainEvent>();
         rain.triggerDuringStepId = "stealth_cross";
+        rain.rainFromChapterStart = true;
+        rain.escalateToStorm = true;
+        rain.stormNotification = "Mưa bão ập đến! Tiếp tục lẻn qua rừng!";
+    }
+
+    void CreateChapter3Rain()
+    {
+        var rain = chapterRoot.AddComponent<RainEvent>();
+        rain.triggerDuringStepId = "read_brother_letter";
+        rain.rainFromChapterStart = true;
+        rain.escalateToStorm = true;
+        rain.stormNotification = "Mưa nặng hạt trên chiến trường...";
+        rain.stormNotificationDuration = 3f;
     }
 
     void CreateMotherNpc()
