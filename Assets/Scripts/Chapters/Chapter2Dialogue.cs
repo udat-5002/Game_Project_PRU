@@ -12,7 +12,7 @@ public static class Chapter2Dialogue
     public const string IntroHudBody =
         "Mục tiêu:\n" +
         "• Nhận thư từ người lính trẻ\n" +
-        "• Mở bản đồ (Tab)\n" +
+        "• Mở bản đồ\n" +
         "• Núp tuần tra, trú mưa\n" +
         "• Giao thư cho mẹ người lính";
 

@@ -6,13 +6,13 @@ public static class Chapter1Dialogue
 {
     /// <summary>ct1-1 — màn chào chương.</summary>
     public const string TransitionSubtitle =
-        "Nhận thư, kiểm tra bản đồ,\nđi qua làng cũ, giao thư cho Bà Lan.";
+        "Nhận thư, mở bản đồ,\nđi qua làng cũ, giao thư cho Bà Lan.";
 
     /// <summary>ct1-2 — intro mục tiêu khi vào bản đồ.</summary>
     public const string IntroHudBody =
         "Mục tiêu:\n" +
         "• Nhận thư tại Trạm Liên Lạc\n" +
-        "• Mở bản đồ (Tab)\n" +
+        "• Mở bản đồ\n" +
         "• Hỏi cụ già, đi qua làng cũ\n" +
         "• Vượt gỗ đổ, tránh tuần tra\n" +
         "• Giao thư cho Bà Lan";

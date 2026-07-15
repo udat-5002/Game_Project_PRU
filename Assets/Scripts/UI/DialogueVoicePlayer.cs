@@ -66,10 +66,9 @@ public class DialogueVoicePlayer : MonoBehaviour
 
     AudioClip LoadClip(string voiceKey)
     {
-        if (cache.TryGetValue(voiceKey, out var cached))
-            return cached;
-
-        var clip = DialogueAudio.Load(voiceKey);
+        // Luôn đọc file mới nhất (tránh cache cũ sau khi thay mp3).
+        cache.Remove(voiceKey);
+        var clip = DialogueAudio.Load(voiceKey, refreshFromDisk: true);
         if (clip != null)
             cache[voiceKey] = clip;
         return clip;
