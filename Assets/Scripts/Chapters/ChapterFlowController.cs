@@ -583,6 +583,9 @@ public class ChapterFlowController : MonoBehaviour
 
     void SpawnPatrols(int chapter, string questId, Vector3 resetPos)
     {
+        if (chapter == 1 || chapter == 2 || chapter == 3)
+            return;
+
         if (patrolRelocator == null)
             patrolRelocator = chapterRoot.GetComponent<PatrolRelocator>() ?? chapterRoot.AddComponent<PatrolRelocator>();
 
