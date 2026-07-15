@@ -7,9 +7,6 @@ public class MailPickupInteractable : Interactable
     public string senderName = "Trạm Liên Lạc";
     [TextArea] public string mailSummary = "Thư từ con trai ở tiền tuyến...";
 
-    [TextArea] public string pickupDialogue =
-        "Nam ơi, mang túi thư này đến làng Bình An giúp cô.";
-
     public override bool CanInteract()
     {
         return QuestManager.Instance != null &&
@@ -19,10 +16,14 @@ public class MailPickupInteractable : Interactable
 
     public override void Interact()
     {
-        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", pickupDialogue, Chapter1Voice.PickupMail, () =>
+        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", Chapter1Dialogue.PickupStation, Chapter1Voice.PickupStation, () =>
         {
-            MailInventory.Instance?.ReceiveMail(recipientName, senderName, mailSummary);
-            QuestManager.Instance?.CompleteStep(questStepId);
+            DialogueManager.Instance?.ShowDialogue("Nam", Chapter1Dialogue.PickupNam, Chapter1Voice.PickupNam, () =>
+            {
+                MailInventory.Instance?.ReceiveMail(recipientName, senderName, mailSummary);
+                QuestManager.Instance?.CompleteStep(questStepId);
+                GameUI.Instance?.ShowNotification(Chapter1Dialogue.CheckMapPrompt, 5f, CrispUiText.Gold);
+            });
         });
     }
 }

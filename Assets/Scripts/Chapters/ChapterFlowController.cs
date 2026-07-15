@@ -65,6 +65,7 @@ public class ChapterFlowController : MonoBehaviour
         }
 
         QuestWaypointRegistry.Clear();
+        GameSession.ResetChapterGuidance();
         GameManager.Instance.TeleportPlayer(playerSpawnPosition);
         yield return new WaitForSeconds(0.25f);
         GameManager.Instance.TeleportPlayer(playerSpawnPosition);
@@ -197,9 +198,9 @@ public class ChapterFlowController : MonoBehaviour
     {
         string title = chapterIndex switch
         {
-            1 => "Khu 1: Con Đường Hy Vọng",
-            2 => "Khu 2: Lá thư của người lính",
-            3 => "Khu 3: Lá Thư Cuối Cùng",
+            1 => "Chương 1: Nhận Thư, Mở Bản Đồ",
+            2 => "Chương 2: Thư Người Lính",
+            3 => "Chương 3: Lá Thư Cuối Cùng",
             _ => ""
         };
 
@@ -219,6 +220,7 @@ public class ChapterFlowController : MonoBehaviour
         else if (chapterIndex == 3)
         {
             ShowIntroWithVoice(Chapter3Dialogue.IntroHudBody, Chapter3Voice.IntroHud);
+            GameUI.Instance?.ShowNotification(Chapter3Dialogue.CheckMapPrompt, 5f, CrispUiText.Gold);
         }
     }
 
@@ -241,11 +243,12 @@ public class ChapterFlowController : MonoBehaviour
         var qm = QuestManager.Instance;
         qm.OnAllQuestsCompleted -= OnChapter1Complete;
         qm.SetupQuests(
-            ("pickup_mail", "Lấy túi thư tại Trạm Liên Lạc"),
+            ("pickup_mail", "Nhận thư tại Trạm Liên Lạc"),
+            ("check_map", "Mở bản đồ (Tab) xem đường tới Bà Lan"),
             ("ask_elder", "Hỏi cụ già đường vào làng"),
             ("cross_obstacle", "Vượt qua khu gỗ đổ chặn đường"),
             ("sneak_patrol", "Lẻn qua lính tuần tra (tránh vòng đỏ)"),
-            ("deliver_mail", "Giao thư cho Bà Lan")
+            ("deliver_mail", "Giao thư đúng người: Bà Lan")
         );
         qm.OnAllQuestsCompleted += OnChapter1Complete;
 
@@ -466,9 +469,10 @@ public class ChapterFlowController : MonoBehaviour
         var qm = QuestManager.Instance;
         qm.OnAllQuestsCompleted -= OnChapter2Complete;
         qm.SetupQuests(
-            ("receive_letter", "Nhận thư từ người lính trẻ"),
-            ("stealth_cross", "Vượt qua lính tuần tra"),
-            ("deliver_mother", "Giao thư cho mẹ anh lính")
+            ("receive_letter", "Nhận thư mới từ người lính trẻ"),
+            ("check_map", "Mở bản đồ (Tab) xem đường tới mẹ người lính"),
+            ("stealth_cross", "Núp tuần tra, trú mưa, đi đúng tuyến"),
+            ("deliver_mother", "Giao thư cho mẹ người lính")
         );
         qm.OnAllQuestsCompleted += OnChapter2Complete;
 
@@ -484,16 +488,15 @@ public class ChapterFlowController : MonoBehaviour
         var qm = QuestManager.Instance;
         qm.OnAllQuestsCompleted -= OnChapter3Complete;
         qm.SetupQuests(
-            ("find_clues", "Tìm manh mối túi thư"),
+            ("check_map", "Mở bản đồ (Tab) ghép tuyến đường cũ"),
+            ("find_clues", "Tìm manh mối theo tuyến trên bản đồ"),
             ("read_brother_letter", "Đọc thư anh trai"),
-            ("final_delivery", "Giao thư cho các gia đình")
+            ("final_delivery", "Đi đúng tuyến, giao nốt thư thất lạc")
         );
         qm.OnAllQuestsCompleted += OnChapter3Complete;
 
         CreateCluePoints();
         CreateChapter3Rain();
-        SpawnPatrols(3, "find_clues", ForestZoneLayout.Ch3Spawn);
-        CreateHideSpot(ForestZoneLayout.Ch3DangerReset, "find_clues");
         CreateFinalDeliveryNpc();
     }
 
@@ -697,7 +700,9 @@ public class ChapterFlowController : MonoBehaviour
         rain.triggerDuringStepId = "stealth_cross";
         rain.rainFromChapterStart = true;
         rain.escalateToStorm = true;
-        rain.stormNotification = "Mưa bão ập đến! Tiếp tục lẻn qua rừng!";
+        rain.showRainDialogue = false;
+        rain.stormNotification = "";
+        rain.rainDialogue = "";
     }
 
     void CreateChapter3Rain()
@@ -706,6 +711,7 @@ public class ChapterFlowController : MonoBehaviour
         rain.triggerDuringStepId = "read_brother_letter";
         rain.rainFromChapterStart = true;
         rain.escalateToStorm = true;
+        rain.showRainDialogue = false;
         rain.stormNotification = "Mưa nặng hạt trên chiến trường...";
         rain.stormNotificationDuration = 3f;
     }
@@ -719,7 +725,7 @@ public class ChapterFlowController : MonoBehaviour
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
             NpcVisualFactory.AutoAdjustGroundPlacement(model);
         }
-        AttachNpcHeadLabel(go, "Mẹ anh lính");
+        AttachNpcHeadLabel(go, "Mẹ người lính");
         RegisterWaypoint("deliver_mother", go.transform.position);
         go.AddComponent<MotherDeliveryInteractable>();
     }
@@ -740,9 +746,12 @@ public class ChapterFlowController : MonoBehaviour
             refreshFromDisk: true,
             Chapter2Voice.Transition,
             Chapter2Voice.IntroHud,
-            Chapter2Voice.SoldierLetter,
-            Chapter2Voice.MotherDeliver,
-            Chapter2Voice.EndBaLan,
+            Chapter2Voice.Soldier,
+            Chapter2Voice.SoldierNam,
+            Chapter2Voice.StealthNam,
+            Chapter2Voice.MotherAsk,
+            Chapter2Voice.MotherNam,
+            Chapter2Voice.MotherThanks,
             Chapter2Voice.EndNam);
     }
 
@@ -752,12 +761,15 @@ public class ChapterFlowController : MonoBehaviour
             refreshFromDisk: true,
             Chapter1Voice.Transition,
             Chapter1Voice.IntroHud,
-            Chapter1Voice.PickupMail,
-            Chapter1Voice.ElderGuide,
+            Chapter1Voice.PickupStation,
+            Chapter1Voice.PickupNam,
+            Chapter1Voice.Elder,
+            Chapter1Voice.ElderNam,
             Chapter1Voice.CrossObstacle,
-            Chapter1Voice.DeliverBaLan,
-            Chapter1Voice.EndNam,
-            Chapter1Voice.EndNarrator);
+            Chapter1Voice.DeliverBaLan1,
+            Chapter1Voice.DeliverNam,
+            Chapter1Voice.DeliverBaLan2,
+            Chapter1Voice.EndNam);
     }
 
     void PreloadChapter3Voices()
@@ -767,11 +779,15 @@ public class ChapterFlowController : MonoBehaviour
             Chapter3Voice.Transition,
             Chapter3Voice.IntroHud,
             Chapter3Voice.ClueHouse,
+            Chapter3Voice.ClueBunker,
             Chapter3Voice.ClueFort,
+            Chapter3Voice.CluesComplete,
+            Chapter3Voice.BrotherFound,
             Chapter3Voice.BrotherLetter,
-            Chapter3Voice.FlashbackSoldier,
-            Chapter3Voice.FlashbackBaLan,
-            Chapter3Voice.FlashbackBrother,
+            Chapter3Voice.BrotherNam,
+            Chapter3Voice.DeliverNam,
+            Chapter3Voice.DeliverRecipient,
+            Chapter3Voice.EndNam,
             Chapter3Voice.Ending);
     }
 
@@ -780,10 +796,14 @@ public class ChapterFlowController : MonoBehaviour
         collectedClueIds.Clear();
         RegisterWaypoint("read_brother_letter", clue3Position);
         CreateHouseClue("Ngôi nhà bỏ hoang",
-            "Căn nhà hoang vắng cạnh chiến trường cũ. Có dấu vết ai đó từng ghé qua...",
+            Chapter3Dialogue.ClueHouse,
             Chapter3Voice.ClueHouse);
 
-        CreateFortClue("Đồn lính đổ nát", "Túi thư cũ dưới đống gạch...", Chapter3Voice.ClueFort);
+        CreateClue("bunker", clue2Position, "Hầm trú ẩn",
+            Chapter3Dialogue.ClueBunker, Chapter3Voice.ClueBunker);
+
+        CreateFortClue("Đồn lính đổ nát", Chapter3Dialogue.ClueFort, Chapter3Voice.ClueFort);
+        RegisterWaypoint("find_clues", clue1Position);
         RefreshClueWaypoint();
     }
 
@@ -915,6 +935,7 @@ public class ChapterFlowController : MonoBehaviour
         clue.clueId = clueId;
         clue.clueTitle = title;
         clue.clueHint = hint;
+        clue.dialogueSpeaker = "Nam";
         clue.voiceKey = voiceKey;
         clue.promptText = "Nhấn E - Khám phá manh mối";
         clue.hideAfterCollect = hideAfterCollect;
@@ -927,10 +948,24 @@ public class ChapterFlowController : MonoBehaviour
         if (!collectedClueIds.Add(clueId))
             return false;
 
-        if (clueId == "fort")
+        bool hasAll =
+            HasCollectedClue("house") &&
+            HasCollectedClue("bunker") &&
+            HasCollectedClue("fort");
+
+        if (hasAll)
         {
             QuestManager.Instance.CompleteStep("find_clues");
-            ShowBrotherLetter();
+            var dm = DialogueManager.Instance;
+            if (dm != null)
+            {
+                dm.ShowDialogue("Nam", Chapter3Dialogue.CluesComplete, Chapter3Voice.CluesComplete, () =>
+                {
+                    dm.ShowDialogue("Nam", Chapter3Dialogue.BrotherFound, Chapter3Voice.BrotherFound, () => ShowBrotherLetter());
+                });
+            }
+            else
+                ShowBrotherLetter();
             return true;
         }
 
@@ -941,24 +976,35 @@ public class ChapterFlowController : MonoBehaviour
 
     void RefreshClueWaypoint()
     {
-        if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive("find_clues"))
+        if (QuestManager.Instance == null) return;
+        if (!QuestManager.Instance.IsStepActive("find_clues") &&
+            !QuestManager.Instance.IsStepActive("check_map"))
             return;
 
         if (!HasCollectedClue("house"))
             RegisterWaypoint("find_clues", clue1Position);
+        else if (!HasCollectedClue("bunker"))
+            RegisterWaypoint("find_clues", clue2Position);
         else
             RegisterWaypoint("find_clues", clue3Position);
     }
+
+    /// <summary>Gọi sau khi mở bản đồ xong bước check_map Chương 3.</summary>
+    public void RefreshClueWaypointsAfterMapUnlock() => RefreshClueWaypoint();
+
 
     void ShowBrotherLetter()
     {
         if (!QuestManager.Instance.IsStepActive("read_brother_letter")) return;
 
         GameUI.Instance?.ShowLetter("Thư của anh trai Nam",
-            "Nếu em nhận được lá thư này, có lẽ anh đã không thể trở về.\n\n" +
-            "Hãy thay anh chăm sóc mẹ.\nVà hãy sống tiếp thật tốt.",
+            Chapter3Dialogue.BrotherLetterBody,
             Chapter3Voice.BrotherLetter,
-            () => QuestManager.Instance.CompleteStep("read_brother_letter"));
+            () =>
+            {
+                DialogueManager.Instance?.ShowDialogue("Nam", Chapter3Dialogue.BrotherNam, Chapter3Voice.BrotherNam, () =>
+                    QuestManager.Instance.CompleteStep("read_brother_letter"));
+            });
     }
 
     void CreateFinalDeliveryNpc()
@@ -1107,25 +1153,20 @@ public class ChapterFlowController : MonoBehaviour
 
     void OnChapter1Complete()
     {
-        DialogueManager.Instance?.ShowDialogue("Nam", "Mỗi lá thư đều mang theo hy vọng...", Chapter1Voice.EndNam, () =>
-        {
-            DialogueManager.Instance?.ShowDialogue("", "Nam được tuyển vào đội vận chuyển thư.", Chapter1Voice.EndNarrator, () =>
-                GameManager.Instance?.CompleteChapter(1));
-        });
+        DialogueManager.Instance?.ShowDialogue("Nam", Chapter1Dialogue.EndNam, Chapter1Voice.EndNam, () =>
+            GameManager.Instance?.CompleteChapter(1));
     }
 
     void OnChapter2Complete()
     {
-        DialogueManager.Instance?.ShowDialogue("Bà Lan", "Con ta... con ta không trở về nữa...", Chapter2Voice.EndBaLan, () =>
-        {
-            DialogueManager.Instance?.ShowDialogue("Nam", "Chiến tranh thật tàn khốc.", Chapter2Voice.EndNam, () =>
-                GameManager.Instance?.CompleteChapter(2));
-        });
+        DialogueManager.Instance?.ShowDialogue("Nam", Chapter2Dialogue.EndNam, Chapter2Voice.EndNam, () =>
+            GameManager.Instance?.CompleteChapter(2));
     }
 
     void OnChapter3Complete()
     {
-        GameManager.Instance?.CompleteChapter(3);
+        DialogueManager.Instance?.ShowDialogue("Nam", Chapter3Dialogue.EndNam, Chapter3Voice.EndNam, () =>
+            GameManager.Instance?.CompleteChapter(3));
     }
 
     void OnDestroy()

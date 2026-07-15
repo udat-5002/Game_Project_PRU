@@ -5,8 +5,10 @@ public class RainEvent : MonoBehaviour
     public string triggerDuringStepId = "stealth_cross";
     public bool rainFromChapterStart = true;
     public bool escalateToStorm = true;
-    public string stormNotification = "Mưa bão ập đến! Tiếp tục lẻn qua rừng!";
+    public string stormNotification = "Mưa lớn đổ xuống! Tìm chỗ trú, giữ thư khô!";
     public float stormNotificationDuration = 4f;
+    public bool showRainDialogue = true;
+    [TextArea] public string rainDialogue = "";
 
     bool triggered;
 
@@ -27,5 +29,8 @@ public class RainEvent : MonoBehaviour
 
         if (!string.IsNullOrEmpty(stormNotification))
             GameUI.Instance?.ShowNotification(stormNotification, stormNotificationDuration);
+
+        if (showRainDialogue && !string.IsNullOrEmpty(rainDialogue))
+            DialogueManager.Instance?.ShowDialogue("Nam", rainDialogue);
     }
 }

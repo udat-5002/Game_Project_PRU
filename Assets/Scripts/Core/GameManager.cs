@@ -95,7 +95,7 @@ public class GameManager : MonoBehaviour
 
             string title = next switch
             {
-                2 => "Chương 2: Lá thư của người lính",
+                2 => "Chương 2: Thư Người Lính",
                 3 => "Chương 3: Lá Thư Cuối Cùng",
                 _ => ""
             };
@@ -119,7 +119,7 @@ public class GameManager : MonoBehaviour
         else
         {
             SceneTransition.Instance?.ShowEnding(
-                "Chiến tranh lấy đi tất cả, chỉ để lại một thứ duy nhất để chúng ta sống tiếp: đó là hy vọng.",
+                Chapter3Dialogue.EndNarrator,
                 () => SceneTransition.Instance.LoadScene(SceneMainMenu),
                 Chapter3Voice.Ending);
         }
@@ -131,7 +131,7 @@ public class GameManager : MonoBehaviour
         SetCurrentChapter(1);
         SceneTransition.Instance?.TransitionToChapter(
             SceneChapter1,
-            "Chương 1: Con Đường Hy Vọng",
+            "Chương 1: Nhận Thư, Mở Bản Đồ",
             Chapter1Dialogue.TransitionSubtitle,
             1,
             Chapter1Voice.Transition);

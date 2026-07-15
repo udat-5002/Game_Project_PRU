@@ -1,17 +1,44 @@
 /// <summary>
 /// Giọng đọc Chương 1 — file trong Resources/Audio/Dialogue/
-/// CT1-1: màn chào chương (SceneTransition)
-/// CT1-2: intro HUD khi vào map
-/// CT1-3 … CT1-8: các nhiệm vụ / kết chương
+/// khớp tên file: ct1-1.mp3 … ct1-11.mp3
 /// </summary>
 public static class Chapter1Voice
 {
-    public const string Transition = "CT1-1";
-    public const string IntroHud = "CT1-2";
-    public const string PickupMail = "CT1-3";
-    public const string ElderGuide = "CT1-4";
-    public const string CrossObstacle = "CT1-5";
-    public const string DeliverBaLan = "CT1-6";
-    public const string EndNam = "CT1-7";
-    public const string EndNarrator = "CT1-8";
+    /// <summary>Màn chào chương.</summary>
+    public const string Transition = "ct1-1";
+
+    /// <summary>Intro mục tiêu khi vào bản đồ.</summary>
+    public const string IntroHud = "ct1-2";
+
+    /// <summary>Trạm Liên Lạc — nhận thư.</summary>
+    public const string PickupStation = "ct1-3";
+
+    /// <summary>Nam — đáp nhận thư.</summary>
+    public const string PickupNam = "ct1-4";
+
+    /// <summary>Cụ già — hỏi đường.</summary>
+    public const string Elder = "ct1-5";
+
+    /// <summary>Nam — đáp cụ già.</summary>
+    public const string ElderNam = "ct1-6";
+
+    /// <summary>Nam — vượt gỗ đổ.</summary>
+    public const string CrossObstacle = "ct1-7";
+
+    /// <summary>Bà Lan — câu 1 khi nhận thư.</summary>
+    public const string DeliverBaLan1 = "ct1-8";
+
+    /// <summary>Nam — giao thư.</summary>
+    public const string DeliverNam = "ct1-9";
+
+    /// <summary>Bà Lan — câu 2.</summary>
+    public const string DeliverBaLan2 = "ct1-10";
+
+    /// <summary>Nam — kết chương.</summary>
+    public const string EndNam = "ct1-11";
+
+    // Alias cũ (tránh lỗi nếu chỗ nào còn gọi)
+    public const string PickupMail = PickupStation;
+    public const string ElderGuide = Elder;
+    public const string DeliverBaLan = DeliverBaLan1;
 }

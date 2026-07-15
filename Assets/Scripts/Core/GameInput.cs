@@ -13,4 +13,10 @@ public static class GameInput
         Keyboard.current != null &&
         (Keyboard.current.enterKey.wasPressedThisFrame ||
          Keyboard.current.numpadEnterKey.wasPressedThisFrame);
+
+    public static bool MapPressedThisFrame =>
+        Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
+
+    public static bool EscapePressedThisFrame =>
+        Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
 }

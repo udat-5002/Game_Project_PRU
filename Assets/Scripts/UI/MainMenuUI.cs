@@ -22,21 +22,15 @@ public class MainMenuUI : MonoBehaviour
 
     static readonly string[] IntroVoiceKeys =
     {
-        MenuVoice.Intro,
-        null
+        MenuVoice.Intro
     };
 
     static readonly string[] IntroPages =
     {
-        "Thời chiến tranh, một ngôi làng nhỏ ở miền Trung Việt Nam.\n" +
-        "Chiến tranh đang diễn ra ác liệt.\n\n" +
-        "Người dân sống trong cảnh:\n" +
-        "• thiếu lương thực\n" +
-        "• thường xuyên sơ tán\n" +
-        "• lo sợ bom đạn",
-
-        "Nam là một thanh niên 19 tuổi sống cùng mẹ.\n\n" +
-        "Anh trai Nam đã ra chiến trường và mất liên lạc hơn 6 tháng."
+        "Nam là một người giao thư trong vùng chiến sự.\n" +
+        "Mỗi lần mở bản đồ, đối chiếu điểm đến và vượt qua nguy hiểm,\n" +
+        "cậu không chỉ đưa một lá thư đến tay người nhận\n" +
+        "mà còn giữ lại một lời hứa giữa chiến tranh."
     };
 
     static readonly Color YearRed = new Color(1f, 0.32f, 0.14f, 1f);
@@ -166,10 +160,7 @@ public class MainMenuUI : MonoBehaviour
             200, YearRed, new Vector2(0.5f, 0.78f), new Vector2(500, 120));
 
         CreateStyledTitle(mainPanel.transform, "GameTitle", "NGƯỜI ĐƯA THƯ",
-            92, TitleWhite, new Vector2(0.5f, 0.235f), new Vector2(1100, 120), FontStyle.BoldAndItalic);
-
-        CreateLabel(mainPanel.transform, "Tagline", "Mỗi lá thư là một tia hy vọng",
-            46, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.168f), new Vector2(980, 68), TextBright, FontStyle.Bold);
+            92, TitleWhite, new Vector2(0.5f, 0.28f), new Vector2(1100, 120), FontStyle.BoldAndItalic);
 
         CreatePosterButton(mainPanel.transform, "BtnStart", "BẮT ĐẦU CHƠI", new Vector2(0.5f, 0.068f), () => ShowIntro());
         CreatePosterButton(mainPanel.transform, "BtnSettings", "CÀI ĐẶT ÂM LƯỢNG", new Vector2(0.5f, 0.012f), ShowSettings, small: true);
@@ -491,6 +482,7 @@ public class MainMenuUI : MonoBehaviour
         if (mainPanel != null) mainPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (introPanel != null) introPanel.SetActive(true);
+        DialogueAudio.Preload(refreshFromDisk: true, MenuVoice.Intro);
         introPageIndex = 0;
         RefreshIntroPage();
     }

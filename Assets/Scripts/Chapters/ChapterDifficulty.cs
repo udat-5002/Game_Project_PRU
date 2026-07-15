@@ -26,11 +26,13 @@ public static class ChapterDifficulty
 
     public static PatrolSetup[] GetPatrols(int chapter, string questId)
     {
+        if (chapter == 3)
+            return System.Array.Empty<PatrolSetup>();
+
         int count = chapter switch
         {
             1 => 5,
             2 => 5,
-            3 => 5,
             _ => 4
         };
 
@@ -69,16 +71,6 @@ public static class ChapterDifficulty
                 ForestZoneLayout.Ch2PatrolStart,
                 ForestZoneLayout.Ch2PatrolEnd,
                 index, 6f),
-
-            (3, "find_clues") => AlongRoute(
-                ForestZoneLayout.Ch3PatrolStart,
-                ForestZoneLayout.Ch3PatrolEnd,
-                index, 6f),
-
-            (3, _) => AlongRoute(
-                ForestZoneLayout.Ch3DangerPatrolStart,
-                ForestZoneLayout.Ch3DangerPatrolEnd,
-                index, 5f),
 
             _ => AlongRoute(
                 ForestZoneLayout.Ch1PatrolStart,

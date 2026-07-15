@@ -29,8 +29,21 @@ public static class DialogueAudio
 
         var clip = Resources.Load<AudioClip>($"Audio/Dialogue/{voiceKey}");
         if (clip == null)
+            clip = Resources.Load<AudioClip>($"Audio/{voiceKey}");
+        if (clip == null)
         {
             foreach (var candidate in Resources.LoadAll<AudioClip>("Audio/Dialogue"))
+            {
+                if (string.Equals(candidate.name, voiceKey, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    clip = candidate;
+                    break;
+                }
+            }
+        }
+        if (clip == null)
+        {
+            foreach (var candidate in Resources.LoadAll<AudioClip>("Audio"))
             {
                 if (string.Equals(candidate.name, voiceKey, System.StringComparison.OrdinalIgnoreCase))
                 {
@@ -46,9 +59,8 @@ public static class DialogueAudio
 #if UNITY_EDITOR
     static void ReimportFromDisk(string voiceKey)
     {
-        foreach (var ext in new[] { ".mp3", ".wav" })
+        foreach (var path in CandidatePaths(voiceKey))
         {
-            var path = $"{ResourcesFolder}/{voiceKey}{ext}";
             if (!System.IO.File.Exists(path))
                 continue;
 
@@ -56,18 +68,37 @@ public static class DialogueAudio
             return;
         }
     }
-#endif
 
-#if UNITY_EDITOR
     static AudioClip LoadFromAssetDatabase(string voiceKey)
     {
-        var path = $"{ResourcesFolder}/{voiceKey}.mp3";
-        var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-        if (clip != null)
-            return clip;
+        foreach (var path in CandidatePaths(voiceKey))
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+            if (clip != null)
+                return clip;
+        }
 
-        path = $"{ResourcesFolder}/{voiceKey}.wav";
-        return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+        return null;
+    }
+
+    static System.Collections.Generic.IEnumerable<string> CandidatePaths(string voiceKey)
+    {
+        var keys = new[]
+        {
+            voiceKey,
+            voiceKey.ToLowerInvariant(),
+            voiceKey.ToUpperInvariant()
+        };
+
+        foreach (var key in keys)
+        {
+            yield return $"{ResourcesFolder}/{key}.mp3";
+            yield return $"{ResourcesFolder}/{key}.wav";
+            yield return $"{ResourcesFolder}/{key}.ogg";
+            yield return $"Assets/Resources/Audio/{key}.mp3";
+            yield return $"Assets/Resources/Audio/{key}.wav";
+            yield return $"Assets/Resources/Audio/{key}.ogg";
+        }
     }
 #endif
 

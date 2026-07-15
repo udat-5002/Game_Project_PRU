@@ -1,22 +1,51 @@
 /// <summary>
 /// Giọng đọc Chương 3 — file trong Resources/Audio/Dialogue/
-/// CT3-1: màn chào chương
-/// CT3-2: intro HUD
-/// CT3-3: manh mối nhà hoang
-/// CT3-4: manh mối túi thư dưới đống gạch
-/// CT3-5: thư anh trai
-/// CT3-6 … CT3-8: giao thư cuối (hồi tưởng 1/2/3)
-/// end: kết game
+/// khớp tên file: ct3-1.mp3 … ct3-12.mp3
+/// Kết game narrator: Resources/Audio/end.mp3
 /// </summary>
 public static class Chapter3Voice
 {
-    public const string Transition = "CT3-1";
-    public const string IntroHud = "CT3-2";
-    public const string ClueHouse = "CT3-3";
-    public const string ClueFort = "CT3-4";
-    public const string BrotherLetter = "CT3-5";
-    public const string FlashbackSoldier = "CT3-6";
-    public const string FlashbackBaLan = "CT3-7";
-    public const string FlashbackBrother = "CT3-8";
+    /// <summary>Màn chào chương.</summary>
+    public const string Transition = "ct3-1";
+
+    /// <summary>Intro mục tiêu.</summary>
+    public const string IntroHud = "ct3-2";
+
+    /// <summary>Manh mối — nhà bỏ hoang.</summary>
+    public const string ClueHouse = "ct3-3";
+
+    /// <summary>Manh mối — hầm trú ẩn (1 voice: ct3-4).</summary>
+    public const string ClueBunker = "ct3-4";
+
+    /// <summary>Manh mối — đồn đổ nát (1 voice: ct3-5).</summary>
+    public const string ClueFort = "ct3-5";
+
+    /// <summary>Đủ 3 manh mối.</summary>
+    public const string CluesComplete = "ct3-6";
+
+    /// <summary>Nam nhận ra chữ anh trai.</summary>
+    public const string BrotherFound = "ct3-7";
+
+    /// <summary>Nội dung thư anh trai.</summary>
+    public const string BrotherLetter = "ct3-8";
+
+    /// <summary>Nam — Anh yên tâm, em sẽ làm.</summary>
+    public const string BrotherNam = "ct3-9";
+
+    /// <summary>Nam — giao thư cuối.</summary>
+    public const string DeliverNam = "ct3-10";
+
+    /// <summary>Người nhận.</summary>
+    public const string DeliverRecipient = "ct3-11";
+
+    /// <summary>Nam — kết chương.</summary>
+    public const string EndNam = "ct3-12";
+
+    /// <summary>Narrator — màn kết game (Resources/Audio/end).</summary>
     public const string Ending = "end";
+
+    // Alias cũ
+    public const string FlashbackSoldier = DeliverNam;
+    public const string FlashbackBaLan = DeliverRecipient;
+    public const string FlashbackBrother = DeliverNam;
 }

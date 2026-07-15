@@ -11,10 +11,13 @@ public class MotherDeliveryInteractable : Interactable
             return;
 
         MailInventory.Instance.DeliverMail("Mẹ anh lính");
-        DialogueManager.Instance?.ShowDialogue("Mẹ anh lính",
-            "Cảm ơn cháu... Ta biết con ta đã hy sinh rồi.", Chapter2Voice.MotherDeliver, () =>
+        DialogueManager.Instance?.ShowDialogue("Mẹ người lính", Chapter2Dialogue.MotherAsk, Chapter2Voice.MotherAsk, () =>
+        {
+            DialogueManager.Instance?.ShowDialogue("Nam", Chapter2Dialogue.MotherNam, Chapter2Voice.MotherNam, () =>
             {
-                QuestManager.Instance?.CompleteStep("deliver_mother");
+                DialogueManager.Instance?.ShowDialogue("Mẹ người lính", Chapter2Dialogue.MotherThanks, Chapter2Voice.MotherThanks, () =>
+                    QuestManager.Instance?.CompleteStep("deliver_mother"));
             });
+        });
     }
 }

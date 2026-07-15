@@ -1,16 +1,52 @@
 /// <summary>
-/// Lời thoại Chương 2 — chỉnh chữ cho khớp file giọng CT2-x tương ứng.
+/// Lời thoại Chương 2 — Thư Người Lính.
+/// Khớp file giọng ct2-1 … ct2-9 trong Resources/Audio/Dialogue/.
 /// </summary>
 public static class Chapter2Dialogue
 {
-    /// <summary>CT2-1 — giọng màn chào khi bắt đầu / vào Chương 2.</summary>
+    /// <summary>ct2-1 — màn chào chương.</summary>
     public const string TransitionSubtitle =
-        "Vượt qua rừng đêm tránh lính tuần tra\ngiao thư cho mẹ anh lính";
+        "Nhận thư mới, kiểm tra bản đồ liên tục,\nnúp tuần tra, trú mưa, giao đúng lúc.";
 
-    /// <summary>CT2-2 — giọng hội thoại intro sau khi vào map.</summary>
+    /// <summary>ct2-2 — intro mục tiêu khi vào bản đồ.</summary>
     public const string IntroHudBody =
-        "Vượt qua thử thách:\n" +
+        "Mục tiêu:\n" +
         "• Nhận thư từ người lính trẻ\n" +
-        "• Vượt qua lính tuần tra\n" +
-        "• Giao thư cho mẹ anh lính";
+        "• Mở bản đồ (Tab)\n" +
+        "• Núp tuần tra, trú mưa\n" +
+        "• Giao thư cho mẹ người lính";
+
+    public const string CheckMapPrompt =
+        "Nhấn Tab để mở bản đồ xem đường tới mẹ người lính. Sau khi xem, mũi tên chỉ đường mới hiện.";
+
+    public const string CheckMapDone =
+        "Đã xem bản đồ — mũi tên chỉ đường đã mở. Đi đúng tuyến, tránh tuần tra.";
+
+    /// <summary>ct2-3</summary>
+    public const string Soldier =
+        "Nếu tôi không kịp về... nhờ anh đưa lá thư này về cho mẹ tôi với.";
+
+    /// <summary>ct2-4</summary>
+    public const string SoldierNam =
+        "Ừ, cứ yên tâm. Tôi sẽ mang tới cho bác ấy.";
+
+    /// <summary>ct2-5</summary>
+    public const string StealthNam =
+        "Phải coi bản đồ kỹ đã, đi sai một chút là lộ ngay.";
+
+    /// <summary>ct2-6</summary>
+    public const string MotherAsk =
+        "Cháu... có mang thư tới cho tôi không?";
+
+    /// <summary>ct2-7</summary>
+    public const string MotherNam =
+        "Dạ, cháu mang tới rồi ạ.";
+
+    /// <summary>ct2-8</summary>
+    public const string MotherThanks =
+        "Vậy là nó vẫn còn nhớ đến mẹ... Cảm ơn cháu nhiều lắm.";
+
+    /// <summary>ct2-9 — kết chương.</summary>
+    public const string EndNam =
+        "Có những lá thư không thể chờ lâu. Giao đúng người, đúng lúc đôi khi quan trọng hơn mọi thứ khác.";
 }

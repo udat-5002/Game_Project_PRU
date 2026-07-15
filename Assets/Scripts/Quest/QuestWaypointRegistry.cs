@@ -12,4 +12,6 @@ public static class QuestWaypointRegistry
 
     public static bool TryGet(string questStepId, out Vector3 pos) =>
         Points.TryGetValue(questStepId, out pos);
+
+    public static IReadOnlyDictionary<string, Vector3> All => Points;
 }

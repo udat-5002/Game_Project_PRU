@@ -20,7 +20,7 @@ public static class ForestZoneLayout
     {
         chapter = 1,
         shortName = "KHU 1: RÌA LÀNG",
-        fullName = "Chương 1 — Con đường hy vọng",
+        fullName = "Chương 1 — Nhận Thư, Mở Bản Đồ",
         groundColor = new Color(0.15f, 0.65f, 0.28f, 0.22f),
         signColor = new Color(0.2f, 0.85f, 0.35f),
         center = new Vector3(5f, 0f, -42f),
@@ -31,7 +31,7 @@ public static class ForestZoneLayout
     {
         chapter = 2,
         shortName = "KHU 2: RỪNG SÂU",
-        fullName = "Chương 2 — Lá thư của người lính",
+        fullName = "Chương 2 — Thư Người Lính",
         groundColor = new Color(0.12f, 0.22f, 0.55f, 0.24f),
         signColor = new Color(0.35f, 0.45f, 0.95f),
         center = new Vector3(15f, 0f, -28f),

@@ -2,34 +2,22 @@ using UnityEngine;
 
 public class FinalDeliveryInteractable : Interactable
 {
-    int delivered;
+    bool delivered;
 
     public override bool CanInteract() =>
-        QuestManager.Instance != null && QuestManager.Instance.IsStepActive("final_delivery");
+        QuestManager.Instance != null &&
+        QuestManager.Instance.IsStepActive("final_delivery") &&
+        !delivered;
 
     public override void Interact()
     {
-        delivered++;
-        string flashback = delivered switch
-        {
-            1 => "Tiếng cười của người lính trước khi lên đường...",
-            2 => "Bà Lan đợi con từng ngày...",
-            _ => "Anh trai viết thư dưới ánh đèn dầu..."
-        };
+        if (delivered) return;
+        delivered = true;
 
-        string voiceKey = delivered switch
+        DialogueManager.Instance?.ShowDialogue("Nam", Chapter3Dialogue.DeliverNam, Chapter3Voice.DeliverNam, () =>
         {
-            1 => Chapter3Voice.FlashbackSoldier,
-            2 => Chapter3Voice.FlashbackBaLan,
-            _ => Chapter3Voice.FlashbackBrother
-        };
-
-        DialogueManager.Instance?.ShowDialogue("Giao thư", flashback, voiceKey, () =>
-        {
-            if (delivered >= 3)
-                QuestManager.Instance?.CompleteStep("final_delivery");
-            else
-                GameUI.Instance?.ShowNotification($"Đã giao {delivered}/3 lá thư");
+            DialogueManager.Instance?.ShowDialogue("Người nhận", Chapter3Dialogue.DeliverRecipient, Chapter3Voice.DeliverRecipient, () =>
+                QuestManager.Instance?.CompleteStep("final_delivery"));
         });
     }
 }

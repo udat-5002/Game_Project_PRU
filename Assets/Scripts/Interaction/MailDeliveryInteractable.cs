@@ -5,9 +5,6 @@ public class MailDeliveryInteractable : Interactable
     public string questStepId = "deliver_mail";
     public string recipientName = "Bà Lan - Làng Bình An";
 
-    [TextArea] public string deliveryDialogue =
-        "Cảm ơn cháu... hy vọng con tôi vẫn bình an.";
-
     [TextArea] public string wrongRecipientDialogue =
         "Cháu nhầm người rồi. Thư này không phải gửi cho ta.";
 
@@ -30,9 +27,13 @@ public class MailDeliveryInteractable : Interactable
             return;
         }
 
-        DialogueManager.Instance?.ShowDialogue("Bà Lan", deliveryDialogue, Chapter1Voice.DeliverBaLan, () =>
+        DialogueManager.Instance?.ShowDialogue("Bà Lan", Chapter1Dialogue.DeliverBaLan1, Chapter1Voice.DeliverBaLan1, () =>
         {
-            QuestManager.Instance?.CompleteStep(questStepId);
+            DialogueManager.Instance?.ShowDialogue("Nam", Chapter1Dialogue.DeliverNam, Chapter1Voice.DeliverNam, () =>
+            {
+                DialogueManager.Instance?.ShowDialogue("Bà Lan", Chapter1Dialogue.DeliverBaLan2, Chapter1Voice.DeliverBaLan2, () =>
+                    QuestManager.Instance?.CompleteStep(questStepId));
+            });
         });
     }
 }

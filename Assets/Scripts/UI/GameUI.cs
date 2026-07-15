@@ -64,7 +64,7 @@ public class GameUI : MonoBehaviour
 
         CrispUiText.WarmGameplayAtlas();
 
-        hudBackdrop = CreatePanel("HudBackdrop", HudBg, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -12), new Vector2(840, 260));
+        hudBackdrop = CreatePanel("HudBackdrop", HudBg, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -12), new Vector2(840, 300));
 
         chapterText = CreateHudLine("Chapter", 38, new Vector2(24, -20), 52);
         zoneText = CreateHudLine("Zone", 30, new Vector2(24, -78), 44);
@@ -73,6 +73,10 @@ public class GameUI : MonoBehaviour
         questText.lineSpacing = 1.25f;
         waypointText = CreateHudLine("Waypoint", 30, new Vector2(24, -218), 44);
         waypointText.color = CrispUiText.White;
+
+        var mapHint = CreateHudLine("MapHint", 26, new Vector2(24, -262), 36);
+        mapHint.color = new Color(0.85f, 0.85f, 0.75f, 1f);
+        mapHint.text = "Nhấn Tab — mở bản đồ";
 
         interactPrompt = CreatePanel("InteractPrompt", new Color(0.02f, 0.02f, 0.03f, 1f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 96), new Vector2(620, 80));
         interactText = CreateAnchoredText("InteractText", 36, Vector2.zero, TextAnchor.MiddleCenter, new Vector2(0.5f, 0), FontStyle.Bold);
@@ -88,6 +92,16 @@ public class GameUI : MonoBehaviour
         notificationText = CreateAnchoredText("Notification", 38, new Vector2(0, -130), TextAnchor.UpperCenter, new Vector2(0.5f, 1), FontStyle.Bold);
         notificationText.rectTransform.sizeDelta = new Vector2(980, 60);
         notificationText.gameObject.SetActive(false);
+
+        EnsurePlayerMap();
+    }
+
+    void EnsurePlayerMap()
+    {
+        if (PlayerMapUI.Instance != null) return;
+        var mapGo = new GameObject("PlayerMapUI");
+        DontDestroyOnLoad(mapGo);
+        mapGo.AddComponent<PlayerMapUI>();
     }
 
     void BuildDialoguePanel()
