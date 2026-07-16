@@ -23,8 +23,8 @@ public static class ForestZoneLayout
         fullName = "Chương 1 — Nhận Thư, Mở Bản Đồ",
         groundColor = new Color(0.15f, 0.65f, 0.28f, 0.22f),
         signColor = new Color(0.2f, 0.85f, 0.35f),
-        center = new Vector3(5f, 0f, -42f),
-        groundSize = new Vector3(110f, 0.05f, 40f)
+        center = new Vector3(5f, 0f, -35f),
+        groundSize = new Vector3(120f, 0.05f, 95f)
     };
 
     public static readonly Zone Zone2 = new Zone
@@ -34,8 +34,8 @@ public static class ForestZoneLayout
         fullName = "Chương 2 — Thư Người Lính",
         groundColor = new Color(0.12f, 0.22f, 0.55f, 0.24f),
         signColor = new Color(0.35f, 0.45f, 0.95f),
-        center = new Vector3(15f, 0f, -28f),
-        groundSize = new Vector3(100f, 0.05f, 50f)
+        center = new Vector3(5f, 0f, -35f),
+        groundSize = new Vector3(120f, 0.05f, 95f)
     };
 
     public static readonly Zone Zone3 = new Zone
@@ -59,28 +59,41 @@ public static class ForestZoneLayout
 
     public static Zone[] All => new[] { Zone1, Zone2, Zone3 };
 
-    // Chương 1 — từ tây nam → đông bắc map
+    // Chương 1 — vòng quanh map (không đi một đường thẳng)
+    // Spawn/Trạm (TN) → Cụ già (ĐN) → Gỗ đổ (Tây) → Cây đa (Đông) → Giếng hoang (Nam) → Bà Lan (ĐB)
     public static readonly Vector3 Ch1Spawn = new Vector3(-42f, 0f, -58f);
     public static readonly Vector3 Ch1MailStation = new Vector3(-28f, 0f, -52f);
-    public static readonly Vector3 Ch1Elder = new Vector3(-14f, 0f, -48f);
-    public static readonly Vector3 Ch1Obstacle = new Vector3(0f, 0f, -44f);
+    public static readonly Vector3 Ch1Elder = new Vector3(34f, 0f, -76f);
+    public static readonly Vector3 Ch1Obstacle = new Vector3(-26f, 0f, -22f);
+    public static readonly Vector3 Ch1LandmarkBanyan = new Vector3(44f, 0f, -42f);
+    public static readonly Vector3 Ch1LandmarkWell = new Vector3(6f, 0f, -72f);
+    public static readonly Vector3 Ch1Delivery = new Vector3(50f, 0f, 6f);
+
+    // Giữ alias cũ (không còn dùng tuần tra)
     public static readonly Vector3 Ch1PatrolStart = new Vector3(12f, 0f, -40f);
     public static readonly Vector3 Ch1PatrolEnd = new Vector3(26f, 0f, -37f);
-    public static readonly Vector3 Ch1HideSpot = new Vector3(18f, 0f, -38f);
-    public static readonly Vector3 Ch1StealthEnd = new Vector3(38f, 0f, -34f);
-    public static readonly Vector3 Ch1Delivery = new Vector3(52f, 0f, -30f);
+    public static readonly Vector3 Ch1HideSpot = Ch1LandmarkBanyan;
+    public static readonly Vector3 Ch1StealthEnd = Ch1LandmarkWell;
 
-    // Chương 2 — giữa map → vùng đông bắc
-    public static readonly Vector3 Ch2Spawn = new Vector3(-32f, 0f, -50f);
-    public static readonly Vector3 Ch2Soldier = new Vector3(-16f, 0f, -44f);
+    // Chương 2 — vòng quanh map
+    // Spawn (TN) → Lính (Tây) → Trú mưa (chỗ cũ gần đường giao) → Hết mưa → Mẹ (ĐB)
+    public static readonly Vector3 Ch2Spawn = new Vector3(-40f, 0f, -56f);
+    public static readonly Vector3 Ch2Soldier = new Vector3(-36f, 0f, -30f);
+    public static readonly Vector3 Ch2RainShelter = new Vector3(40f, 0f, -10f);
+    public static readonly Vector3 Ch2RainPathEnd = new Vector3(44f, 0f, -18f);
+    public static readonly Vector3 Ch2Mother = new Vector3(50f, 0f, 6f);
+
+    // Alias cũ
     public static readonly Vector3 Ch2PatrolStart = new Vector3(-2f, 0f, -38f);
     public static readonly Vector3 Ch2PatrolEnd = new Vector3(14f, 0f, -34f);
     public static readonly Vector3 Ch2Patrol2Start = new Vector3(18f, 0f, -28f);
     public static readonly Vector3 Ch2Patrol2End = new Vector3(34f, 0f, -22f);
-    public static readonly Vector3 Ch2HideSpot = new Vector3(24f, 0f, -26f);
-    public static readonly Vector3 Ch2StealthEnd = new Vector3(44f, 0f, -18f);
-    public static readonly Vector3 Ch2RainShelter = new Vector3(40f, 0f, -10f);
-    public static readonly Vector3 Ch2Mother = new Vector3(54f, 0f, -2f);
+    public static readonly Vector3 Ch2HideSpot = Ch2RainShelter;
+    public static readonly Vector3 Ch2StealthEnd = Ch2RainPathEnd;
+    public static readonly Vector3 Ch2Shelter1 = Ch2RainShelter;
+    public static readonly Vector3 Ch2Shelter2 = Ch2RainShelter;
+    public static readonly Vector3 Ch2Shelter3 = Ch2RainShelter;
+    public static readonly Vector3 Ch2Shelter4 = Ch2RainShelter;
 
     // Chương 3 — chéo cả map: tây nam → đông bắc
     public static readonly Vector3 Ch3Spawn = new Vector3(-44f, 0f, -56f);
