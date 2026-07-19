@@ -16,7 +16,40 @@ public class MailPickupInteractable : Interactable
 
     public override void Interact()
     {
-        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", Chapter1Dialogue.PickupStation, Chapter1Voice.PickupStation, () =>
+        StartCoroutine(PickupRoutine());
+    }
+
+    private System.Collections.IEnumerator PickupRoutine()
+    {
+        // 1. Lock input so the player cannot move
+        GameManager.Instance?.LockInput(true);
+
+        // 2. Play the picking up animation on the player
+        var tpc = FindFirstObjectByType<ThirdPersonController>();
+        if (tpc != null && tpc.animator != null)
+        {
+            // Reset movement animation parameters
+            tpc.animator.SetFloat("Speed", 0f);
+            tpc.animator.SetBool("Jump", false);
+            tpc.animator.SetBool("FreeFall", false);
+            tpc.animator.SetBool("Grounded", true);
+
+            // Play picking up animation
+            tpc.animator.CrossFadeInFixedTime("Picking Up", 0.1f);
+        }
+
+        // 3. Wait for the animation to play
+        yield return new WaitForSeconds(1.5f);
+
+        if (tpc != null && tpc.animator != null)
+        {
+            // Smoothly crossfade back to Locomotion (Idle)
+            tpc.animator.CrossFadeInFixedTime("Locomotion", 0.2f);
+        }
+
+        // 4. Start dialogue flow
+        // Trạm chỉ giao thư — không phát thoại chỉ đường (ct1-3 thuộc cụ già).
+        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", Chapter1Dialogue.PickupStation, null, () =>
         {
             DialogueManager.Instance?.ShowDialogue("Nam", Chapter1Dialogue.PickupNam, Chapter1Voice.PickupNam, () =>
             {

@@ -64,7 +64,7 @@ public static class NpcVisualFactory
         {
             modelTransform.localScale = reference.localScale;
             modelTransform.localPosition = reference.localPosition;
-            modelTransform.localRotation = reference.localRotation;
+            modelTransform.localRotation = Quaternion.Euler(0f, 90f, 0f);
             return;
         }
 

@@ -46,7 +46,8 @@ public class PlayerInteraction : MonoBehaviour
             if (currentTarget.GetComponent<Collider>() != null && 
                 !currentTarget.name.Contains("Clue") &&
                 !currentTarget.name.Contains("TramLienLac") &&
-                !currentTarget.name.Contains("FallenLog"))
+                !currentTarget.name.Contains("FallenLog") &&
+                !currentTarget.name.Contains("Khu gỗ đổ"))
             {
                 var toPlayer = transform.position - currentTarget.transform.position;
                 toPlayer.y = 0;
