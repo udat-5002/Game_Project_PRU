@@ -6,21 +6,21 @@ public static class Chapter2Dialogue
 {
     /// <summary>ct2-1 — màn chào chương.</summary>
     public const string TransitionSubtitle =
-        "Nhận thư mới, kiểm tra bản đồ liên tục,\nnúp tuần tra, trú mưa, giao đúng lúc.";
+        "Nhận thư mới, kiểm tra bản đồ liên tục,\ntrú mưa giữ thư khô, giao đúng lúc.";
 
     /// <summary>ct2-2 — intro mục tiêu khi vào bản đồ.</summary>
     public const string IntroHudBody =
         "Mục tiêu:\n" +
         "• Nhận thư từ người lính trẻ\n" +
         "• Mở bản đồ\n" +
-        "• Núp tuần tra, trú mưa\n" +
+        "• Trú mưa, giữ thư khô\n" +
         "• Giao thư cho mẹ người lính";
 
     public const string CheckMapPrompt =
         "Nhấn Tab để mở bản đồ xem đường tới mẹ người lính. Sau khi xem, mũi tên chỉ đường mới hiện.";
 
     public const string CheckMapDone =
-        "Đã xem bản đồ — mũi tên chỉ đường đã mở. Đi đúng tuyến, tránh tuần tra.";
+        "Đã xem bản đồ — mũi tên chỉ đường đã mở. Đi đúng tuyến, trú mưa giữ thư khô.";
 
     /// <summary>ct2-3</summary>
     public const string Soldier =
@@ -30,9 +30,9 @@ public static class Chapter2Dialogue
     public const string SoldierNam =
         "Ừ, cứ yên tâm. Tôi sẽ mang tới cho bác ấy.";
 
-    /// <summary>ct2-5</summary>
+    /// <summary>ct2-5 — nhắc giữ thư khô dưới mưa.</summary>
     public const string StealthNam =
-        "Phải coi bản đồ kỹ đã, đi sai một chút là lộ ngay.";
+        "Mưa rừng nặng hạt. Phải trú từng đoạn, đừng để thư ướt.";
 
     /// <summary>ct2-6</summary>
     public const string MotherAsk =

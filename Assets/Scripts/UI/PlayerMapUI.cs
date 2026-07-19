@@ -18,7 +18,7 @@ public class PlayerMapUI : MonoBehaviour
         public string label;
         public Vector3 worldPos;
         public bool isDelivery;
-        public bool isPatrolHint;
+        public bool isShelterHint;
     }
 
     Canvas canvas;
@@ -39,7 +39,7 @@ public class PlayerMapUI : MonoBehaviour
     static readonly Color MarkerIdle = new Color(0.75f, 0.78f, 0.7f, 1f);
     static readonly Color MarkerActive = new Color(1f, 0.82f, 0.2f, 1f);
     static readonly Color MarkerDelivery = new Color(0.35f, 0.85f, 0.45f, 1f);
-    static readonly Color MarkerPatrol = new Color(0.95f, 0.35f, 0.28f, 0.85f);
+    static readonly Color MarkerShelter = new Color(0.45f, 0.75f, 1f, 0.9f);
     static readonly Color PlayerColor = new Color(0.35f, 0.7f, 1f, 1f);
 
     Vector2 mapMinXZ;
@@ -231,7 +231,7 @@ public class PlayerMapUI : MonoBehaviour
         hintText = CreateText(root.transform, "Hint", 32, new Vector2(0f, -430f), new Vector2(0.5f, 0.5f),
             new Vector2(1200, 44), Color.white, FontStyle.Bold);
         hintText.alignment = TextAnchor.MiddleCenter;
-        hintText.text = "Tab đóng  •  Vàng = mục tiêu hiện tại  •  Xanh = điểm giao thư  •  Đỏ = khu tuần tra";
+        hintText.text = "Tab đóng  •  Vàng = mục tiêu hiện tại  •  Xanh = điểm giao thư";
 
         var legend = CreateText(root.transform, "Legend", 30, new Vector2(0f, -380f), new Vector2(0.5f, 0.5f),
             new Vector2(1200, 40), new Color(0.95f, 0.95f, 0.9f), FontStyle.Bold);
@@ -246,9 +246,9 @@ public class PlayerMapUI : MonoBehaviour
 
         if (hintText != null)
         {
-            hintText.text = chapter == 3
-                ? "Tab đóng  •  Vàng = mục tiêu hiện tại  •  Xanh = điểm giao thư"
-                : "Tab đóng  •  Vàng = mục tiêu hiện tại  •  Xanh = điểm giao thư  •  Đỏ = khu tuần tra";
+            hintText.text = chapter == 2
+                ? "Tab đóng  •  Vàng = mục tiêu  •  Xanh = giao thư  •  Xanh dương = chỗ trú mưa"
+                : "Tab đóng  •  Vàng = mục tiêu hiện tại  •  Xanh = điểm giao thư";
         }
 
         switch (chapter)
@@ -258,16 +258,29 @@ public class PlayerMapUI : MonoBehaviour
                 Add("pickup_mail", "Trạm Liên Lạc", ForestZoneLayout.Ch1MailStation);
                 Add("ask_elder", "Cụ già / hỏi đường", ForestZoneLayout.Ch1Elder);
                 Add("cross_obstacle", "Khu gỗ đổ", ForestZoneLayout.Ch1Obstacle);
-                Add("sneak_patrol", "Khu tuần tra", ForestZoneLayout.Ch1HideSpot, patrol: true);
+                Add("landmark_banyan", "Ngã ba cây đa", ForestZoneLayout.Ch1LandmarkBanyan);
+                Add("landmark_well", "Giếng hoang", ForestZoneLayout.Ch1LandmarkWell);
                 Add("deliver_mail", "Giao thư: Bà Lan", ForestZoneLayout.Ch1Delivery, delivery: true);
-                SetBoundsFrom(ForestZoneLayout.Ch1Spawn, ForestZoneLayout.Ch1Delivery, ForestZoneLayout.Ch1MailStation);
+                SetBoundsFrom(
+                    ForestZoneLayout.Ch1Spawn,
+                    ForestZoneLayout.Ch1Elder,
+                    ForestZoneLayout.Ch1Obstacle,
+                    ForestZoneLayout.Ch1LandmarkBanyan,
+                    ForestZoneLayout.Ch1LandmarkWell,
+                    ForestZoneLayout.Ch1Delivery);
                 break;
             case 2:
                 titleText.text = "BẢN ĐỒ — Chương 2: Thư Người Lính";
                 Add("receive_letter", "Người lính trẻ", ForestZoneLayout.Ch2Soldier);
-                Add("stealth_cross", "Khu tuần tra / trú mưa", ForestZoneLayout.Ch2HideSpot, patrol: true);
+                Add("shelter_rain", "Chòi trú mưa", ForestZoneLayout.Ch2RainShelter, shelter: true);
+                Add("keep_letter_dry", "Hết đoạn mưa", ForestZoneLayout.Ch2RainPathEnd);
                 Add("deliver_mother", "Giao thư: Mẹ người lính", ForestZoneLayout.Ch2Mother, delivery: true);
-                SetBoundsFrom(ForestZoneLayout.Ch2Spawn, ForestZoneLayout.Ch2Mother, ForestZoneLayout.Ch2Soldier);
+                SetBoundsFrom(
+                    ForestZoneLayout.Ch2Spawn,
+                    ForestZoneLayout.Ch2Soldier,
+                    ForestZoneLayout.Ch2RainShelter,
+                    ForestZoneLayout.Ch2RainPathEnd,
+                    ForestZoneLayout.Ch2Mother);
                 break;
             default:
                 titleText.text = "BẢN ĐỒ — Chương 3: Lá Thư Cuối Cùng";
@@ -296,7 +309,7 @@ public class PlayerMapUI : MonoBehaviour
         objectiveText.text = objective;
     }
 
-    void Add(string id, string label, Vector3 world, bool delivery = false, bool patrol = false)
+    void Add(string id, string label, Vector3 world, bool delivery = false, bool shelter = false)
     {
         route.Add(new MapMarker
         {
@@ -304,7 +317,7 @@ public class PlayerMapUI : MonoBehaviour
             label = label,
             worldPos = world,
             isDelivery = delivery,
-            isPatrolHint = patrol
+            isShelterHint = shelter
         });
     }
 
@@ -335,11 +348,11 @@ public class PlayerMapUI : MonoBehaviour
 
         string activeId = QuestManager.Instance?.CurrentStep?.id;
 
-        // Route lines between non-patrol points
+        // Route lines between main objectives (bỏ chỗ trú để đường không rối)
         var pathPoints = new List<Vector2>();
         foreach (var m in route)
         {
-            if (m.isPatrolHint) continue;
+            if (m.isShelterHint) continue;
             pathPoints.Add(WorldToMap(m.worldPos));
         }
 
@@ -350,7 +363,7 @@ public class PlayerMapUI : MonoBehaviour
         {
             var m = route[i];
             bool active = IsActiveMarker(m.id, activeId);
-            Color color = m.isPatrolHint ? MarkerPatrol
+            Color color = m.isShelterHint ? MarkerShelter
                 : m.isDelivery ? MarkerDelivery
                 : active ? MarkerActive
                 : MarkerIdle;
@@ -415,7 +428,17 @@ public class PlayerMapUI : MonoBehaviour
 
         // Bắt buộc xem bản đồ sau nhận thư — tô điểm đến & cụ già
         if (activeQuestId == "check_map" &&
-            (markerId == "ask_elder" || markerId == "deliver_mail"))
+            (markerId == "ask_elder" || markerId == "deliver_mail" ||
+             markerId == "landmark_banyan" || markerId == "keep_letter_dry" ||
+             markerId == "shelter_rain" || markerId == "deliver_mother"))
+            return true;
+
+        if (activeQuestId == "find_shortcut" &&
+            (markerId == "landmark_banyan" || markerId == "landmark_well"))
+            return true;
+
+        if (activeQuestId == "keep_letter_dry" &&
+            (markerId == "keep_letter_dry" || markerId == "shelter_rain"))
             return true;
 
         // Chapter 3 clues share find_clues step

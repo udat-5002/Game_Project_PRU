@@ -31,6 +31,8 @@ public class ChapterFlowController : MonoBehaviour
     GameObject chapterRoot;
     PatrolRelocator patrolRelocator;
     readonly HashSet<string> collectedClueIds = new HashSet<string>();
+    readonly HashSet<string> visitedShortcutIds = new HashSet<string>();
+    static readonly string[] ShortcutOrder = { "landmark_banyan", "landmark_well" };
 
     public static ChapterFlowController Active { get; private set; }
 
@@ -171,8 +173,6 @@ public class ChapterFlowController : MonoBehaviour
 
         if (FindFirstObjectByType<QuestManager>() == null)
             new GameObject("QuestManager").AddComponent<QuestManager>();
-
-        ApplyStealthToVegetation();
     }
 
     void ApplyStealthToVegetation()
@@ -247,7 +247,7 @@ public class ChapterFlowController : MonoBehaviour
             ("check_map", "Mở bản đồ (Tab) xem đường tới Bà Lan"),
             ("ask_elder", "Hỏi cụ già đường vào làng"),
             ("cross_obstacle", "Vượt qua khu gỗ đổ chặn đường"),
-            ("sneak_patrol", "Lẻn qua lính tuần tra (tránh vòng đỏ)"),
+            ("find_shortcut", "Tìm lối tắt theo lời cụ (đi đúng mốc)"),
             ("deliver_mail", "Giao thư đúng người: Bà Lan")
         );
         qm.OnAllQuestsCompleted += OnChapter1Complete;
@@ -255,8 +255,7 @@ public class ChapterFlowController : MonoBehaviour
         CreateMailStation();
         CreateElderNpc();
         CreateObstacleSection();
-        CreateStealthPath(1, ForestZoneLayout.Ch1StealthEnd, "sneak_patrol",
-            ForestZoneLayout.Ch1HideSpot, ForestZoneLayout.Ch1Obstacle);
+        CreateShortcutPath();
         CreateDeliveryNpc("Bà Lan", deliveryNpcPosition);
     }
 
@@ -283,6 +282,13 @@ public class ChapterFlowController : MonoBehaviour
             pos = woodCenter;
 
         var go = CreateMarker("Khu gỗ đổ", pos, new Color(0.25f, 0.65f, 0.3f), new Vector3(2f, 2f, 2f));
+
+        var worldLabel = go.transform.Find("ObjectiveLabel");
+        if (worldLabel != null)
+            Destroy(worldLabel.gameObject);
+
+        var tag = go.GetComponent<NpcHeadLabel>() ?? go.AddComponent<NpcHeadLabel>();
+        tag.Configure("Khu gỗ đổ", 3.6f);
 
         SpawnFallenLogs(go.transform, mapWood);
 
@@ -471,14 +477,13 @@ public class ChapterFlowController : MonoBehaviour
         qm.SetupQuests(
             ("receive_letter", "Nhận thư mới từ người lính trẻ"),
             ("check_map", "Mở bản đồ (Tab) xem đường tới mẹ người lính"),
-            ("stealth_cross", "Núp tuần tra, trú mưa, đi đúng tuyến"),
+            ("keep_letter_dry", "Trú mưa giữ thư khô, đi đúng tuyến"),
             ("deliver_mother", "Giao thư cho mẹ người lính")
         );
         qm.OnAllQuestsCompleted += OnChapter2Complete;
 
         CreateSoldierNpc();
-        CreateStealthPath(2, ForestZoneLayout.Ch2StealthEnd, "stealth_cross",
-            ForestZoneLayout.Ch2HideSpot, ForestZoneLayout.Ch2Soldier);
+        CreateRainShelterPath();
         CreateRainAtmosphere();
         CreateMotherNpc();
     }
@@ -571,13 +576,344 @@ public class ChapterFlowController : MonoBehaviour
         go.AddComponent<SoldierLetterInteractable>();
     }
 
+    void CreateShortcutPath()
+    {
+        visitedShortcutIds.Clear();
+
+        CreateShortcutLandmark(
+            "landmark_banyan",
+            ForestZoneLayout.Ch1LandmarkBanyan,
+            "Ngã ba cây đa",
+            Chapter1Dialogue.LandmarkBanyan,
+            new Color(0.35f, 0.75f, 0.4f));
+
+        CreateShortcutLandmark(
+            "landmark_well",
+            ForestZoneLayout.Ch1LandmarkWell,
+            "Giếng hoang",
+            Chapter1Dialogue.LandmarkWell,
+            new Color(0.4f, 0.7f, 0.85f));
+
+        RefreshShortcutWaypoint();
+    }
+
+    void CreateShortcutLandmark(string id, Vector3 pos, string title, string confirmLine, Color accent)
+    {
+        var go = CreateMarker(title, pos, accent, new Vector3(2.8f, 2.8f, 2.8f));
+        var worldLabel = go.transform.Find("ObjectiveLabel");
+        if (worldLabel != null)
+            Destroy(worldLabel.gameObject);
+
+        if (id == "landmark_banyan")
+            SpawnBanyanCrossroadsVisual(go.transform);
+        else if (id == "landmark_well")
+            SpawnAbandonedWellVisual(go.transform);
+
+        float labelHeight = id == "landmark_banyan" ? 5.5f : 3.4f;
+        var tag = go.GetComponent<NpcHeadLabel>() ?? go.AddComponent<NpcHeadLabel>();
+        tag.Configure(title, labelHeight);
+
+        var landmark = go.AddComponent<ShortcutLandmarkInteractable>();
+        landmark.landmarkId = id;
+        landmark.landmarkTitle = title;
+        landmark.confirmLine = confirmLine;
+        landmark.promptText = "Nhấn E - Nhìn mốc đường";
+    }
+
+    void SpawnBanyanCrossroadsVisual(Transform parent)
+    {
+        // Cây đứng rõ ràng — không dùng khúc gỗ nằm (tránh lẫn với khu gỗ đổ).
+        var cracked = Resources.Load<GameObject>("CrackedTree");
+        if (cracked != null)
+        {
+            var main = Object.Instantiate(cracked, parent);
+            main.name = "BanyanTree_Main";
+            main.transform.localPosition = Vector3.zero;
+            main.transform.localRotation = Quaternion.identity;
+            main.transform.localScale = Vector3.one * 3.6f;
+            StripColliders(main);
+
+            var side = Object.Instantiate(cracked, parent);
+            side.name = "BanyanTree_Side";
+            side.transform.localPosition = new Vector3(-2.6f, 0f, 1.8f);
+            side.transform.localRotation = Quaternion.Euler(0f, 35f, 0f);
+            side.transform.localScale = Vector3.one * 2.4f;
+            StripColliders(side);
+        }
+
+        if (TryFindMapTreeNear(parent.position, 80f, out var treeProto))
+            SpawnUprightTreeClone(parent, treeProto, new Vector3(2.8f, 0f, -1.6f), 1.1f, -40f);
+
+        SpawnLandmarkBush(parent, new Vector3(1.2f, 0f, 1.1f), 3.4f);
+        SpawnLandmarkBush(parent, new Vector3(-1.4f, 0f, -0.8f), 2.8f);
+        SpawnLandmarkBush(parent, new Vector3(0.2f, 0f, -2.2f), 2.5f);
+    }
+
+    void SpawnAbandonedWellVisual(Transform parent)
+    {
+        // Giếng đá hoang — vòng thành + miệng giếng tối
+        var rim = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        rim.name = "WellRim";
+        rim.transform.SetParent(parent, false);
+        rim.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+        rim.transform.localScale = new Vector3(2.2f, 0.45f, 2.2f);
+        StripColliders(rim);
+        var rimR = rim.GetComponent<Renderer>();
+        if (rimR != null) rimR.material = CreateURPMaterial(new Color(0.42f, 0.4f, 0.36f), 1f);
+
+        var inner = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        inner.name = "WellHole";
+        inner.transform.SetParent(parent, false);
+        inner.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+        inner.transform.localScale = new Vector3(1.45f, 0.2f, 1.45f);
+        StripColliders(inner);
+        var innerR = inner.GetComponent<Renderer>();
+        if (innerR != null) innerR.material = CreateURPMaterial(new Color(0.08f, 0.1f, 0.12f), 1f);
+
+        var water = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        water.name = "WellWater";
+        water.transform.SetParent(parent, false);
+        water.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+        water.transform.localScale = new Vector3(1.35f, 0.05f, 1.35f);
+        StripColliders(water);
+        var waterR = water.GetComponent<Renderer>();
+        if (waterR != null) waterR.material = CreateURPMaterial(new Color(0.15f, 0.28f, 0.32f), 0.85f);
+
+        // Cây / bụi xung quanh cho cảm giác bỏ hoang trong rừng
+        var cracked = Resources.Load<GameObject>("CrackedTree");
+        if (cracked != null)
+        {
+            var tree = Object.Instantiate(cracked, parent);
+            tree.name = "WellSideTree";
+            tree.transform.localPosition = new Vector3(2.4f, 0f, -1.2f);
+            tree.transform.localRotation = Quaternion.Euler(0f, 25f, 8f);
+            tree.transform.localScale = Vector3.one * 1.8f;
+            StripColliders(tree);
+        }
+
+        SpawnLandmarkBush(parent, new Vector3(-1.6f, 0f, 1.3f), 2.8f);
+        SpawnLandmarkBush(parent, new Vector3(1.8f, 0f, 1.5f), 2.4f);
+    }
+
+    void SpawnLandmarkBush(Transform parent, Vector3 localPos, float scale)
+    {
+        var bushPrefab = Resources.Load<GameObject>("WildGrass/Bush");
+        if (bushPrefab == null) return;
+
+        var bush = Object.Instantiate(bushPrefab, parent);
+        bush.name = "LandmarkBush";
+        bush.transform.localPosition = localPos;
+        bush.transform.localScale = Vector3.one * scale;
+        var bushMat = Resources.Load<Material>("WildGrass/BushMat");
+        if (bushMat != null)
+        {
+            foreach (var r in bush.GetComponentsInChildren<Renderer>())
+                r.material = bushMat;
+        }
+    }
+
+    static void SpawnUprightTreeClone(Transform parent, Transform prototype, Vector3 localOffset, float scaleMul, float yaw)
+    {
+        if (prototype == null) return;
+
+        var copy = Object.Instantiate(prototype.gameObject, parent);
+        copy.name = "BanyanTree_Map";
+        // Ép cây đứng thẳng theo trục Y thế giới — tránh dính rotation nằm của prefab map.
+        copy.transform.SetPositionAndRotation(
+            parent.TransformPoint(localOffset),
+            Quaternion.Euler(0f, yaw, 0f));
+        copy.transform.SetParent(parent, true);
+        copy.transform.localScale = Vector3.one * Mathf.Max(1.2f, prototype.lossyScale.y * scaleMul);
+        StripColliders(copy);
+    }
+
+    static bool TryFindMapTreeNear(Vector3 point, float radius, out Transform prototype)
+    {
+        prototype = null;
+        float bestDist = float.MaxValue;
+
+        foreach (var rootName in new[] { "Map", "Environment_Decor" })
+        {
+            var root = GameObject.Find(rootName)?.transform;
+            if (root == null) continue;
+
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.IndexOf("NewTree", System.StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                var renderer = t.GetComponent<Renderer>() ?? t.GetComponentInChildren<Renderer>();
+                if (renderer == null) continue;
+
+                // Ưu tiên cây đứng (cao), không lấy khúc gỗ nằm
+                if (renderer.bounds.size.y < 2.5f) continue;
+
+                float dist = HorizontalDistance(point, renderer.bounds.center);
+                if (dist > radius || dist >= bestDist) continue;
+
+                bestDist = dist;
+                prototype = t;
+            }
+        }
+
+        return prototype != null;
+    }
+
+    public bool IsNextShortcutLandmark(string landmarkId)
+    {
+        if (string.IsNullOrEmpty(landmarkId) || visitedShortcutIds.Contains(landmarkId))
+            return false;
+
+        foreach (var id in ShortcutOrder)
+        {
+            if (visitedShortcutIds.Contains(id)) continue;
+            return id == landmarkId;
+        }
+
+        return false;
+    }
+
+    public bool TryVisitShortcutLandmark(string landmarkId)
+    {
+        if (QuestManager.Instance == null || !QuestManager.Instance.IsStepActive("find_shortcut"))
+            return false;
+        if (!IsNextShortcutLandmark(landmarkId))
+            return false;
+
+        visitedShortcutIds.Add(landmarkId);
+
+        bool done = true;
+        foreach (var id in ShortcutOrder)
+        {
+            if (!visitedShortcutIds.Contains(id))
+            {
+                done = false;
+                break;
+            }
+        }
+
+        if (done)
+        {
+            QuestManager.Instance.CompleteStep("find_shortcut");
+            GameUI.Instance?.ShowNotification("Đã hết lối tắt — tới nhà Bà Lan giao thư.", 4f, CrispUiText.Gold);
+            return true;
+        }
+
+        GameUI.Instance?.ShowNotification("Đúng mốc rồi. Đi tiếp theo lối tắt.", 3f);
+        RefreshShortcutWaypoint();
+        return true;
+    }
+
+    void RefreshShortcutWaypoint()
+    {
+        if (!visitedShortcutIds.Contains("landmark_banyan"))
+            RegisterWaypoint("find_shortcut", ForestZoneLayout.Ch1LandmarkBanyan);
+        else
+            RegisterWaypoint("find_shortcut", ForestZoneLayout.Ch1LandmarkWell);
+    }
+
+    void CreateRainShelterPath()
+    {
+        CreateRainShelterPoint(ForestZoneLayout.Ch2RainShelter, "Chỗ trú mưa");
+
+        var end = GroundSnap.Snap(ForestZoneLayout.Ch2RainPathEnd);
+        CreateZone("RainPathEnd_keep_letter_dry", end, new Vector3(5f, 3f, 5f), "keep_letter_dry", Color.clear);
+        RegisterWaypoint("keep_letter_dry", end);
+
+        var tracker = chapterRoot.AddComponent<LetterDrynessTracker>();
+        tracker.activeQuestId = "keep_letter_dry";
+        // Đi vòng map xa — cho đủ thời gian chạy giữa các điểm
+        tracker.wetSecondsToFail = 45f;
+        tracker.fallbackResetPosition = ForestZoneLayout.SnapPoint(ForestZoneLayout.Ch2Soldier);
+        RainShelter.LastShelterPosition = GroundSnap.SnapCharacter(ForestZoneLayout.Ch2Soldier);
+    }
+
+    void CreateRainShelterPoint(Vector3 pos, string label)
+    {
+        var root = new GameObject("RainHut_Shelter");
+        root.transform.SetParent(chapterRoot.transform);
+        root.transform.position = GroundSnap.Snap(pos);
+        // Mặt trước mở hướng về phía người lính (tây) để đi vào núp.
+        root.transform.rotation = Quaternion.Euler(0f, -55f, 0f);
+
+        // Trigger chỉ trong lòng chòi — phải bước vào mới trú được.
+        var triggerGo = new GameObject("ShelterInterior");
+        triggerGo.transform.SetParent(root.transform, false);
+        triggerGo.transform.localPosition = new Vector3(0f, 1.4f, -0.2f);
+        var trigger = triggerGo.AddComponent<BoxCollider>();
+        trigger.isTrigger = true;
+        trigger.size = new Vector3(3.6f, 2.8f, 3.4f);
+
+        var shelter = triggerGo.AddComponent<RainShelter>();
+        shelter.enterMessage = "Đã vào chòi — đang núp mưa, thư khô.";
+
+        var tag = root.GetComponent<NpcHeadLabel>() ?? root.AddComponent<NpcHeadLabel>();
+        tag.Configure("Chòi trú mưa", 4.2f);
+
+        SpawnEnterableRainHut(root.transform);
+
+        var lightGo = new GameObject("ShelterLight");
+        lightGo.transform.SetParent(root.transform, false);
+        lightGo.transform.localPosition = new Vector3(0f, 2.6f, -0.3f);
+        var beacon = lightGo.AddComponent<Light>();
+        beacon.type = LightType.Point;
+        beacon.color = new Color(1f, 0.82f, 0.45f);
+        beacon.intensity = 5.5f;
+        beacon.range = 9f;
+    }
+
+    /// <summary>
+    /// Chòi gỗ mở cửa trước — có tường chắn, đi vào trong mới núp mưa.
+    /// </summary>
+    void SpawnEnterableRainHut(Transform parent)
+    {
+        var wood = new Color(0.42f, 0.28f, 0.14f);
+        var darkWood = new Color(0.28f, 0.18f, 0.1f);
+        var thatch = new Color(0.55f, 0.45f, 0.22f);
+
+        // solid=true: giữ collider để đứng/núp trong chòi, không xuyên tường.
+        void Part(string name, PrimitiveType type, Vector3 localPos, Vector3 localScale, Vector3 euler, Color color, bool solid)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            go.name = name;
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            go.transform.localRotation = Quaternion.Euler(euler);
+            go.transform.localScale = localScale;
+            if (!solid)
+                StripColliders(go);
+            var r = go.GetComponent<Renderer>();
+            if (r != null) r.material = CreateURPMaterial(color, 1f);
+        }
+
+        // Cột góc
+        Part("PostFL", PrimitiveType.Cylinder, new Vector3(-2.3f, 1.55f, 2.1f), new Vector3(0.3f, 1.55f, 0.3f), Vector3.zero, wood, true);
+        Part("PostFR", PrimitiveType.Cylinder, new Vector3(2.3f, 1.55f, 2.1f), new Vector3(0.3f, 1.55f, 0.3f), Vector3.zero, wood, true);
+        Part("PostBL", PrimitiveType.Cylinder, new Vector3(-2.3f, 1.55f, -2.1f), new Vector3(0.3f, 1.55f, 0.3f), Vector3.zero, wood, true);
+        Part("PostBR", PrimitiveType.Cylinder, new Vector3(2.3f, 1.55f, -2.1f), new Vector3(0.3f, 1.55f, 0.3f), Vector3.zero, wood, true);
+
+        // Tường sau + hai bên — mặt +Z để trống làm cửa vào
+        Part("WallBack", PrimitiveType.Cube, new Vector3(0f, 1.65f, -2.25f), new Vector3(5f, 3.2f, 0.18f), Vector3.zero, wood, true);
+        Part("WallLeft", PrimitiveType.Cube, new Vector3(-2.45f, 1.65f, 0f), new Vector3(0.18f, 3.2f, 4.4f), Vector3.zero, wood, true);
+        Part("WallRight", PrimitiveType.Cube, new Vector3(2.45f, 1.65f, 0f), new Vector3(0.18f, 3.2f, 4.4f), Vector3.zero, wood, true);
+
+        // Mái che mưa
+        Part("Roof", PrimitiveType.Cube, new Vector3(0f, 3.55f, 0f), new Vector3(5.6f, 0.18f, 5.2f), new Vector3(-12f, 0f, 0f), thatch, true);
+        Part("RoofBeam", PrimitiveType.Cube, new Vector3(0f, 3.15f, 0f), new Vector3(5.2f, 0.16f, 0.22f), Vector3.zero, darkWood, false);
+
+        // Ngưỡng cửa gợi lối vào (không chắn)
+        Part("DoorSill", PrimitiveType.Cube, new Vector3(0f, 0.08f, 2.15f), new Vector3(2.4f, 0.12f, 0.35f), Vector3.zero, darkWood, false);
+
+        SpawnLandmarkBush(parent, new Vector3(-3.4f, 0f, -2.6f), 3f);
+        SpawnLandmarkBush(parent, new Vector3(3.5f, 0f, -2.4f), 2.8f);
+    }
+
     void CreateStealthPath(int chapter, Vector3 endPos, string questId, Vector3 hidePos, Vector3 resetPos)
     {
+        // Giữ API cũ — chương 1/2 không còn dùng tuần tra.
         var end = GroundSnap.Snap(endPos);
         CreateZone($"StealthEnd_{questId}", end, new Vector3(5f, 3f, 5f), questId, Color.clear);
         RegisterWaypoint(questId, end);
-
-        SpawnPatrols(chapter, questId, resetPos);
         CreateHideSpot(hidePos, questId);
     }
 
@@ -686,25 +1022,13 @@ public class ChapterFlowController : MonoBehaviour
 
     void CreateRainAtmosphere()
     {
-        var pos = GroundSnap.Snap(rainShelterPosition);
-        var go = new GameObject("RainShelterProp");
-        go.transform.SetParent(chapterRoot.transform);
-        go.transform.position = pos;
-
-        var prefab = Resources.Load<GameObject>("CrackedTree");
-        if (prefab != null)
-        {
-            var tree = Object.Instantiate(prefab, go.transform);
-            tree.transform.localPosition = Vector3.zero;
-            tree.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
-        }
-
         var rain = chapterRoot.AddComponent<RainEvent>();
-        rain.triggerDuringStepId = "stealth_cross";
+        rain.triggerDuringStepId = "keep_letter_dry";
         rain.rainFromChapterStart = true;
         rain.escalateToStorm = true;
         rain.showRainDialogue = false;
-        rain.stormNotification = "";
+        rain.stormNotification = "Mưa lớn! Tìm chòi trú mưa, giữ thư khô.";
+        rain.stormNotificationDuration = 4f;
         rain.rainDialogue = "";
     }
 

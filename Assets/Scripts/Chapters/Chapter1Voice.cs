@@ -10,7 +10,7 @@ public static class Chapter1Voice
     /// <summary>Intro mục tiêu khi vào bản đồ.</summary>
     public const string IntroHud = "ct1-2";
 
-    /// <summary>Trạm Liên Lạc — nhận thư.</summary>
+    /// <summary>Cụ già — dặn xem bản đồ (file ct1-3; trước gắn nhầm Trạm).</summary>
     public const string PickupStation = "ct1-3";
 
     /// <summary>Nam — đáp nhận thư.</summary>
@@ -18,6 +18,9 @@ public static class Chapter1Voice
 
     /// <summary>Cụ già — hỏi đường.</summary>
     public const string Elder = "ct1-5";
+
+    /// <summary>Alias — ct1-3 thuộc cụ già.</summary>
+    public const string ElderMapAdvice = PickupStation;
 
     /// <summary>Nam — đáp cụ già.</summary>
     public const string ElderNam = "ct1-6";

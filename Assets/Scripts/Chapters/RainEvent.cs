@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class RainEvent : MonoBehaviour
 {
-    public string triggerDuringStepId = "stealth_cross";
+    public string triggerDuringStepId = "keep_letter_dry";
     public bool rainFromChapterStart = true;
     public bool escalateToStorm = true;
     public string stormNotification = "Mưa lớn đổ xuống! Tìm chỗ trú, giữ thư khô!";
