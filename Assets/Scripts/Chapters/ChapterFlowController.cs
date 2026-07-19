@@ -560,6 +560,7 @@ public class ChapterFlowController : MonoBehaviour
         if (model != null)
         {
             model.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+            AoBaBaLook.Apply(model.gameObject);
             NpcVisualFactory.AutoAdjustGroundPlacement(model);
         }
         RegisterWaypoint("deliver_mail", go.transform.position);
@@ -585,6 +586,7 @@ public class ChapterFlowController : MonoBehaviour
             ForestZoneLayout.Ch1LandmarkBanyan,
             "Ngã ba cây đa",
             Chapter1Dialogue.LandmarkBanyan,
+            Chapter1Voice.LandmarkBanyan,
             new Color(0.35f, 0.75f, 0.4f));
 
         CreateShortcutLandmark(
@@ -592,12 +594,13 @@ public class ChapterFlowController : MonoBehaviour
             ForestZoneLayout.Ch1LandmarkWell,
             "Giếng hoang",
             Chapter1Dialogue.LandmarkWell,
+            Chapter1Voice.LandmarkWell,
             new Color(0.4f, 0.7f, 0.85f));
 
         RefreshShortcutWaypoint();
     }
 
-    void CreateShortcutLandmark(string id, Vector3 pos, string title, string confirmLine, Color accent)
+    void CreateShortcutLandmark(string id, Vector3 pos, string title, string confirmLine, string voiceKey, Color accent)
     {
         var go = CreateMarker(title, pos, accent, new Vector3(2.8f, 2.8f, 2.8f));
         var worldLabel = go.transform.Find("ObjectiveLabel");
@@ -617,6 +620,7 @@ public class ChapterFlowController : MonoBehaviour
         landmark.landmarkId = id;
         landmark.landmarkTitle = title;
         landmark.confirmLine = confirmLine;
+        landmark.voiceKey = voiceKey;
         landmark.promptText = "Nhấn E - Nhìn mốc đường";
     }
 
@@ -1068,51 +1072,56 @@ public class ChapterFlowController : MonoBehaviour
     {
         DialogueAudio.Preload(
             refreshFromDisk: true,
-            Chapter2Voice.Transition,
-            Chapter2Voice.IntroHud,
-            Chapter2Voice.Soldier,
-            Chapter2Voice.SoldierNam,
-            Chapter2Voice.StealthNam,
-            Chapter2Voice.MotherAsk,
-            Chapter2Voice.MotherNam,
-            Chapter2Voice.MotherThanks,
-            Chapter2Voice.EndNam);
+            Chapter2Voice.Transition,     // ct2-1
+            Chapter2Voice.IntroHud,       // ct2-2
+            Chapter2Voice.Soldier,        // ct2-3
+            Chapter2Voice.SoldierNam,     // ct2-4
+            Chapter2Voice.StealthNam,     // ct2-5
+            Chapter2Voice.MotherAsk,      // ct2-6
+            Chapter2Voice.MotherNam,      // ct2-7
+            Chapter2Voice.MotherThanks,   // ct2-8
+            Chapter2Voice.EndNam);        // ct2-9
+        DialogueVoicePlayer.Instance?.ClearCache();
     }
 
     void PreloadChapter1Voices()
     {
         DialogueAudio.Preload(
             refreshFromDisk: true,
-            Chapter1Voice.Transition,
-            Chapter1Voice.IntroHud,
-            Chapter1Voice.PickupStation,
-            Chapter1Voice.PickupNam,
-            Chapter1Voice.Elder,
-            Chapter1Voice.ElderNam,
-            Chapter1Voice.CrossObstacle,
-            Chapter1Voice.DeliverBaLan1,
-            Chapter1Voice.DeliverNam,
-            Chapter1Voice.DeliverBaLan2,
-            Chapter1Voice.EndNam);
+            Chapter1Voice.Transition,       // ct1-1
+            Chapter1Voice.IntroHud,         // ct1-2
+            Chapter1Voice.PickupStation,    // ct1-3
+            Chapter1Voice.PickupNam,        // ct1-4
+            Chapter1Voice.ElderMapAdvice,   // ct1-5
+            Chapter1Voice.Elder,            // ct1-6
+            Chapter1Voice.ElderNam,         // ct1-7  Dạ, cháu sẽ nhớ
+            Chapter1Voice.CrossObstacle,    // ct1-8  khu gỗ đổ
+            Chapter1Voice.LandmarkBanyan,   // ct1-9
+            Chapter1Voice.LandmarkWell,     // ct1-10
+            Chapter1Voice.DeliverBaLan1,    // ct1-11
+            Chapter1Voice.DeliverNam,       // ct1-12
+            Chapter1Voice.DeliverBaLan2,    // ct1-13
+            Chapter1Voice.EndNam);          // ct1-14
+        DialogueVoicePlayer.Instance?.ClearCache();
     }
 
     void PreloadChapter3Voices()
     {
         DialogueAudio.Preload(
             refreshFromDisk: true,
-            Chapter3Voice.Transition,
-            Chapter3Voice.IntroHud,
-            Chapter3Voice.ClueHouse,
-            Chapter3Voice.ClueBunker,
-            Chapter3Voice.ClueFort,
-            Chapter3Voice.CluesComplete,
-            Chapter3Voice.BrotherFound,
-            Chapter3Voice.BrotherLetter,
-            Chapter3Voice.BrotherNam,
-            Chapter3Voice.DeliverNam,
-            Chapter3Voice.DeliverRecipient,
-            Chapter3Voice.EndNam,
-            Chapter3Voice.Ending);
+            Chapter3Voice.Transition,         // ct3-1
+            Chapter3Voice.IntroHud,           // ct3-2
+            Chapter3Voice.ClueHouse,          // ct3-3
+            Chapter3Voice.ClueFort,           // ct3-4
+            Chapter3Voice.ClueBunker,         // ct3-5
+            Chapter3Voice.CluesComplete,      // ct3-6
+            Chapter3Voice.BrotherFound,       // ct3-7
+            Chapter3Voice.BrotherNam,         // ct3-8
+            Chapter3Voice.DeliverNam,         // ct3-9
+            Chapter3Voice.DeliverRecipient,   // ct3-10
+            Chapter3Voice.EndNam,             // ct3-11
+            Chapter3Voice.Ending);            // ct3-12
+        DialogueVoicePlayer.Instance?.ClearCache();
     }
 
     void CreateCluePoints()

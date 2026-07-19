@@ -8,6 +8,7 @@ public class ShortcutLandmarkInteractable : Interactable
     public string landmarkId;
     public string landmarkTitle;
     public string confirmLine;
+    public string voiceKey;
 
     public override bool CanInteract()
     {
@@ -26,7 +27,7 @@ public class ShortcutLandmarkInteractable : Interactable
             ? $"Nam nhận ra mốc: {landmarkTitle}."
             : confirmLine;
 
-        DialogueManager.Instance?.ShowDialogue("Nam", body, null, () =>
+        DialogueManager.Instance?.ShowDialogue("Nam", body, voiceKey, () =>
             flow.TryVisitShortcutLandmark(landmarkId));
     }
 }

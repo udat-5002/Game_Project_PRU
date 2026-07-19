@@ -1,6 +1,5 @@
 /// <summary>
-/// Lời thoại Chương 3 — Lá Thư Cuối Cùng.
-/// Khớp nội dung giọng ct3-1 … ct3-12.
+/// Lời thoại Chương 3 — khớp Chapter3Voice ct3-1 … ct3-12 (theo tiến trình).
 /// </summary>
 public static class Chapter3Dialogue
 {
@@ -26,11 +25,11 @@ public static class Chapter3Dialogue
     public const string ClueHouse =
         "Căn nhà bỏ hoang... có dấu ai đó từng ghé qua, vẫn cố mang thư theo.";
 
-    /// <summary>ct3-5 (hầm)</summary>
+    /// <summary>ct3-5</summary>
     public const string ClueBunker =
         "Hầm trú ẩn cũ. Ai đó đã dừng lại đây để giữ túi thư khô ráo trước khi đi tiếp.";
 
-    /// <summary>ct3-4 (đồn)</summary>
+    /// <summary>ct3-4</summary>
     public const string ClueFort =
         "Đồn lính đổ nát. Túi thư thất lạc nằm dưới đống gạch...";
 
@@ -42,7 +41,7 @@ public static class Chapter3Dialogue
     public const string BrotherFound =
         "Chữ này... là của anh trai mình thật sao?";
 
-    /// <summary>Thư anh trai — hiện chữ (chưa có file giọng riêng).</summary>
+    /// <summary>Thư anh trai — hiện chữ (không có file giọng).</summary>
     public const string BrotherLetterBody =
         "Nam, nếu em đọc được thư này thì thay anh mang chúng về nhé. Đừng để ai phải chờ lâu quá.";
 

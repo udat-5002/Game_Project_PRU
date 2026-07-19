@@ -1,14 +1,13 @@
 /// <summary>
-/// Lời thoại Chương 1 — Nhận Thư, Mở Bản Đồ.
-/// Khớp file giọng ct1-1 … ct1-11 trong Resources/Audio/Dialogue/.
+/// Lời thoại Chương 1 — khớp Chapter1Voice ct1-1 … ct1-14 (theo tiến trình).
 /// </summary>
 public static class Chapter1Dialogue
 {
-    /// <summary>ct1-1 — màn chào chương.</summary>
+    /// <summary>ct1-1</summary>
     public const string TransitionSubtitle =
         "Nhận thư, mở bản đồ,\nđi qua làng cũ, giao thư cho Bà Lan.";
 
-    /// <summary>ct1-2 — intro mục tiêu khi vào bản đồ.</summary>
+    /// <summary>ct1-2</summary>
     public const string IntroHudBody =
         "Mục tiêu:\n" +
         "• Nhận thư tại Trạm Liên Lạc\n" +
@@ -23,7 +22,7 @@ public static class Chapter1Dialogue
     public const string CheckMapDone =
         "Đã xem bản đồ — mũi tên chỉ đường đã mở. Có thể hỏi cụ già đường.";
 
-    /// <summary>Trạm Liên Lạc — giao túi thư (không dùng thoại chỉ đường).</summary>
+    /// <summary>ct1-3</summary>
     public const string PickupStation =
         "Đây là thư gửi Bà Lan ở Làng Bình An. Con cầm túi này, giao tới tận tay người nhận nhé.";
 
@@ -31,41 +30,43 @@ public static class Chapter1Dialogue
     public const string PickupNam =
         "Vâng, cháu sẽ đi cẩn thận và giao tới tận tay ạ.";
 
-    /// <summary>ct1-3 — cụ già dặn xem bản đồ (trước đây gắn nhầm vào Trạm).</summary>
+    /// <summary>ct1-5</summary>
     public const string ElderMapAdvice =
         "Đường hôm nay không ổn đâu. Trước khi đi, con xem bản đồ kỹ rồi hãy lên đường nhé.";
 
-    /// <summary>ct1-5</summary>
+    /// <summary>ct1-6</summary>
     public const string Elder =
         "Đi chậm thôi cháu. Lạc đường còn quay lại được, chứ lạc mất người nhận thì muộn rồi.";
 
-    /// <summary>ct1-6</summary>
+    /// <summary>ct1-7</summary>
     public const string ElderNam =
         "Dạ, cháu sẽ nhớ.";
 
-    /// <summary>ct1-7</summary>
+    /// <summary>ct1-8</summary>
     public const string CrossObstacle =
         "Cây gỗ đổ chắn ngang đường chính. Nam vượt qua, rồi tìm lối tắt theo lời cụ.";
 
+    /// <summary>ct1-9</summary>
     public const string LandmarkBanyan =
         "Ngã ba cây đa... đúng như cụ nói. Đi tiếp tới giếng hoang.";
 
+    /// <summary>ct1-10</summary>
     public const string LandmarkWell =
         "Giếng hoang rồi. Lối tắt hết — còn đoạn nữa là tới nhà Bà Lan.";
 
-    /// <summary>ct1-8</summary>
+    /// <summary>ct1-11</summary>
     public const string DeliverBaLan1 =
         "Tôi cứ tưởng bức thư này không đến được nữa rồi.";
 
-    /// <summary>ct1-9</summary>
+    /// <summary>ct1-12</summary>
     public const string DeliverNam =
         "Cháu theo đúng lối tắt cụ chỉ, cuối cùng cũng mang tới được cho bác đây ạ.";
 
-    /// <summary>ct1-10</summary>
+    /// <summary>ct1-13</summary>
     public const string DeliverBaLan2 =
         "Chỉ cần còn nhận được thư... là tôi vẫn thấy nó còn nhớ đến nhà.";
 
-    /// <summary>ct1-11 — kết chương.</summary>
+    /// <summary>ct1-14</summary>
     public const string EndNam =
         "Giao thư không chỉ là đi đúng điểm đến... mà là giữ cho người ở lại có thể yên tâm chờ đợi.";
 }

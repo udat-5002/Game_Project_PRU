@@ -16,8 +16,8 @@ public class MailPickupInteractable : Interactable
 
     public override void Interact()
     {
-        // Trạm chỉ giao thư — không phát thoại chỉ đường (ct1-3 thuộc cụ già).
-        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", Chapter1Dialogue.PickupStation, null, () =>
+        // ct1-3 → ct1-4
+        DialogueManager.Instance?.ShowDialogue("Trạm Liên Lạc", Chapter1Dialogue.PickupStation, Chapter1Voice.PickupStation, () =>
         {
             DialogueManager.Instance?.ShowDialogue("Nam", Chapter1Dialogue.PickupNam, Chapter1Voice.PickupNam, () =>
             {

@@ -7,8 +7,8 @@ public class ElderGuideInteractable : Interactable
 
     public override void Interact()
     {
-        // ct1-3: dặn xem bản đồ — đúng vai cụ già, không còn hiện ở Trạm.
-        DialogueManager.Instance?.ShowDialogue("Cụ già", Chapter1Dialogue.ElderMapAdvice, Chapter1Voice.PickupStation, () =>
+        // ct1-5 → ct1-6 → ct1-7
+        DialogueManager.Instance?.ShowDialogue("Cụ già", Chapter1Dialogue.ElderMapAdvice, Chapter1Voice.ElderMapAdvice, () =>
         {
             DialogueManager.Instance?.ShowDialogue("Cụ già", Chapter1Dialogue.Elder, Chapter1Voice.Elder, () =>
             {

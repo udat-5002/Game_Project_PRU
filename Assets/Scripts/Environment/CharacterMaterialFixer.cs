@@ -30,7 +30,13 @@ public class CharacterMaterialFixer : MonoBehaviour
         foreach (var smr in GetComponentsInChildren<SkinnedMeshRenderer>(true))
         {
             if (smr == null) continue;
-            smr.material = new Material(mat);
+            var instance = new Material(mat);
+            // Nhấn nhẹ tông xanh bộ đội trên albedo áo lính cụ Hồ
+            if (instance.HasProperty("_BaseColor"))
+                instance.SetColor("_BaseColor", new Color(0.92f, 0.96f, 0.82f, 1f));
+            if (instance.HasProperty("_Smoothness"))
+                instance.SetFloat("_Smoothness", 0.22f);
+            smr.material = instance;
         }
     }
 
