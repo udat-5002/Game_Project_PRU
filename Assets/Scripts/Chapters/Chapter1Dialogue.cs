@@ -14,7 +14,7 @@ public static class Chapter1Dialogue
         "• Nhận thư tại Trạm Liên Lạc\n" +
         "• Mở bản đồ\n" +
         "• Hỏi cụ già, đi qua làng cũ\n" +
-        "• Vượt gỗ đổ, tránh tuần tra\n" +
+        "• Vượt gỗ đổ, tìm lối tắt\n" +
         "• Giao thư cho Bà Lan";
 
     public const string CheckMapPrompt =
@@ -23,13 +23,17 @@ public static class Chapter1Dialogue
     public const string CheckMapDone =
         "Đã xem bản đồ — mũi tên chỉ đường đã mở. Có thể hỏi cụ già đường.";
 
-    /// <summary>ct1-3</summary>
+    /// <summary>Trạm Liên Lạc — giao túi thư (không dùng thoại chỉ đường).</summary>
     public const string PickupStation =
-        "Đường hôm nay không ổn đâu. Trước khi đi, con xem bản đồ kỹ rồi hãy lên đường nhé.";
+        "Đây là thư gửi Bà Lan ở Làng Bình An. Con cầm túi này, giao tới tận tay người nhận nhé.";
 
     /// <summary>ct1-4</summary>
     public const string PickupNam =
         "Vâng, cháu sẽ đi cẩn thận và giao tới tận tay ạ.";
+
+    /// <summary>ct1-3 — cụ già dặn xem bản đồ (trước đây gắn nhầm vào Trạm).</summary>
+    public const string ElderMapAdvice =
+        "Đường hôm nay không ổn đâu. Trước khi đi, con xem bản đồ kỹ rồi hãy lên đường nhé.";
 
     /// <summary>ct1-5</summary>
     public const string Elder =
@@ -41,7 +45,13 @@ public static class Chapter1Dialogue
 
     /// <summary>ct1-7</summary>
     public const string CrossObstacle =
-        "Cây gỗ đổ chắn ngang đường. Nam vượt qua, giữ túi thư khô và sạch.";
+        "Cây gỗ đổ chắn ngang đường chính. Nam vượt qua, rồi tìm lối tắt theo lời cụ.";
+
+    public const string LandmarkBanyan =
+        "Ngã ba cây đa... đúng như cụ nói. Đi tiếp tới giếng hoang.";
+
+    public const string LandmarkWell =
+        "Giếng hoang rồi. Lối tắt hết — còn đoạn nữa là tới nhà Bà Lan.";
 
     /// <summary>ct1-8</summary>
     public const string DeliverBaLan1 =
@@ -49,7 +59,7 @@ public static class Chapter1Dialogue
 
     /// <summary>ct1-9</summary>
     public const string DeliverNam =
-        "Cháu canh đường kỹ lắm, cuối cùng cũng mang tới được cho bác đây ạ.";
+        "Cháu theo đúng lối tắt cụ chỉ, cuối cùng cũng mang tới được cho bác đây ạ.";
 
     /// <summary>ct1-10</summary>
     public const string DeliverBaLan2 =

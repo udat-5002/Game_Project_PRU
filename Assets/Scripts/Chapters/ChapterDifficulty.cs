@@ -18,44 +18,16 @@ public static class ChapterDifficulty
 
     public static float TimeLimitMinutes(int chapter) => chapter switch
     {
-        1 => 12f,
-        2 => 10f,
+        1 => 18f,
+        2 => 16f,
         3 => 18f,
         _ => 0f
     };
 
     public static PatrolSetup[] GetPatrols(int chapter, string questId)
     {
-        if (chapter == 3)
-            return System.Array.Empty<PatrolSetup>();
-
-        int count = chapter switch
-        {
-            1 => 5,
-            2 => 5,
-            _ => 4
-        };
-
-        var patrols = new PatrolSetup[count];
-        for (int i = 0; i < count; i++)
-        {
-            bool hide = questId is "stealth_cross";
-            var pointA = PickPatrolPoint(chapter, questId, i);
-            var pointB = PickPatrolPoint(chapter, questId, i + 3);
-
-            patrols[i] = new PatrolSetup
-            {
-                pointA = GroundSnap.Snap(pointA),
-                pointB = GroundSnap.Snap(pointB),
-                moveSpeed = Random.Range(2.2f, 3.2f),
-                detectRadius = Random.Range(6.5f, 8.5f),
-                detectSeconds = Random.Range(1.1f, 1.6f),
-                mustHideToPass = hide,
-                activeQuestId = questId
-            };
-        }
-
-        return patrols;
+        // Không còn thử thách lính tuần tra ở các chương.
+        return System.Array.Empty<PatrolSetup>();
     }
 
     static Vector3 PickPatrolPoint(int chapter, string questId, int index)
